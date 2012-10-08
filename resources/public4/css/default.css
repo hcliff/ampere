@@ -1,0 +1,6 @@
+body { padding: 75px 80px; background: #454545; color: #b2b2b2; font-family: "Helvetica Neue", "Verdana", sans-serif;}
+a {text-decoration:none; color: #b2b2b2; }
+
+#wrapper { margin:auto; width: 1024px; }
+
+.alert { border-radius:10px; background: #3f634d; border: 2px solid #3c8455; padding: 15px; }

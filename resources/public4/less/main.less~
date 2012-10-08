@@ -1,0 +1,4 @@
+table td{
+    height: 50px;
+    line-height: 34px;
+}
