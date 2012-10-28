@@ -1,6 +1,7 @@
 (ns torrent-client.views.common
   (:require [noir.cljs.core :as cljs])
   (:use [noir.core :only [defpartial]]
+        [torrent-client.hiccup.page :only [include-less]]
         [hiccup.page :only [html5 include-css include-js]]
         [hiccup.form :only [label file-upload submit-button]]
         [hiccup.element :only [link-to]]
@@ -17,7 +18,7 @@
 (defpartial layout [& content]
             (html5
               [:head
-                [:title "linux torrents"]
+                [:title "Ampere, abusus non tollit usum"]
                 [:link {:href "favicon.ico" :rel "shortcut-icon" :type "image/x-icon"}]
                 (include-css "/css/bootstrap.css")
                 (include-js "js/jquery.js" "/js/less.js" "/js/underscore.js" "js/humane.js"
@@ -35,7 +36,7 @@
                       (file-upload "torrent")]
                     [:div.control-group
                       (label {:class "control-label"} "file" "file")
-                      (file-upload "file")]]
+                      (file-upload "files")]]
                   [:div.modal-footer
                     [:a.btn {:data-dismiss "modal"} "close"]
                     (submit-button {:class "btn btn-primary" :form "create-form"} "create")]
@@ -43,31 +44,34 @@
                 [:div.navbar.navbar-fixed-top
                   [:div.navbar-inner
                     [:div.container-fluid
-                      [:a.brand "Linux torrents"]
-                      [:div.nav-collapse
-                        [:form.navbar-search.pull-left
-                          [:input.search-query.span4 {:type "text"
-                            :placeholder "Search torrents..." :data-provide "typeahead"}]]]
+                      [:a.brand "Ampere"]
                       [:div.nav-collapse.pull-right
                         [:ul.nav
                           [:li
                             (link-to {:role "button" :data-toggle "modal"} "#create-modal" 
                               "Create Torrent")]]]
                   ]]]
-                [:div#alerts
-                  [:div.alert
-                    [:strong "hello world!"]
-                    [:button.close {:type "button" :data-dismiss "alert"}]
-                  ]]
-                [:table.table.table-striped.body
-                  [:thead
-                    [:th.span4 "Name"]
-                    [:th.span2 "Added"]
-                    [:th.span1 "Seeds"]
-                    [:th.span1 "Leechers"]
-                    [:th.span1 "Complete"]
-                    [:th.span3 ""]]
-                  [:tbody]]
-                  (cljs/include-scripts)
-                ]
-               ))
+                [:div.container-fluid
+                  [:div.row-fluid
+                    [:ul.nav.nav-tabs
+                      [:li.active 
+                        [:a {:data-toggle "tab"}
+                          "Downloading " [:span.badge "8"]]]
+                      [:li
+                        [:a {:data-toggle "tab"}
+                          "Finished " [:span.badge "1"]]]
+                      ]
+                    [:div.tab-content
+                      [:div#home.tab-pane-active
+                        [:table.table.table-striped.body
+                          [:thead
+                            [:th.flex3 "Name"]
+                            [:th.flex1.size "Size"]
+                            [:th.flex5 "Progress"]
+                            [:th.flex1.speed "Speed"]
+                            [:th.actions ""]
+                            ]
+                          [:tbody]
+                        ]]]]]
+                (cljs/include-scripts)
+                ]))

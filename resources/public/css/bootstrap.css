@@ -261,59 +261,59 @@ a:hover {
   -ms-box-sizing: border-box;
   box-sizing: border-box;
   float: left;
-  margin-left: 2.127659574%;
-  *margin-left: 2.0744680846382977%;
+  margin-left: 0;
+  *margin-left: -0.05319148936170213px;
 }
 .row-fluid [class*="span"]:first-child {
   margin-left: 0;
 }
 .row-fluid .span12 {
-  width: 99.99999998999999%;
-  *width: 99.94680850063828%;
+  width: 99.999996%;
+  *width: 99.94680451063829%;
 }
 .row-fluid .span11 {
-  width: 91.489361693%;
-  *width: 91.4361702036383%;
+  width: 91.666663%;
+  *width: 91.61347151063829%;
 }
 .row-fluid .span10 {
-  width: 82.97872339599999%;
-  *width: 82.92553190663828%;
+  width: 83.33332999999999%;
+  *width: 83.28013851063828%;
 }
 .row-fluid .span9 {
-  width: 74.468085099%;
-  *width: 74.4148936096383%;
+  width: 74.999997%;
+  *width: 74.94680551063828%;
 }
 .row-fluid .span8 {
-  width: 65.95744680199999%;
-  *width: 65.90425531263828%;
+  width: 66.666664%;
+  *width: 66.61347251063829%;
 }
 .row-fluid .span7 {
-  width: 57.446808505%;
-  *width: 57.3936170156383%;
+  width: 58.333331%;
+  *width: 58.2801395106383%;
 }
 .row-fluid .span6 {
-  width: 48.93617020799999%;
-  *width: 48.88297871863829%;
+  width: 49.999998%;
+  *width: 49.9468065106383%;
 }
 .row-fluid .span5 {
-  width: 40.425531911%;
-  *width: 40.3723404216383%;
+  width: 41.666664999999995%;
+  *width: 41.61347351063829%;
 }
 .row-fluid .span4 {
-  width: 31.914893614%;
-  *width: 31.8617021246383%;
+  width: 33.333332%;
+  *width: 33.2801405106383%;
 }
 .row-fluid .span3 {
-  width: 23.404255317%;
-  *width: 23.3510638276383%;
+  width: 24.999999%;
+  *width: 24.946807510638298%;
 }
 .row-fluid .span2 {
-  width: 14.89361702%;
-  *width: 14.8404255306383%;
+  width: 16.666666%;
+  *width: 16.613474510638298%;
 }
 .row-fluid .span1 {
-  width: 6.382978723%;
-  *width: 6.329787233638298%;
+  width: 8.333333%;
+  *width: 8.280141510638298%;
 }
 .container {
   margin-right: auto;
@@ -4184,52 +4184,128 @@ a.badge:hover {
   color: inherit;
 }
 body {
-  padding-top: 40px;
-}
-.table {
-  width: 100%;
-  margin: 0;
+  padding-top: 60px;
 }
 .table td,
-.table thead th {
-  padding: 10px 20px;
-  vertical-align: middle;
+.table th {
+  height: 50px;
+  line-height: 34px;
+  margin-left: 0 !important;
 }
-thead {
-  border-color: #D5D5D5;
-  border-width: 0 0 1px;
-  -webkit-box-shadow: inset 0 1px 0 white, 0 1px 5px rgba(0, 0, 0, .1);
-  -moz-box-shadow: inset 0 1px 0 white, 0 1px 5px rgba(0, 0, 0, .1);
-  box-shadow: inset 0 1px 0 white, 0 1px 5px rgba(0, 0, 0, .1);
-  background-color: #fbfbfb;
-  background-image: -moz-linear-gradient(top, #ffffff, #f5f5f5);
-  background-image: -ms-linear-gradient(top, #ffffff, #f5f5f5);
-  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#f5f5f5));
-  background-image: -webkit-linear-gradient(top, #ffffff, #f5f5f5);
-  background-image: -o-linear-gradient(top, #ffffff, #f5f5f5);
-  background-image: linear-gradient(top, #ffffff, #f5f5f5);
-  background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#f5f5f5', GradientType=0);
-  height: 30px;
-  overflow: hidden;
+table tr:last-child td {
+  border-bottom: 1px solid #DDD;
 }
-thead thead {
-  overflow: hidden;
+.navbar i {
+  margin-right: 5px;
 }
-thead th {
-  height: 30px;
-  line-height: 30px;
-  vertical-align: middle;
-  border-right: 1px solid rgba(0, 0, 0, 0.15);
-  -webkit-box-shadow: 0 0 0 1px white;
-  -moz-box-shadow: 0 0 0 1px white;
-  box-shadow: 0 0 0 1px white;
+footer {
+  top: -webkit-calc(100% - 65px);
+  position: absolute;
 }
-thead th:last-child {
-  border-right: 0px;
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
+small {
+  font-size: 10px;
+}
+.nav {
+  margin-bottom: 0;
+}
+.table .progress {
+  margin-bottom: 0;
+  margin-top: 7px;
+}
+.table .progress label {
+  float: right;
+  font-size: 10px;
+  margin-top: -15px;
+  line-height: 10px;
+  margin-right: 3px;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+th,
+tr {
+  display: -webkit-box;
+  display: -moz-box;
+  display: box;
+  width: 100%;
+}
+.table td.actions,
+.table th.actions {
+  width: 100px;
+}
+.table td.actions > div,
+.table th.actions > div {
+  float: right;
+}
+.flex12 {
+  display: block;
+  -webkit-box-flex: 12;
+  -moz-box-flex: 12;
+  box-flex: 12;
+}
+.flex11 {
+  display: block;
+  -webkit-box-flex: 11;
+  -moz-box-flex: 11;
+  box-flex: 11;
+}
+.flex10 {
+  display: block;
+  -webkit-box-flex: 10;
+  -moz-box-flex: 10;
+  box-flex: 10;
+}
+.flex9 {
+  display: block;
+  -webkit-box-flex: 9;
+  -moz-box-flex: 9;
+  box-flex: 9;
+}
+.flex8 {
+  display: block;
+  -webkit-box-flex: 8;
+  -moz-box-flex: 8;
+  box-flex: 8;
+}
+.flex7 {
+  display: block;
+  -webkit-box-flex: 7;
+  -moz-box-flex: 7;
+  box-flex: 7;
+}
+.flex6 {
+  display: block;
+  -webkit-box-flex: 6;
+  -moz-box-flex: 6;
+  box-flex: 6;
+}
+.flex5 {
+  display: block;
+  -webkit-box-flex: 5;
+  -moz-box-flex: 5;
+  box-flex: 5;
+}
+.flex4 {
+  display: block;
+  -webkit-box-flex: 4;
+  -moz-box-flex: 4;
+  box-flex: 4;
+}
+.flex3 {
+  display: block;
+  -webkit-box-flex: 3;
+  -moz-box-flex: 3;
+  box-flex: 3;
+}
+.flex2 {
+  display: block;
+  -webkit-box-flex: 2;
+  -moz-box-flex: 2;
+  box-flex: 2;
+}
+.flex1 {
+  display: block;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  box-flex: 1;
 }
 .pull-right {
   float: right;

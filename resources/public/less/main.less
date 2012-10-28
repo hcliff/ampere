@@ -1,38 +1,74 @@
 body{
-  padding-top: 40px;
+  padding-top: 60px;
 }
 
-.table{
-	width: 100%;
-	margin:0;
-	td, thead th{
-		padding: 10px 20px;
-		vertical-align: middle;
-	}
+.table td, .table th{
+  height: 50px;
+  line-height: 34px;
+  margin-left: 0 !important;
 }
-
-thead{
-	border-color: #D5D5D5;
-  border-width: 0 0 1px;
-  .box-shadow(~"inset 0 1px 0 white, 0 1px 5px rgba(0, 0, 0, .1)");
-  #gradient > .vertical(@white, #f5f5f5);
-  height: 30px;
-  overflow: hidden;
-
-  thead{
-  	overflow: hidden;
+table tr:last-child td{
+  border-bottom: 1px solid #DDD;
+}
+.navbar i{
+  margin-right: 5px;
+}
+footer{
+  top: ~"-webkit-calc(100% - 65px)";
+  position:absolute;
+}
+small{
+  font-size:10px;
+}
+.nav{
+  margin-bottom: 0;
+}
+.table .progress{
+  margin-bottom: 0;
+  margin-top: 7px;
+  label{
+      float: right;
+      font-size: 10px;
+      margin-top: -15px;
+      line-height: 10px;
+      margin-right: 3px;
+      background-color: rgba(0,0,0,0.4);
   }
+}
 
-  th{
-  	height: 30px;
-  	line-height: 30px;
-  	vertical-align: middle;
-  	border-right: 1px solid rgba(0,0,0,0.15);
-  	.box-shadow(~"0 0 0 1px white");
+th, tr{
+  display: -webkit-box;
+  display: -moz-box;
+  display: box;
+  width: 100%;
+}
 
-  	&:last-child{
-  		border-right: 0px;
-  		.box-shadow(none);
-  	}
+.table td.actions, .table th.actions{
+  width: 100px;
+  > div{
+    float: right;
   }
 }
+
+.size, .speed{
+
+}
+
+.flexer(@flex){
+  -webkit-box-flex: @flex;
+  -moz-box-flex: @flex;
+  box-flex: @flex;
+}
+
+.flexX (@index) when (@index > 0) {
+  (~".flex@{index}") { .flex(@index); }
+  .flexX(@index - 1);
+}
+.flexX (0) {}
+
+.flex (@columns) {
+  display: block;
+  .flexer(@columns)
+}
+
+.flexX (@gridColumns);

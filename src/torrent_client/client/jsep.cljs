@@ -1,5 +1,5 @@
 (ns torrent-client.client.jsep
-  (:require [torrent-client.client.dispatch :as dispatch]
+  (:require [torrent-client.client.core.dispatch :as dispatch]
             [waltz.state :as state])
   (:use [jayq.core :only [$ ajax on val empty fade-out fade-in attr append]]
   			[jayq.util :only [clj->js]]
