@@ -1,4 +1,7 @@
 (ns torrent-client.client.core.crypt
+  (:require
+    [goog.crypt :as crypt]
+    [goog.crypt.Sha1 :as Sha1])
   (:use 
     [torrent-client.client.core.bencode :only [int char]]
     [goog.crypt :only [byteArrayToString]]
@@ -8,7 +11,7 @@
   "A wrapper around the SHA class to get the
   computed value without subsequent calls"
   [string]
-  (let [sha1 (js/Sha1.)]
+  (let [sha1 (crypt/Sha1.)]
     (.update sha1 string)
     (.digest sha1)))
 

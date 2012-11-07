@@ -35,7 +35,7 @@
 
 (defn peer-connection
   ([] (peer-connection #(dispatch/fire [:ice-callback])))
-  ([success] (js/webkitPeerConnection00. stun-server success)))
+  ([success] (js/webkitRTCPeerConnection. stun-server success)))
 
 (defn add-stream [peer-connection stream]
   (.addStream peer-connection stream)

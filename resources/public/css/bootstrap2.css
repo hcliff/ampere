@@ -4308,27 +4308,10 @@ tr {
   box-flex: 1;
 }
 .files {
-  width: 250px;
+  width: 200px;
+  height: 200px;
   display: block;
-  float: left;
-  margin-top: 7px;
-  font-size: 0;
-}
-.files  + .help-inline {
-  display: none;
-}
-.files:empty {
-  display: none;
-}
-.files:empty + .help-inline {
-  display: block;
-}
-.files .label {
-  margin: 0 5px 5px 0;
-  max-width: 200px;
-  display: inline-block;
-  text-overflow: ellipsis;
-  overflow: hidden;
+  background-color: red;
 }
 .pull-right {
   float: right;

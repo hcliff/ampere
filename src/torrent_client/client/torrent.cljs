@@ -1,6 +1,7 @@
 (ns torrent-client.client.torrent
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
+    [torrent-client.client.core.db :as db]
     [filesystem.filesystem :as filesystem]
     [filesystem.entry :as entry]
     [goog.crypt :as crypt]
@@ -12,7 +13,10 @@
     [torrent-client.client.core.url :only [http-scheme?]]
     [torrent-client.client.core.bencode :only [encode decode uint8-array push-back-reader]]
     [torrent-client.client.core.crypt :only [sha1]]
-    [torrent-client.client.bitfield :only [bitfield]])
+    [torrent-client.client.bitfield :only [bitfield]]
+    [torrent-client.client.storage :only [connection]]
+    [torrent-client.client.pieces :only [files]]
+    )
   (:use-macros 
     [waltz.macros :only [in out defstate defevent]]
     [async.macros :only [async let-async]]))
@@ -22,15 +26,6 @@
 ; Functions for processing the .torrent file
 ; and the associated files
 ;************************************************
-
-(defn- filereader [file]
-  (async [success-callback]
-    (let [reader (js/FileReader.)
-          ; onloadend actually triggers a progress event
-          ; we want the actual file contents
-          success-callback #(success-callback (.-result (.-currentTarget %)))]
-      (set! (.-onloadend reader) success-callback)
-      (.readAsArrayBuffer reader file))))
 
 (defn- set-file-data
   "Given files in a set order, calculate start and stop indexes"
@@ -44,21 +39,23 @@
         (recur (rest elements) new-total (conj new-elements new-element))
       ))))
 
-(defn read-torrent-file 
-  "Given a torrent file read, decode and process it"
+(defn read-metainfo-file 
+  "Given a metainfo file read, decode and process it"
   ([torrent-file] 
     (read-torrent-file torrent-file #(dispatch/fire :add-torrent-data %)))
   ([torrent-file success-callback]
-    (let-async [torrent-file (filereader torrent-file)]
+    (let-async [torrent-file (filesystem/filereader torrent-file)]
       (let [reader (push-back-reader (uint8-array torrent-file 0))
             metadata (decode reader)
             info (metadata "info")
             info-hash (sha1 (encode info))
+            ; Used as a key to refer to the torrent
             pretty-info-hash (pad-string-left (crypt/byteArrayToHex info-hash) "0" 40)
             
             ; The pieces in the file, how many in the file and which ones we have
             pieces-hash (partition-string 20 (info "pieces"))
             pieces-length (count pieces-hash)
+            ; number of bytes in each piece (integer)
             piece-length (info "piece length")
             bitfield (bitfield pieces-length)
 
@@ -67,133 +64,135 @@
             announce [(metadata "announce")]
             announce-list (reduce conj announce (flatten (metadata "announce-list")))
 
-            ; Build an array of the torrents files
-            ; allow for multiple files or just the one
+            ; NOTE: the actual torrent files are not referred to in
+            ; the torrent, they are managed seperately in pieces.cljs
             files-list (js->clj (info "files") :keywordize true)
             files (or files-list [{:path (info "name") :length (info "length")}])
-            ; files (generate-block-boundaries (set-file-data files) piece-length)
-            
-            total-length (reduce + (map "length" files))
+            files (set-file-data files)
+
+            total-length (reduce + (map :length files))
             
             last-piece-length (rem total-length piece-length)
+            ; If the remainder is 0 then the last piece must be a complete block
             last-piece-length (if (zero? last-piece-length) 
-                                piece-length last-piece-length)
-]
-
+                                piece-length last-piece-length)]
         (success-callback {
          :info-hash info-hash
          :pretty-info-hash pretty-info-hash
          :encoding (metadata "encoding")
          :pieces-hash pieces-hash
-         :pieces-size pieces-size
+         :piece-length piece-length
          :bitfield bitfield
          :announce-list (filter http-scheme? announce-list)
          :comment (info "comment")
          :name (info "name")
          :files files
          :total-length total-length
-         :piece-length piece-length
          :last-piece-length last-piece-length
         })
       )))
   )
 
-(defn- write-input-to-file [fs path data]
+(defn- write-input-to-file 
+  "Write data to file"
+  [fs path data]
   (async [success-callback]
-    (let-async [entry (entry/get-file fs path {:create (not-nil? data)})
+    (let-async [entry (entry/get-file fs path {:create true})
                 writer (entry/create-writer entry)]
-      (set (.-onwriteend writer) (success-callback entry))
+      (.log js/console )
+      (set! (.-onwriteend writer) #(success-callback entry))
+      ; If we have no data for this file immidiately write it
       (if (nil? data)
         (success-callback entry)
         (.write writer data)))))
 
-(def not-nil? (complement nil?))
+(defn- write-metainfo-to-db [metainfo]
+  (let [transaction (db/create-transaction @connection ["metainfo"] "readwrite")
+        object-store (.objectStore transaction "metainfo")]
+    (assoc! object-store (metainfo :pretty-info-hash) metainfo)))
 
 ; Torrent is a hash-map of information on the torrent
 ; fs is the filesystem access
 ; torrent-file is the actual .torrent
 ; files are the actual files for distribution
-(defn build-files [torrent torrent-file files success-callback]
+(defn build-files [torrent files success-callback]
   ; First build out the file system access
-  (let-async [:let files-size (reduce + (map "length" (@torrent :files)))
-              :let requested-bytes (+ (.-size torrent-file) files-size)
+  ; (js* "debugger;")
+  (let-async [:let requested-bytes (@torrent :total-length)
               granted-bytes (filesystem/request-quota :PERSISTENT requested-bytes)
               fs (filesystem/request-file-system :PERSISTENT granted-bytes)]
           ; folder (.createPath directory-entry (torrent :name))
-
-    ; Return a handler to the .torrent file
-    (let-async [:let root-path (.-name torrent-file)
-                torrent-file-entry (write-input-to-file fs root-path torrent-file)]
-      (success-callback :torrent-file torrent-file-entry))
     
     ; The *loop* is run sequentially, everything within said loop is async
     ; so this is non-blocking
     ; Read (and potentially write) the files associated with the torrent
     ; and return a handler to them
-    ; H.C: CORRECT ASSUMPTION WE WILL BE HANDED FILES
-    (doseq [file files]
-      (let-async [:let file-path (.-name file)
-                  file-entry (write-input-to-file fs file-path file)]
 
-        (success-callback :file file-entry)))
+    (doseq [file (@torrent :files)
+            ; If given the actual file, provide the contents
+            :let [entry (first (filter #(= (:name %) (:path file)) files))]]
+      (let-async [file-entry (write-input-to-file fs (:path file) entry)]
+        (dispatch/fire :add-file [torrent file-entry])
+        (success-callback file-entry)))
   ))
 
-(defn torrent-machine 
-  [torrent-data torrent-file files]
+(defn torrent-machine
+  ; A hash of torrent information
+  ; File object
+  ; Collection of file objects
+  [torrent-data torrent-file file-entries]
   (let [; If passed torrent data then start from has-torrent-data
-        current (if (empty? torrent-data) :need-torrent-data :has-torrent-data)
+        current (if (empty? torrent-data) :need-metainfo :has-metainfo)
         me (machine {:label :torrent-machine :current :init})
         torrent (atom torrent-data)]
 
-    (defevent me :read-torrent-file [torrent-file]
+    ; When the torrent atom changes update the database reference
+    (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
+      (write-metainfo-to-db new-metainfo)))
+
+    (defevent me :read-metainfo-file [file]
       "Given a .torrent turn it into a hashmap of data"
-      (read-torrent-file torrent-file 
-        #(state/trigger me :add-torrent-data %)))
+      (read-metainfo-file file #(state/trigger me :add-metainfo %)))
 
-    (defevent me :add-torrent-data [torrent-data]
+    (defevent me :add-metainfo [metainfo]
       "Given a hashmap of torrent data add it to the internal atom"
-      (swap! torrent conj torrent-data)
-      (state/set me :has-torrent-data))
+      (swap! torrent conj metainfo)
+      (.log js/console "written")
+      (state/set me :has-metainfo))
 
-    (defevent me :add-files [torrent torrent-file files]
+    (defevent me :add-files [files]
       "Given torrent information and the files it pertains to 
       access them on the filesystem and add the entry to the torrent"
-      (build-files torrent torrent-file files #(state/trigger me % %2)))
-
-    (defn- has-files? []
-      (= (count (@torrent :files)) (count files)))
-
-    (defevent me :torrent-file [torrent-file]
-      "Called when the .torrent file is ready for use"
-      (swap! torrent assoc :torrent-file torrent-file)
-      ; If the files needed have all been written, continue
-      (if (has-files?)
-        (state/set me :ready)))
+      (build-files torrent files #(state/trigger me :file %)))
 
     (defevent me :file [file]
       "Called when one of the associated files is ready for use"
-      ; Add the file to the vector of files associated with this torrent
-      (swap! torrent #(assoc % :files (conj (:files %) %2)) file )
-      ; If both the torrent file and all the associated files are written
-      ; continue to ready
-      (if (and 
-            (has-files?)
-            (not-nil? (@torrent :torrent-file)))
-        (state/set me :ready)))
+      ; If the files are all in the file atom we're ready to proceed
+      (if (= (count (@torrent :files)) 
+             (count (@files (@torrent :pretty-info-hash))))
+        (state/set me :has-files)))
 
     (defstate me :init)
 
-    (defstate me :need-torrent-data
+    (defstate me :need-metainfo
+      "Optional start state processeds a torrent file"
       (in [] 
-        (state/trigger me :read-torrent-file torrent-file)))
+        (state/trigger me :read-metainfo-file torrent-file)))
 
-    (defstate me :has-torrent-data
+    (defstate me :has-metainfo
+      "Once the metainfo is generated check the files"
       (in []
-        (state/trigger me :add-files torrent torrent-file files)
-        (dispatch/fire [me :has-torrent-data] @torrent)))
+        (state/trigger me :add-files file-entries)
+        (dispatch/fire [me :has-metainfo] @torrent)))
+
+    (defstate me :has-files
+      "Once the files are checked/created move to ready"
+      (in []
+        (state/set me :ready)))
 
     (defstate me :ready
       (in []
+        (.log js/console "ready yo")
         (swap! torrent assoc :status :processed)
         (dispatch/fire :update-torrent torrent)
         (dispatch/fire :update-torrent-announce torrent)
@@ -211,9 +210,28 @@
 ; ergo: file restore doesn't do read-torrent-file
 ; file create *does*
 
+; When a torrent is loaded from the db
+(dispatch/react-to #{:add-metainfo-object} (fn [_ metainfo]
+  (let [torrent (torrent-machine metainfo nil [])]
+    (.log js/console "LOADED FROM DB!")
+    )))
+
 ; When the add-torrent form is submitted generate a new torrent-machine
-(dispatch/react-to #{:add-torrent-file} (fn [_ {:keys [torrent-file files]}]
-  (let [torrent (torrent-machine {} torrent-file files)]
+(dispatch/react-to #{:add-metainfo-file} (fn [_ file]
+  (let [torrent (torrent-machine {} file [])]
     ; As soon as the torrent file is read we need to 
     ; (dispatch/react-to #{[torrent :ready]} announce)
+    )))
+
+; When a torrent is built from some files
+; NOTES: not yet implimented
+(dispatch/react-to #{:add-metainfo-and-files} (fn [_ [metainfo files]]
+  (let [torrent (torrent-machine metainfo nil files)]
+    
+    )))
+
+; When I'm testing...
+(dispatch/react-to #{:add-metainfo-file-and-files} (fn [_ [file files]]
+  (let [torrent (torrent-machine {} file files)]
+
     )))

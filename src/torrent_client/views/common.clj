@@ -3,17 +3,9 @@
   (:use [noir.core :only [defpartial]]
         [torrent-client.hiccup.page :only [include-less]]
         [hiccup.page :only [html5 include-css include-js]]
-        [hiccup.form :only [label file-upload submit-button]]
+        [hiccup.form :only [label file-upload submit-button text-field]]
         [hiccup.element :only [link-to]]
         [hiccup.util]))
-
-; (defn include-less
-;   "Include a list of external less stylesheet files.
-;   Also include the js compiler"
-;   [& styles]
-;   (for [style styles]
-;     [:link {:type "text/css", :href (to-uri style), :rel "stylesheet/less"}])
-;   )
 
 (defpartial layout [& content]
             (html5
@@ -22,21 +14,43 @@
                 [:link {:href "favicon.ico" :rel "shortcut-icon" :type "image/x-icon"}]
                 (include-css "/css/bootstrap.css")
                 (include-js "js/jquery.js" "/js/less.js" "/js/underscore.js" "js/humane.js"
-                  "js/bootstrap/bootstrap-modal.js" "https://raw.github.com/gist/3789078/61bffe580742bd9b726e9208108772fe5e0bf20b/sha1.js"
-                  "http://js.pusher.com/1.12/pusher.min.js")
+                  "js/bootstrap/bootstrap-modal.js" "http://js.pusher.com/1.12/pusher.min.js")
               ]
               [:body
-                [:div#create-modal.modal
+                [:div#create-modal.modal.hide
                   [:div.modal-header
                     [:h3 "Create a torrent"]
                     [:button.close {:type "button" :data-dismiss "modal"}]]
                   [:form#create-form.modal-body.form-horizontal
                     [:div.control-group
-                      (label {:class "control-label"} "torrent" ".torrent")
-                      (file-upload "torrent")]
+                      (label {:class "control-label"} "name" "name")
+                      [:div.controls
+                        (text-field {:placeholder "My great torrent"} "name")]]
                     [:div.control-group
-                      (label {:class "control-label"} "file" "file")
-                      (file-upload "files")]]
+                      (label {:class "control-label"} "tracker" "tracker")
+                      [:div.controls
+                        (text-field {:type "url" :placeholder "http://"} "tracker")]]
+                    [:div.control-group
+                      (label {:class "control-label"} "files" "files")
+                      [:div.controls
+                        [:div.files]
+                        [:span.help-inline "Drag files from your computer to add them"]]
+                      ]]
+                  [:div.modal-footer
+                    [:a.btn {:data-dismiss "modal"} "close"]
+                    (submit-button {:class "btn btn-primary" :form "create-form"} "create")]
+                  ]
+                [:div#add-modal.modal.hide
+                  [:div.modal-header
+                    [:h3 "Add a torrent"]
+                    [:button.close {:type "button" :data-dismiss "modal"}]]
+                  [:form#add-form.modal-body.form-horizontal
+                    [:div.control-group
+                      (label {:class "control-label"} "metainfo" ".torrent")
+                      [:div.controls
+                        (file-upload "metainfo")
+                        [:span.help-block "Or drag a file from your computer"]
+                      ]]]
                   [:div.modal-footer
                     [:a.btn {:data-dismiss "modal"} "close"]
                     (submit-button {:class "btn btn-primary" :form "create-form"} "create")]
@@ -48,6 +62,9 @@
                       [:div.nav-collapse.pull-right
                         [:ul.nav
                           [:li
+                            (link-to {:role "button" :data-toggle "modal"} "#add-modal" 
+                              "Add Torrent")]
+                          [:li
                             (link-to {:role "button" :data-toggle "modal"} "#create-modal" 
                               "Create Torrent")]]]
                   ]]]
@@ -56,10 +73,10 @@
                     [:ul.nav.nav-tabs
                       [:li.active 
                         [:a {:data-toggle "tab"}
-                          "Downloading " [:span.badge "8"]]]
+                          "Downloading " [:span#downloading-count.badge "0"]]]
                       [:li
                         [:a {:data-toggle "tab"}
-                          "Finished " [:span.badge "1"]]]
+                          "Finished " [:span#finished-count.badge "0"]]]
                       ]
                     [:div.tab-content
                       [:div#home.tab-pane-active

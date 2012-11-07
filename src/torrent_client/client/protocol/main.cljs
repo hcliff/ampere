@@ -14,8 +14,8 @@
   (send-piece [client index begin piece] "")
   (send-cancel [client index begin piece] "")
 
-  (recieve-handshake [client data])
-  (recieve-bitfield [client data])
+  (receive-handshake [client data])
+  (receive-bitfield [client data])
 
 
   ; (keep-alive [client] "Fire a keep-alive every 60 seconds")

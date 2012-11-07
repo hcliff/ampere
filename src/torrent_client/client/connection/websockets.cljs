@@ -25,14 +25,14 @@
       :type "POST"
       }))
 
-  (recieve-data [connection data]
+  (receive-data [connection data]
     (let [data (crypt/str-to-uint8-array (.-data data))]
-      (dispatch/fire [:recieve-data (connection/peer-id connection)] data)))
+      (dispatch/fire [:receive-data (connection/peer-id connection)] data)))
 
   (connect-to-peer [connection]
     (let [channel (.subscribe @pusher peer-id)]
       (.log js/console "connecting to peer")
-      (.bind channel "data" #(connection/recieve-data connection %))))
+      (.bind channel "data" #(connection/receive-data connection %))))
 
   (peer-id [connection]
     (str peer-id))

@@ -72,3 +72,31 @@ th, tr{
 }
 
 .flexX (@gridColumns);
+
+.files{
+  width:250px;
+  display:block;
+  float:left;
+  margin-top:7px;
+  font-size: 0;
+
+  & + .help-inline{
+    display: none;
+  }
+
+  &:empty{
+    display: none;
+  }
+
+  &:empty + .help-inline{
+    display: block;
+  }
+
+  .label{
+    margin: 0 5px 5px 0;
+    max-width: 200px;
+    display: inline-block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
