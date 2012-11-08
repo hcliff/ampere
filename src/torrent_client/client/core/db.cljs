@@ -62,24 +62,15 @@
 ; ;;************************************************
 
 (defn open-database 
-  "Deal with the impressive amount of shit around IndexedDB.
-  Chrome at the time of writing doesn't support onupgraderequired
-  which is the neater method of versioning and requires a shim"
+  "Manages versioning of object-stores for a database"
   [database version object-stores]
   (async [success-callback]
     (let [request (.open indexedDB database version)]
       (letfn [(success [e]
                 (let [db (.-result request)]
-                  (if (.-setVersion db)
-                    (let [version (.setVersion (.-result request) version)]
-                      ; once the versioning is actually done we can
-                      ; proceed to create the object store
-                      (set! (.-onsuccess version) upgrade-required)
-                      (set! (.-onerror version) #(.log js/console "version" %))
-                      )
-                     (success-callback (db/IndexedDb. db)))))
+                  (success-callback (db/IndexedDb. db))))
 
-              (upgrade-required [e]
+              (upgrade-needed [e]
                 (let [db (.-result request)]
                   ; Create all the object stores
                   (doseq [store object-stores]
@@ -87,13 +78,8 @@
                       (create-object-store db (:name store) {
                         :keyPath (:key-path store)
                         :autoIncrement (:auto-increment store)
-                        }))
-                  ; More chrome BS, need to reopen db to use datastore
-                  (let [request (.open indexedDB database version)
-                        success-callback 
-                          #(success-callback (db/IndexedDb. (.-result request)))]
-                    (set! (.-onsuccess request) success-callback)))))
-              ]
+                        })))
+                  db))]
 
         (set! (.-onsuccess request) success)
-        (set! (.-onupgraderequired request) upgrade-required)))))
+        (set! (.-onupgradeneeded request) upgrade-needed)))))

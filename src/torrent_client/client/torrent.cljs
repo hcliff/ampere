@@ -157,7 +157,6 @@
     (defevent me :add-metainfo [metainfo]
       "Given a hashmap of torrent data add it to the internal atom"
       (swap! torrent conj metainfo)
-      (.log js/console "written")
       (state/set me :has-metainfo))
 
     (defevent me :add-files [files]
@@ -182,8 +181,7 @@
     (defstate me :has-metainfo
       "Once the metainfo is generated check the files"
       (in []
-        (state/trigger me :add-files file-entries)
-        (dispatch/fire [me :has-metainfo] @torrent)))
+        (state/trigger me :add-files file-entries)))
 
     (defstate me :has-files
       "Once the files are checked/created move to ready"
@@ -192,11 +190,10 @@
 
     (defstate me :ready
       (in []
-        (.log js/console "ready yo")
-        (swap! torrent assoc :status :processed)
-        (dispatch/fire :update-torrent torrent)
-        (dispatch/fire :update-torrent-announce torrent)
-        (dispatch/fire [me :ready] @torrent)))
+        (do
+          (swap! torrent assoc :status :processed)
+          (.log js/console "about to :add-torrent")
+          (dispatch/fire :started-torrent torrent))))
 
     ; Trigger the (in) on the requested state
     (state/set me current)
@@ -210,6 +207,10 @@
 ; ergo: file restore doesn't do read-torrent-file
 ; file create *does*
 
+; (dispatch/react-to #{:started-torrent} (fn [_ torrent]
+;       (.log js/console "start torrent" torrent)
+;       ))
+
 ; When a torrent is loaded from the db
 (dispatch/react-to #{:add-metainfo-object} (fn [_ metainfo]
   (let [torrent (torrent-machine metainfo nil [])]
@@ -220,7 +221,8 @@
 (dispatch/react-to #{:add-metainfo-file} (fn [_ file]
   (let [torrent (torrent-machine {} file [])]
     ; As soon as the torrent file is read we need to 
-    ; (dispatch/react-to #{[torrent :ready]} announce)
+    (.log js/console "Word")
+    
     )))
 
 ; When a torrent is built from some files

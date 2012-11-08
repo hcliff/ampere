@@ -1,5 +1,6 @@
 (ns torrent-client.client.jsep
   (:require [torrent-client.client.core.dispatch :as dispatch]
+            [torrent-client.client.polyfills.prefix :as prefix]
             [waltz.state :as state])
   (:use [jayq.core :only [$ ajax on val empty fade-out fade-in attr append]]
   			[jayq.util :only [clj->js]]
@@ -9,121 +10,85 @@
   (:use-macros [waltz.macros :only [in out defstate defevent]]
                [async.macros :only [async]]))
 
-;;************************************************
-;; Helper functions for testing code without data channels
-;;************************************************
-
-(defn get-user-media
-  ([] (get-user-media
-    #(dispatch/fire [:get-user-media-success])
-    #(dispatch/fire [:get-user-media-error])))
-  ([success] (get-user-media success
-    #(dispatch/fire [:get-user-media-error])))
-  ([success error] (let [options {:audio true :video false}]
-    (.webkitGetUserMedia js/navigator (clj->js options) success error)
-  )))
-
-(defn createObjectURL [stream]
-  (createObjectURL js/webkitURL (clj->js stream))
-  )
 
 ;;************************************************
 ;; Wrapper around javascript functions for JSEP
 ;;************************************************
 
-(def stun-server "STUN stun.l.google.com:19302")
+(defn peer-connection [options]
+  (prefix/PeerConnection. (clj->js options)))
 
-(defn peer-connection
-  ([] (peer-connection #(dispatch/fire [:ice-callback])))
-  ([success] (js/webkitRTCPeerConnection. stun-server success)))
+(defn create-data-channel [peer-connection channel-name]
+  (.createDataChannel peer-connection channel-name))
 
-(defn add-stream [peer-connection stream]
-  (.addStream peer-connection stream)
-  )
-
-(defn create-offer [peer-connection hints]
-  (.createOffer peer-connection (clj->js hints))
-  )
+(defn create-offer [peer-connection success-callback]
+  (.createOffer peer-connection success-callback))
 
 (defn create-answer [peer-connection offer-sdp-string hints]
-  (.createAnswer peer-connection offer-sdp-string (clj->js hints))
-  )
+  (.createAnswer peer-connection offer-sdp-string (clj->js hints)))
 
-(defn set-local-description [peer-connection session-description offer]
-  (.setLocalDescription peer-connection (aget peer-connection (name session-description)) offer)
-  )
+(defn set-local-description [peer-connection description]
+  (.setLocalDescription peer-connection description))
 
-(defn set-remote-description [peer-connection session-description offer]
-  (.setRemoteDescription peer-connection (aget peer-connection (name session-description)) offer)
-  )
+(defn set-remote-description [peer-connection description]
+  (.setRemoteDescription peer-connection description))
 
-(defn process-ice-message [peer-connection candidate]
-  (.processIceMessage peer-connection candidate)
-  )
+(defn add-ice-candidate [peer-connection event]
+  (let [options {:sdpMLineIndex (.-label event) :candidate (.-candidate event)}
+        candidate (.RTCIceCandidate (clj->js options))]
+  (.addIceCandidate peer-connection candidate)))
 
 (defn to-sdp [object]
-  (.toSdp object)
-  )
-
-(defn start-ice [peer-connection]
-  (.startIce peer-connection)
-  )
+  (.toSdp object))
 
 (defn session-description [sdp-string]
-  (js/SessionDescription. sdp-string)
-  )
+  (js/SessionDescription. sdp-string))
 
 (defn jsep-machine [mode peer]
   "where mode is :receive-offer or :send-offer
   peer is only used when receiving data and is the offer that is
   currently being received"
   (let [me (machine {:label :jsep-machine :current :init})
-        user-media (get-user-media #(trigger me :add-stream %))
-        peer-connection (peer-connection #(trigger me :add-ice-candidate % %2))]
+        options {:iceServers [{:url "stun:stun.l.google.com:19302"}]}
+        peer-connection (peer-connection options)]
 
-    (defevent me :add-stream [stream]
-      (add-stream peer-connection stream)
-      (transition me :init :has-user-media))
+    (set! (.-onicecandidate peer-connection) (fn [event]
+      (trigger me :add-ice-candidate event)))
 
-    (defevent me :add-ice-candidate [candidate more]
+    (defevent me :add-ice-candidate [event]
       ; Only when all the ice candidates have been
       ; received should the state progress
-      (if-not more
-        (transition me :has-user-media :ready)))
+      (if-not (undefined? (.-candidate event))
+        (add-ice-candidate peer-connection event)
+        ; If there is no candidate it is indicating we are finished
+        (state/set me :ready)))
 
     (defevent me :receive-offer []
       "When given an offer from the server, connect to that peer"
-      (let [offer (session-description (peer :sdp))
-            answer (create-answer peer-connection (peer :sdp) nil)]
-        (set-remote-description peer-connection :SDP_OFFER offer)
-        (set-local-description peer-connection :SDP_ANSWER answer)
-        (start-ice peer-connection)
-      ))
+      (let [offer-description (session-description (peer :sdp))]
+        (create-answer peer-connection (fn [answer-description]
+          (set-remote-description peer-connection offer-description)
+          (set-local-description peer-connection answer-description)
+          ))))
 
     (defevent me :send-offer []
       "Generate an offer to send to the server;
       Note that this offer will never be answered directly!"
-      (let [offer (create-offer peer-connection nil)]
-          (set-local-description peer-connection :SDP_OFFER offer)
-          (start-ice peer-connection)
-        ))
+      (create-offer peer-connection (fn [description]
+        (set-local-description peer-connection description)
+        (state/set me :ready)
+        )))
 
     (defstate me :init)
 
-    ; once we have obtained user media
-    ; prepare to send or receive an offer
-    (defstate me :has-user-media
-      (in [] (trigger me mode) ))
-
     ; Once everything is completed return the finished peer connection
     (defstate me :ready
-      (in [] (do
-        (dispatch/fire :ready peer-connection)
-      )))
+      (in []
+        (dispatch/fire :ready peer-connection)))
+
+    (state/trigger me mode)
 
 ))
-
-
 
 (defn generate-offer-sdp []
   (async [success-callback]

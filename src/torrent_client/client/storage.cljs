@@ -19,7 +19,7 @@
 ; ;;************************************************
 
 (dispatch/react-to #{:document-ready} (fn []
-  (let-async [database (db/open-database "ampere" "1.0" object-stores)]
+  (let-async [database (db/open-database "ampere" "3.0" object-stores)]
 
     (let [transaction (db/create-transaction database ["metainfo"] "readonly")
           object-store (.objectStore transaction "metainfo")

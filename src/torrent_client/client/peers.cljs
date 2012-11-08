@@ -2,9 +2,10 @@
   (:use [torrent-client.client.peer :only [generate-peer]])
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
-    [goog.Timer :as Timer]))
+    [goog.Timer :as Timer]
+    [goog.events :as events]))
 
-
+; 30 seconds
 (def optimistic-unchoke-period (* 30 1000))
 
 ; how many peers should we downlaod from at once
@@ -16,16 +17,15 @@
 
 ; Optimistically unchoke a torrent periodically
 (dispatch/react-to #{:add-torrent} (fn [torrent]
-  (let [timer (Timer. optimistic-unchoke-period)]
+  (let [timer (goog/Timer. optimistic-unchoke-period)]
     (.start timer)
     (events/listen timer Timer/TICK #(unoptimistic (@torrent :pretty-info-hash)))
     (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
   )))
 
-(dispatch/react-to #{:add-connection} (fn [_ [torrent connection]]
+(dispatch/react-to #{:add-channel} (fn [_ [torrent channel]]
   "A new connection has been established" 
- 
-  (let [peer (generate-peer torrent connection)]
+  (let [peer (generate-peer torrent channel)]
     ; add the peer to the list of peers for this torrent
     (swap! peers (partial merge-with concat) {(@torrent :pretty-info-hash) [peer]}))
   ))
