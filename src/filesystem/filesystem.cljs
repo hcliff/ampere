@@ -1,4 +1,5 @@
 (ns filesystem.filesystem
+  (:require [filesystem.prefix :as prefix])
   (:use-macros [async.macros :only [let-async async]]))
 
 (defn request-file-system [type size]

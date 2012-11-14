@@ -40,19 +40,17 @@
 
 ; H.C TODO: ADD BASIC LOOKUPS ON FILE TO ALLOW FOR (file :name)
 
-(dispatch/react-to #{:add-file} (fn [_ [torrent file]]
+(dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
   "A file has been added to this torrent"
 
-  (let [file (generate-file torrent file)]
+  (let [file (generate-file torrent file-entry file-data)]
     (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]})
   )))
 
-(defn generate-file [torrent file]  
-  (let [; Find the correct data for this file in the torrent atom
-        data (first (filter #(= (:name %) (.-path file)) (@torrent :files)))
-        boundaries (generate-block-boundaries torrent data)]
+(defn generate-file [torrent file-entry file-data]
+  (let [boundaries (generate-block-boundaries torrent file-data)]
     ; Attach information on the block boundaries to the file
-    (with-meta (block-file file) (merge data boundaries))))
+    (with-meta (block-file file-entry) (merge file-data boundaries))))
 
 ; (defn needs-piece [block-position file]
 ;   (and (<= block-position (file :block-end))

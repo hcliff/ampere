@@ -1,10 +1,9 @@
 (ns torrent-client.client.protocol.bittorrent
   (:require
-    [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.core.crypt :as crypt]
     [torrent-client.client.bitfield :as bitfield]
     [torrent-client.client.protocol.main :as protocol]
-    [torrent-client.client.connection.main :as connection])
+    [goog.events :as events])
   (:use 
     [torrent-client.client.peer-id :only [peer-id]]
     [torrent-client.client.core.bencode :only [subarray]]
@@ -95,17 +94,16 @@
 ;;************************************************
 
 ; connection-instance not connection to avoid naming collision
-(deftype BittorrentProtocol [torrent connection-instance peer]
+(deftype BittorrentProtocol [torrent channel peer]
   protocol/Protocol
 
-  (watch-connection [client]
-    "Set up an event listener for data from the connection"
-    (dispatch/react-to 
-      #{[:receive-data (connection/peer-id connection-instance)]} 
-      #(receive-data peer %2)))
+  (watch-channel [client]
+    "Watch a datachannel for incoming data"
+    (set! (.-message channel) (fn [event]
+      (recieve-data peer (.-data event)))))
 
   (send-data [client string]
-    (connection/send-data connection-instance string))
+    (.send channel string))
 
   (send-data [client type data]
     (if (string? data)
@@ -210,9 +208,9 @@
   ([coll start finish]
     (.subarray array start finish)))
 
-(defn generate-protocol [torrent connection peer]
+(defn generate-protocol [torrent channel peer]
   "Generate an instance of the protocol, and start watching the 
-  provided connection"
-  (let [protocol-instance (BittorrentProtocol. torrent connection peer)]
-    (protocol/watch-connection protocol-instance)
+  provided channel"
+  (let [protocol-instance (BittorrentProtocol. torrent channel peer)]
+    (protocol/watch-channel protocol-instance)
     protocol-instance))

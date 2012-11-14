@@ -1,7 +1,8 @@
 (ns torrent-client.client.core.db
   (:require [goog.db :as db]
             [goog.db.ObjectStore :as ObjectStore]
-            [goog.db.IndexedDb :as IndexedDb])
+            [goog.db.IndexedDb :as IndexedDb]
+            [torrent-client.client.polyfills.prefix :as prefix])
   (:use [jayq.util :only [clj->js]])
   (:use-macros [async.macros :only [async]]))
 
@@ -45,18 +46,6 @@
 (defn create-transaction [db object-stores method]
   (.createTransaction db (clj->js object-stores) method))
 
-(def indexedDB
-  (or (.-indexedDB js/window) (.-webkitIndexedDB js/window)
-      (.-mozIndexedDB js/window) (.-msIndexedDB js/window)))
-
-; ; H.C: should work?
-; ; (def indexedDB
-; ;   (apply or (map #(aget js/window %) 
-; ;                  ["indexedDB" "webkitIndexedDB" "mozIndexedDB" "msIndexedDB"])))
-; ; (def indexedDB 
-; ;   (apply or ((juxt #(.-indexedDB %) #(.-webkitIndexedDB %)
-; ;                    #(.-mozIndexedDB %) #(.-msIndexedDB %)) js/window)))
-
 ; ;;************************************************
 ; ;; Async helpers
 ; ;;************************************************
@@ -65,7 +54,7 @@
   "Manages versioning of object-stores for a database"
   [database version object-stores]
   (async [success-callback]
-    (let [request (.open indexedDB database version)]
+    (let [request (.open prefix/indexedDB database version)]
       (letfn [(success [e]
                 (let [db (.-result request)]
                   (success-callback (db/IndexedDb. db))))

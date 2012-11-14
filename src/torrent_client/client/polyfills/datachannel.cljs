@@ -2,50 +2,72 @@
   (:require 
     [torrent-client.client.polyfills.prefix :as prefix]
     [torrent-client.client.core.dispatch :as dispatch]
-    [torrent-client.client.connection.main :as connection]
     [torrent-client.client.core.crypt :as crypt])
   (:use 
     [jayq.core :only [ajax]]))
 
-(def pusher (atom nil))
+; H.C this is ropey as hell, I stopped working on it
+; with the advent of moz data channels
 
-(dispatch/react-to #{:document-ready} (fn []
+(.log js/console "start shim")
 
-  (set! (.-log js/Pusher) (fn [message]
-    (.log js/console message)))
+(js/DCPF_install "wss://datachannel-polyfill.nodejitsu.com")
 
-  ; When the pusher api is loaded pass in our credentials to pusherapp
-  (reset! pusher (js/Pusher. "2721af40efe881bcacf4"))))
+; (def pusher (atom nil))
 
-; For consistency we proivde an interface on
-; real data channels 
-; (extend-type PeerConnection
-;   (create-data-channel [label]
-;     (.createDataChannel this label)))
+; (dispatch/react-to #{:document-ready} (fn []
 
-; ; Again; provide a consisten interface on
-; ; real datachannels
-; (extend-type DataChannel
+;   (set! (.-log js/Pusher) (fn [message]
+;     (.log js/console message)))
 
-;   Channel
-;   (close [this]
-;     (.close this))
-;   (send [this data]
-;     (.send this data))
+;   ; When the pusher api is loaded pass in our credentials to pusherapp
+;   (reset! pusher (js/Pusher. "2721af40efe881bcacf4"))))
+
+; ; For consistency we provide an interface on
+; ; real data channels 
+; (defprotocol Create
+;   (create-data-channel [label] "A wrapper to create data channels"))
+
+; ; (extend-type prefix/PeerConnection
+; ;   Create
+; ;   (create-data-channel [label]
+; ;     (.createDataChannel this label)))
+
+; (defprotocol Channel
+;   (close [channel] "Close the channel")
+;   (send [channel data] "Send data on the channel")
 ;   )
 
+; (def DataChannel (or (.-DataChannel js/window) (.-Object js/window)))
+
+; ; Again; provide a consistent interface on
+; ; real datachannels
+; ; (extend-type DataChannel
+
+; ;   Channel
+; ;   (close [this]
+; ;     (.close this))
+; ;   (send [this data]
+; ;     (.send this data)))
+
 ; ; Wrap the datachannel with a websocket
-; (deftype WebsocketDataChannel [label socket]
+; (deftype WebsocketDataChannel [label]
 
 ;   Channel
 ;   (close [this]
-;     (.close socket))
+;     true)
 
+;   ; H.C - sort this out
 ;   (send [this data]
-;     (ajax (str "http://localhost:8090/api/1/client/" peer-id) {
-;       :data {:data data}
-;       :type "POST"
-;       })))
+    
+
+;     ))
+
+; (defn websocket-data-channel [label]
+;   (let [channel (WebsocketDataChannel. label)]
+;     (.bind websocket "data" (fn [data]
+;       (if (= (.-from data) label)
+;         #(-.onmessage channel data))))))
 
 ; (let [pc (prefix/PeerConnection. nil)]
 ;   (try
@@ -53,16 +75,17 @@
 ;     ; If the data channel creation failed our browser
 ;     ; doesn't yet support it
 ;     (catch js/Object e
-;       (extend-type PeerConnection
-;         ; overload the create-channel method
-;         (create-data-channel [label]
-;           ; return a fake websocket connection
-;           (let [channel (websocket-data-channel label)]
-;             channel))))))
+;       (.info js/console "No support for datachannels, falling back to websockets")
+;       ; (extend-type prefix/PeerConnection
+;       ;   Create
+;       ;   ; overload the create-channel method
+;       ;   (create-data-channel [label]
+;       ;     ; return a fake websocket connection
+;       ;     (let [channel (websocket-data-channel label)]
+;       ;       channel))
+;       ;   )
+;       )
+;     )
+;   )
 
-; (defn websocket-data-channel [label]
-;   (let [websocket (.subscribe @pusher peer-id)
-;         channel (WebsocketDataChannel. label websocket)]
-;     (.bind websocket "data" #(-.onmessage channel %))))
-
-(.log js/console "not last")
+(.log js/console "suvived the fucking shim")

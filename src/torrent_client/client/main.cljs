@@ -5,16 +5,19 @@
     [clojure.browser.repl :as repl]
     [goog.events :as events]
     [goog.events.FileDropHandler :as FileDropHandler]
-    [goog.string :as string])
-  (:use 
-    [jayq.core :only [$ on attr append document-ready empty]]
-    [torrent-client.jayq.core :only [input-files event-files modal]]
-    [crate.binding :only [bound]])
-  (:use-macros [crate.def-macros :only [defpartial]]))
-
-;[torrent-client.client.peer-id]
-    ; [torrent-client.client.torrent]
-    ; [torrent-client.client.tracker]
+    [goog.string :as gstring]
+    [clojure.string :as string]
+    [waltz.state :as state])
+  (:use
+    [torrent-client.client.pieces :only [files]]
+    [jayq.core :only [$ on attr document-ready empty text]]
+    [torrent-client.jayq.core :only [append input-files event-files modal tab]]
+    [torrent-client.client.waltz :only [machine]]
+    [crate.binding :only [bound]]
+    [goog.format :only [numBytesToString]])
+  (:use-macros 
+    [waltz.macros :only [in out defstate defevent]]
+    [crate.def-macros :only [defpartial]]))
 
 ;;************************************************
 ;; Dev stuff
@@ -30,11 +33,16 @@
 ; A vector of the torrents currently in use
 (def torrents (atom []))
 
+; When a torrent is started, add it to the torrents
+(dispatch/react-to #{:started-torrent} (fn [_ torrent]
+  (.log js/console "Adding to torrents atom" torrent)
+  (swap! torrents conj torrent)))
+
 ; A vector of files currently being used in the create form
 (def create-form-files (atom []))
 
 ;;************************************************
-;; Code
+;; jquery selectors
 ;;************************************************
 
 (def $document ($ js/document))
@@ -42,6 +50,8 @@
 (def $add-form ($ "#add-form"))
 (def $create-modal ($ "#create-modal"))
 (def $create-form ($ "#create-form"))
+(def $seed-modal ($ "#seed-modal"))
+(def $seed-form ($ "#seed-form"))
 (def $torrents ($ "tbody"))
 
 ;;************************************************
@@ -55,7 +65,7 @@
   (or (= (.-type file) "application/x-bittorrent")
       ; But my ubuntu chrome build returns blank
       (and (= (.-type file) "")
-           (string/caseInsensitiveEndsWith (.-name file) ".torrent"))))
+           (gstring/caseInsensitiveEndsWith (.-name file) ".torrent"))))
 
 ; Set up drag and drop for the page
 (let [dropzone js/document
@@ -105,97 +115,159 @@
   ; Clear input values
   (.reset (first $create-form))
   ; And reset the files
-  (empty ($ ".files") $create-modal)
+  (empty ($ ".files" $create-modal))
   (reset! create-form-files [])))
 
 (on $add-form :submit (fn [e]
-  (do (.preventDefault e)
-    ; Get the files given to us
-    (let [file (first (input-files ($ "[name=metainfo]" $add-form)))]
-      (dispatch/fire :add-metainfo-file file)
-    (modal ($ "#add-modal") "hide")))))
+  (.preventDefault e)
+  ; Get the files given to us
+  (let [file (first (input-files ($ "[name=metainfo]" $add-form)))]
+    (dispatch/fire :add-metainfo-file file)
+  (modal ($ "#add-modal") "hide"))))
 
 (on $add-modal :hide (fn [e]
   (.reset (first $add-form))))
+
+(on $seed-form :submit (fn [e]
+  (.preventDefault e)
+  (.log js/console "fired submit")
+  (let [metainfo (first (input-files ($ "[name=metainfo]" $seed-form)))
+        file-entries [(first (input-files ($ "[name=files]" $seed-form)))]]
+    (dispatch/fire :add-metainfo-file-and-files [metainfo file-entries])
+  )))
 
 ;;************************************************
 ;; Templating
 ;;************************************************
 
-(defn size-format [{:keys [downloaded size]}]
-  (* 100 (/ size downloaded)))
+(def elements (atom {}))
+
+(dispatch/react-to #{:started-torrent} (fn [_ torrent]
+  (let [element (torrent-row torrent)
+        file (@files (@torrent :pretty-info-hash))]
+    ; Render the torrent row and add it to the atom
+    (swap! elements (partial merge-with concat) {(@torrent :pretty-info-hash) [element]})
+    (append $torrents element)
+  )))
 
 (defpartial torrent-file-badge [content]
   [:span.label (.-name content)])
 
-(defpartial torrent-row [content]
+(defn bound-class 
+  "Given a func that returns boolean display a css class"
+  [torrent func class-name & [negative-class-name]]
+  (letfn [(which-class [torrent]
+            (if (func torrent)
+              class-name
+              negative-class-name))]
+    (bound torrent which-class)))
+
+(defn download-percent [torrent]
+  (str "50%"))
+
+(defn total-length-to-string [{:keys [total-length]}]
+  (string/lower-case (numBytesToString total-length)))
+
+(defn time-remaining-to-string [torrent]
+  "∞"
+  ; (if (paused? torrent)
+  ;   "∞"
+  ;   (let [; The number of seconds remaining
+  ;         seconds (/ (torrent :total-length) (* 700 1000))]
+  ;     seconds))
+)
+
+(defn torrent-speed-to-string [torrent]
+  "700kb/s"
+  )
+
+(defpartial torrent-row [torrent]
   [:tr
-    [:td.flex3 (content :name)]
-    [:td.flex1.size (content :size)]
+    [:td.flex3 (@torrent :name)]
+    [:td.flex1.size (total-length-to-string @torrent)]
     [:td.flex5
-      [:div.progress.progress-striped.active
-        [:div.bar]
-        [:label.label "about one hour remaining"]
+      [:div {:class (bound-class torrent active? 
+                      "progress progress-striped active"
+                      "progress progress-striped")}
+        [:div.bar {:style {:width (bound torrent download-percent)}}]
+        [:label {:class (bound-class torrent active? "label" "label hide")} 
+          (bound torrent time-remaining-to-string)]
       ]]
-    [:td.flex1.speed "700" [:small "kb/s"]]
+    [:td.flex1.speed (bound torrent torrent-speed-to-string)]
     [:td.actions
       [:div.btn-group
-        [:button.btn [:i.icon-folder-open]]
-        [:button.btn [:i.icon-pause]]
+        [:button {:class (bound-class torrent completed? "btn" "btn hide")}
+          [:i.icon-folder-open]]
+        [:button.btn 
+          [:i {:class (bound-class torrent active? "icon-pause" "icon-play")}]]
         [:button.btn [:i.icon-trash]]
       ]]])
 
-; (def downloading? [torrent]
-;   (contains? [:downloading :downloading-paused (state/current torrent)]))
 
-; (def finished? [torrent]
-;   (contains? [:finished :finished-paused (state/current torrent)]))
+(defn active? [torrent]
+  "Take either a collection or atom and return it's active status"
+  (if-not (coll? torrent)
+    (active? @torrent)
+    (= :processed (torrent :status))))
 
-; When a torrent changes status or is added update the counts
-; (add-watch torrents nil (fn [_ _ old-torrents new-torrents]
-;   (letfn [(count-type [type value]
-;             (count (filter type value)))
-;           (count-value [values]
-;             (map count-type [downloading? finished?] values))
-;           (compare-count [type]
-;             (apply - (map #(count-type type %1) [old-torrents new-torrents])))]
-;   (let [[new-downloading, new-finished] (count-value new-torrents)
-;         [diff-downloading, diff-finished] (compare-count )]
-;     (text ($ :downloading-badge) finished)
-;     (text ($ :finished-badge) finished)
-;     (when (pos? diff-downloading)
-;       ())
-;     )))
+(def paused? (complement active?))
 
-;(defn tab-machine []
-  ; (let [me (machine {:label :tab-machine :current :downloading})]
+(defn downloading? [torrent]
+  "Take a collection or atom and determin if the torrent has finished"
+  (if-not (coll? torrent)
+    (downloading? @torrent)
+    (< (torrent :size) (torrent :total-length))))
 
-  ;   ; When a torrent finished automatically show the finished tab
-  ;   (dispatch/react-to #{:finished-torrent} (fn [_ _]
-  ;     (state/set! me :finished)))
+(def completed? (complement downloading?))
 
-  ;   (defstate me :downloading
-  ;     (in []
-  ;       ; hide all finished (finished, finished-paused)
-  ;       (hide ($ "[.^=finished]" $torrents))
-  ;       ; show all downloading (downloading, downloading-paused)
-  ;       (show ($ "[.^=downloading]" $torrents))
-  ;       (tab ($ :downloading-tab $torrents) "show")))
+(dispatch/react-to #{:started-torrent :completed-torrent :stopped-torrent 
+                     :paused-torrent :resumed-torrent} (fn [_ torrent]
+  (let [; Only show splings that are not paused
+        torrents (filter active? @torrents)
+        ; Count the splings downloading (file size less than target size)
+        downloading (count (filter downloading? torrents))
+        ; If it's active and downloading
+        completed (- (count torrents) downloading)]
+  (text ($ "#downloading-count") downloading)
+  (text ($ "#completed-count") completed))))
 
-  ;   (defstate me :finished
-  ;     (in []
-  ;       (hide ($ "[.^=downloading]" $torrents))
-  ;       (show ($ "[.^=finished]" $torrents))
-  ;       (tab ($ :finished-tab $torrents) "show")))
+(defn tab-machine []
+  (let [me (machine {:label :tab-machine :current :downloading})]
 
-  ;   ))
+    ; When a torrent finished automatically show the finished tab
+    (dispatch/react-to #{:completed-torrent} (fn [_ _]
+      (state/set me :completed)))
 
-;;************************************************
-;; Client notifications
-;;************************************************
+    (on ($ "#downloading-tab") :click (fn [_]
+      (state/set me :downloading)))
 
-; (def webkit-notifications (.-webkitNotifications js/window))
+    (on ($ "#completed-tab") :click (fn [_]
+      (state/set me :completed)))
 
+    (defstate me :downloading
+      (in []
+        (empty $torrents)
+        (let [torrents (filter downloading? @torrents)
+          
+              elements (map (comp @elements :pretty-info-hash deref) torrents)]
+          (append $torrents elements))
+        (tab ($ "#downloading-tab") "show")))
+
+    (defstate me :completed
+      (in []
+        (empty $torrents)
+        (let [torrents (filter completed? @torrents)
+              elements (map (comp @elements :pretty-info-hash deref) torrents)]
+          (append $torrents elements))
+        (tab ($ "#completed-tab") "show")))
+
+    ))
+
+(tab-machine)
+
+;************************************************
+; Client notifications
+;************************************************
 
 ; TODO add options page with a "show notifications box"
 
@@ -204,7 +276,7 @@
 ;     (.requestPermission webkit-notifications))))
 
 ; ; When a torrent completes, try to inform the user
-; (dispatch/react-to #{:finished-torrent} (fn [_ torrent]
+; (dispatch/react-to #{:completed-torrent} (fn [_ torrent]
 ;   ; If the user is currently on the site don't show the notification
 ;   (if-not (.hasFocus js/document)
 ;     (.createNotification webkit-notifications

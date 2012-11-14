@@ -38,9 +38,17 @@
 
   )
 
-(defn bitfield [length]
-  (let [byte-array (js/Uint8Array. length)]
-    (Bitfield. byte-array)))
+(defn bitfield [bits]
+  (if (integer? bits)
+    ; Create a new bitfield, given the number
+    ; of bits in it
+    (let [length (Math/ceil (/ bits 8))
+          byte-array (js/Uint8Array. length)]
+      (Bitfield. byte-array))
+    ; Construct a bitfield from an existing one
+    ; (recieved from peer)
+    (let [byte-array (js/Uint8Array. bits)]
+      (Bitfield. byte-array))))
 
 (defn bitfield-unique [bitfield1 bitfield2]
   ; Calculate the difference in pieces between the bitfields

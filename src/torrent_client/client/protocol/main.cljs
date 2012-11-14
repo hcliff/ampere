@@ -1,7 +1,7 @@
 (ns torrent-client.client.protocol.main)
 
 (defprotocol Protocol
-  (watch-connection [client] "Start listening to the connection for data")
+  (watch-channel [client] "Start listening to the channel for data")
   (send-data [client data] [client type data] "")
   (send-handshake [client] "")
   (send-choke [client] "")

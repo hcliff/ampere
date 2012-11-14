@@ -14,7 +14,9 @@
                 [:link {:href "favicon.ico" :rel "shortcut-icon" :type "image/x-icon"}]
                 (include-css "/css/bootstrap.css")
                 (include-js "js/jquery.js" "/js/less.js" "/js/underscore.js" "js/humane.js"
-                  "js/bootstrap/bootstrap-modal.js" "http://js.pusher.com/1.12/pusher.min.js")
+                  "js/bootstrap/bootstrap-modal.js" "js/bootstrap/bootstrap-tab.js"
+                  "http://js.pusher.com/1.12/pusher.min.js" "js/idb_filesystem.js"
+                  "js/datachannel.js")
               ]
               [:body
                 [:div#create-modal.modal.hide
@@ -53,8 +55,28 @@
                       ]]]
                   [:div.modal-footer
                     [:a.btn {:data-dismiss "modal"} "close"]
-                    (submit-button {:class "btn btn-primary" :form "create-form"} "create")]
+                    (submit-button {:class "btn btn-primary" :form "add-form"} "create")]
                   ]
+
+                [:div#seed-modal.modal.hide
+                  [:div.modal-header
+                    [:h3 "Seed a torrent"]
+                    [:button.close {:type "button" :data-dismiss "modal"}]]
+                  [:form#seed-form.modal-body.form-horizontal
+                    [:div.control-group
+                      (label {:class "control-label"} "metainfo" ".torrent")
+                      [:div.controls (file-upload "metainfo")]]
+                    [:div.control-group
+                      (label {:class "control-label"} "files" ".torrent")
+                      [:div.controls (file-upload "files")]]]
+                  [:div.modal-footer
+                    [:a.btn {:data-dismiss "modal"} "close"]
+                    (submit-button {:class "btn btn-primary" :form "seed-form"} "create")]
+                  ]
+
+
+
+
                 [:div.navbar.navbar-fixed-top
                   [:div.navbar-inner
                     [:div.container-fluid
@@ -66,28 +88,32 @@
                               "Add Torrent")]
                           [:li
                             (link-to {:role "button" :data-toggle "modal"} "#create-modal" 
-                              "Create Torrent")]]]
+                              "Create Torrent")]
+                          [:li
+                            (link-to {:role "button" :data-toggle "modal"} "#seed-modal" 
+                              "Seed Torrent")]]]
                   ]]]
                 [:div.container-fluid
                   [:div.row-fluid
                     [:ul.nav.nav-tabs
                       [:li.active 
-                        [:a {:data-toggle "tab"}
+                        [:a#downloading-tab {:data-toggle "tab"}
                           "Downloading " [:span#downloading-count.badge "0"]]]
                       [:li
-                        [:a {:data-toggle "tab"}
-                          "Finished " [:span#finished-count.badge "0"]]]
+                        [:a#completed-tab {:data-toggle "tab"}
+                          "Completed " [:span#completed-count.badge "0"]]]
                       ]
                     [:div.tab-content
-                      [:div#home.tab-pane-active
+                      [:div#hom.tab-pane-active
                         [:table.table.table-striped.body
                           [:thead
-                            [:th.flex3 "Name"]
-                            [:th.flex1.size "Size"]
-                            [:th.flex5 "Progress"]
-                            [:th.flex1.speed "Speed"]
-                            [:th.actions ""]
-                            ]
+                            [:tr
+                              [:th.flex3 "Name"]
+                              [:th.flex1.size "Size"]
+                              [:th.flex5 "Progress"]
+                              [:th.flex1.speed "Speed"]
+                              [:th.actions ""]
+                            ]]
                           [:tbody]
                         ]]]]]
                 (cljs/include-scripts)

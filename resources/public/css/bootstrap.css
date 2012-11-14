@@ -4191,6 +4191,7 @@ body {
   height: 50px;
   line-height: 34px;
   margin-left: 0 !important;
+  box-sizing: border-box;
 }
 table tr:last-child td {
   border-bottom: 1px solid #DDD;
@@ -4225,14 +4226,15 @@ tr {
   display: -webkit-box;
   display: -moz-box;
   display: box;
+}
+tr {
   width: 100%;
 }
-.table td.actions,
-.table th.actions {
+.table .actions {
   width: 100px;
+  display: block;
 }
-.table td.actions > div,
-.table th.actions > div {
+.table .actions > div {
   float: right;
 }
 .flex12 {

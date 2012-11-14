@@ -2,6 +2,7 @@
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.core.db :as db]
+    [torrent-client.client.bitfield :as bitfield]
     [filesystem.filesystem :as filesystem]
     [filesystem.entry :as entry]
     [goog.crypt :as crypt]
@@ -13,7 +14,6 @@
     [torrent-client.client.core.url :only [http-scheme?]]
     [torrent-client.client.core.bencode :only [encode decode uint8-array push-back-reader]]
     [torrent-client.client.core.crypt :only [sha1]]
-    [torrent-client.client.bitfield :only [bitfield]]
     [torrent-client.client.storage :only [connection]]
     [torrent-client.client.pieces :only [files]]
     )
@@ -57,7 +57,9 @@
             pieces-length (count pieces-hash)
             ; number of bytes in each piece (integer)
             piece-length (info "piece length")
-            bitfield (bitfield pieces-length)
+            ; A bitfield representing the pieces
+            ; each bit represents a piece
+            bitfield (bitfield/bitfield pieces-length)
 
             ; Build an array of the announce list
             ; metadata announce-list may not exist
@@ -81,6 +83,7 @@
          :pretty-info-hash pretty-info-hash
          :encoding (metadata "encoding")
          :pieces-hash pieces-hash
+         :pieces-length pieces-length
          :piece-length piece-length
          :bitfield bitfield
          :announce-list (filter http-scheme? announce-list)
@@ -99,7 +102,6 @@
   (async [success-callback]
     (let-async [entry (entry/get-file fs path {:create true})
                 writer (entry/create-writer entry)]
-      (.log js/console )
       (set! (.-onwriteend writer) #(success-callback entry))
       ; If we have no data for this file immidiately write it
       (if (nil? data)
@@ -127,12 +129,11 @@
     ; so this is non-blocking
     ; Read (and potentially write) the files associated with the torrent
     ; and return a handler to them
-
     (doseq [file (@torrent :files)
             ; If given the actual file, provide the contents
-            :let [entry (first (filter #(= (:name %) (:path file)) files))]]
+            :let [entry (first (filter #(= (.-name %) (:path file)) files))]]
       (let-async [file-entry (write-input-to-file fs (:path file) entry)]
-        (dispatch/fire :add-file [torrent file-entry])
+        (dispatch/fire :add-file [torrent file-entry file])
         (success-callback file-entry)))
   ))
 
@@ -152,11 +153,13 @@
 
     (defevent me :read-metainfo-file [file]
       "Given a .torrent turn it into a hashmap of data"
+      (.log js/console "read-metainfo-file")
       (read-metainfo-file file #(state/trigger me :add-metainfo %)))
 
     (defevent me :add-metainfo [metainfo]
       "Given a hashmap of torrent data add it to the internal atom"
       (swap! torrent conj metainfo)
+      (.log js/console "alive....")
       (state/set me :has-metainfo))
 
     (defevent me :add-files [files]
@@ -186,7 +189,12 @@
     (defstate me :has-files
       "Once the files are checked/created move to ready"
       (in []
-        (state/set me :ready)))
+        ; Fill up the array buffer as we have all the pieces
+        (dotimes [n (quot (@torrent :pieces-length) 8)]
+          (aset (bitfield/byte-array (@torrent :bitfield)) n 255))
+        (.log js/console "bitfield woo" (@torrent :bitfield))
+        (state/set me :ready)
+        ))
 
     (defstate me :ready
       (in []
@@ -214,7 +222,6 @@
 ; When a torrent is loaded from the db
 (dispatch/react-to #{:add-metainfo-object} (fn [_ metainfo]
   (let [torrent (torrent-machine metainfo nil [])]
-    (.log js/console "LOADED FROM DB!")
     )))
 
 ; When the add-torrent form is submitted generate a new torrent-machine
@@ -233,7 +240,9 @@
     )))
 
 ; When I'm testing...
-(dispatch/react-to #{:add-metainfo-file-and-files} (fn [_ [file files]]
-  (let [torrent (torrent-machine {} file files)]
+(dispatch/react-to #{:add-metainfo-file-and-files} (fn [_ [metainfo-file files]]
+  (.log js/console "whaa")
+  (let [torrent (torrent-machine {} metainfo-file files)]
+    (.log js/console "torrent-machine"))
 
-    )))
+  ))

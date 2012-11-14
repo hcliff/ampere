@@ -1,7 +1,15 @@
-(ns torrent-client.jayq.core)
+(ns torrent-client.jayq.core
+  (:use [jayq.util :only [clj->js]]))
+
+(defn append [$elem content]
+  (if (sequential? content)
+    ; TODO: Should be able to apply .append?
+    (doseq [string content]
+      (append $elem string))
+    (.append $elem content)))
 
 (defn input-files [$elem]
-	"Returns a vector of files for a given input"
+  "Returns a vector of files for a given input"
   (filelist-files (first $elem)))
 
 (defn event-files 
@@ -11,14 +19,14 @@
   (filelist-files (-> event .getBrowserEvent .-dataTransfer)))
 
 (defn filelist-files [filelist]
-	(let [filelist (.-files filelist)]
-		(vec (for [k (js-keys filelist)
-				       :let [value (aget filelist k)]
-				       :when (identical? (type value) js/File)] 
-			value))))
+  (let [filelist (.-files filelist)]
+    (vec (for [k (js-keys filelist)
+               :let [value (aget filelist k)]
+               :when (identical? (type value) js/File)] 
+      value))))
 
 (defn modal [$elem params]
-	(.modal $elem params))
+  (.modal $elem params))
 
 (defn tab [$elem params]
-	(.tab $elem params))
+  (.tab $elem params))

@@ -8,7 +8,7 @@
 ; 30 seconds
 (def optimistic-unchoke-period (* 30 1000))
 
-; how many peers should we downlaod from at once
+; how many peers should we download from at once
 (def download-count 4)
 
 (def peers (atom {}))
@@ -16,19 +16,45 @@
 (def unchoked (atom {}))
 
 ; Optimistically unchoke a torrent periodically
-(dispatch/react-to #{:add-torrent} (fn [torrent]
+(dispatch/react-to #{:started-torrent} (fn [torrent]
   (let [timer (goog/Timer. optimistic-unchoke-period)]
     (.start timer)
     (events/listen timer Timer/TICK #(unoptimistic (@torrent :pretty-info-hash)))
     (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
   )))
 
-(dispatch/react-to #{:add-channel} (fn [_ [torrent channel]]
-  "A new connection has been established" 
-  (let [peer (generate-peer torrent channel)]
+(dispatch/react-to #{:stopped-torrent} (fn [torrent]
+  ; Cancel any pieces in transit
+  (doseq [peer (@peers (torrent :info-hash))]
+    (trigger peer :cancel))
+  ; Remove all of our peers
+  (swap! peers dissoc (torrent :info-hash))))
+
+(dispatch/react-to #{:completed-torrent} (fn [torrent]
+  (doseq [peer (@peers (torrent :info-hash))]
+    (trigger peer :cancel))
+  ; TODO: rework unchoke algorithm upon completion
+  ; TODO: do we change our interested status?
+  ))
+
+(dispatch/react-to #{:paused-torrent} (fn [torrent]
+  ; TODO: cancel current pieces?
+  ; TODO: do we change our interested status?
+  ; TODO: pause timer
+  ))
+
+(dispatch/react-to #{:add-channel} (fn [_ [torrent channel peer-data]]
+  "A new channel has been established to get torrent data" 
+  (let [peer (generate-peer torrent channel peer-id)]
     ; add the peer to the list of peers for this torrent
     (swap! peers (partial merge-with concat) {(@torrent :pretty-info-hash) [peer]}))
   ))
+
+(dispatch/react-to #{:add-block} (fn [_ [torrent block]]
+  "When a peer sends us a block we didn't have before"
+  ; Inform all our peers we have it
+  (doseq [peer (@peers (torrent :info-hash))]
+    (trigger peer :add-block block))))
 
 ; listen for changes in the peers interest
 (dispatch/react-to #{:receive-interested :receive-not-interested} (fn [_ torrent]

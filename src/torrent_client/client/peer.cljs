@@ -7,31 +7,31 @@
   (:require
     [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.protocol.main :as protocol]
-    [torrent-client.client.connection.main :as connection]
     [waltz.state :as state])
   (:use-macros [waltz.macros :only [in out defstate defevent]])
   )
 
 (defn peer-machine
-  "A state machine for managing the connection status with the peer
-  this oversees the connection process and the subsequent connection
+  "A state machine for managing the channel with the peer
+  this oversees the channel process and the subsequent channel
   management"
-  [torrent connection]
+  [torrent channel peer-data]
 
   (let [me (machine {:label :peer-machine :current :init})
-        peer-data (atom {:peer-id (connection/peer-id connection)
+        peer-data (atom (merge peer-data {
                          ; Is this client choking the peer,
                          :choking true 
                          ; Is peer interested in this client
-                         :interested false})
-        bitorrent-client (generate-protocol torrent connection me)]
+                         :interested false}))
+        bitorrent-client (generate-protocol torrent channel me)]
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
       peer-id and the torrent info-hash"
+      (.log js/console "recieve handshake" (@peer-data :peer-id) peer-id)
       (if (and (= (vec (@torrent :info-hash)) info-hash)
                (= (@peer-data :peer-id) peer-id))
-        (transition me :init :handshaken)))
+        (state/set me :handshaken)))
 
     (defevent me :receive-choke []
       (transition :not-choked-not-interested :choked-not-interested)
@@ -99,8 +99,10 @@
     ; remember the bitfield is optional, not all clients will send it
     (defstate me :handshaken
       (in []
-        (state/set me :choked-not-interested)
-        (protocol/send-bitfield bitorrent-client)))
+        (do
+          (state/set me :choked-not-interested)
+          (.log js/console "received bitfield")
+          (protocol/send-bitfield bitorrent-client))))
 
     (defstate me :choked-not-interested
       (in [] (protocol/send-not-interested bitorrent-client)))
@@ -124,6 +126,6 @@
 ))
 
 (defn generate-peer
-  "Given a connection create a bittorrent peer and track the state"
-  [torrent connection]
-  (peer-machine torrent connection))
+  "Given a channel create a bittorrent peer and track the state"
+  [torrent channel peer-data]
+  (peer-machine torrent channel peer-data))
