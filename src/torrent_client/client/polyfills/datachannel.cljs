@@ -13,6 +13,31 @@
 
 (js/DCPF_install "wss://datachannel-polyfill.nodejitsu.com")
 
+(defprotocol RTCPeerConnection
+  (local-id [this] "Returns a unique id for this connections local desc")
+  (remote-id [this] "Returns a unique id for this connections local desc")
+  (set-local-description [this description])
+  (set-remote-description [this description])
+  )
+
+(extend-type prefix/RTCPeerConnection
+  RTCPeerConnection
+  (local-id [this]
+    (re-matches #"/^o=.+/gm" (.-localDescription this))
+    )
+
+  (remote-id [this]
+    (re-matches #"/^o=.+/gm" (.-remoteDescription this))
+    )
+
+  (set-local-description [this description]
+    (.setLocalDescription this description))
+
+  (set-remote-description [this description]
+    (.setRemoteDescription this description))
+
+  )
+
 ; (def pusher (atom nil))
 
 ; (dispatch/react-to #{:document-ready} (fn []

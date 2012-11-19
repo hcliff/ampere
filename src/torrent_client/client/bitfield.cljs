@@ -2,13 +2,12 @@
 
 (defprotocol BitfieldProtocol
   (get [bitfield index] "Return if a piece exists within the bitfield")
-  (set! [bitfield index val] "Set a piece within the bitfield")
   (byte-array [bitfield] "Returns the internal byte-array")
   )
 
 (deftype Bitfield [byte-array]
-  BitfieldProtocol
 
+  BitfieldProtocol
   (get [bitfield index]
     (let [; What byte does this position pack into
           byte-index (bit-shift-right index 3)
@@ -19,22 +18,23 @@
       ; it must be a 0 and thus not downloaded
       (not= (bit-and byte index-bit) 0))
 
-  (set! [bitfield index val]
-    (let [byte-index (bit-shift-right index 3)
-          byte (aget byte-array byte-index)
-          piece-bit (bit-shift-left 1 (mod index 8))]
-      (if val
-        ; If we have the piece add it to the byte
-        (aset byte-array byte-index (bit-and byte piece-bit))
-        ; Otherwise remove it
-        (aset byte-array byte-index (bit-xor byte piece-bit)))
-    ))
-
   (byte-array [bitfield]
     byte-array)
 
   IFn
   (-invoke [bitfield] byte-array)
+
+  IAssociative
+  (-assoc [coll k v]
+    (let [byte-index (bit-shift-right k 3)
+          byte (aget byte-array byte-index)
+          piece-bit (bit-shift-left 1 (mod k 8))]
+      (if v
+        ; If we have the piece add it to the byte
+        (aset byte-array byte-index (bit-or byte piece-bit))
+        ; Otherwise remove it
+        (aset byte-array byte-index (bit-xor byte piece-bit)))
+    ))
 
   )
 
@@ -49,6 +49,18 @@
     ; (recieved from peer)
     (let [byte-array (js/Uint8Array. bits)]
       (Bitfield. byte-array))))
+
+(defn fill-bitfield 
+  "Given a bitfield mark that we have all the pieces"
+  [bitfield pieces-length]
+  (let [full-bytes (quot pieces-length 8)
+        represented-bits (* full-bytes 8)]
+    ; The last bitfield byte may be partial 
+    (dotimes [n full-bytes]
+      (aset (byte-array bitfield) n 255))
+    (doseq [n (range represented-bits pieces-length)]
+      (assoc bitfield n true))
+    bitfield))
 
 (defn bitfield-unique [bitfield1 bitfield2]
   ; Calculate the difference in pieces between the bitfields

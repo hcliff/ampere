@@ -134,8 +134,11 @@ function DCPF_install(ws_url)
     var self = this
 
     var channel = createDataChannel(this, configuration)
+    console.log('your channel is created', channel)
         channel._udt.onopen = function()
         {
+
+          console.log('your channel is open')
           // Wait until the other end of the channel is ready
           channel._udt.onmessage = function(message)
           {
@@ -148,6 +151,7 @@ function DCPF_install(ws_url)
               // Set onmessage event to bypass messages to user defined function
               channel._udt.onmessage = function(message)
               {
+                console.log('udt', message, channel)
                 if(channel.onmessage)
                   channel.onmessage(message)
               }
@@ -179,6 +183,7 @@ function DCPF_install(ws_url)
             // Set onmessage event to bypass messages to user defined function
             channel._udt.onmessage = function(message)
             {
+              console.log('udt', message, channel)
               if(channel.onmessage)
                 channel.onmessage(message)
             }
@@ -191,7 +196,6 @@ function DCPF_install(ws_url)
             var evt = document.createEvent('Event')
                 evt.initEvent('datachannel', true, true)
                 evt.channel = channel
-
             if(pc.ondatachannel)
                 pc.ondatachannel(evt);
         }

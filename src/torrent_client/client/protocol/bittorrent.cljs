@@ -54,9 +54,10 @@
 
 (defmulti receive-data (fn [peer data] (char (first data))))
 
-(defmethod receive-data msg-choke [p _]   
+(defmethod receive-data msg-choke [p _]
   (trigger p :receive-choke))
-(defmethod receive-data msg-unchoke [p _] 
+(defmethod receive-data msg-unchoke [p _]
+  (.log js/console "msg-unchoke")
   (trigger p :receive-unchoke))
 
 (defmethod receive-data msg-interested [p _]
@@ -84,7 +85,7 @@
   (let [[index begin length] (crypt/unpack [:int :int :int] (rest data))]
     (trigger p :receive-cancel index begin length)))
 
-(defmethod receive-data msg-handshake [p data]
+(defmethod receive-data :default [p data]
   (let [info-hash (vec (subarray data 28 48))
         peer-id (crypt/byteArrayToString (vec (subarray data 48 68)))]
     (trigger p :receive-handshake info-hash peer-id)))
@@ -99,8 +100,8 @@
 
   (watch-channel [client]
     "Watch a datachannel for incoming data"
-    (set! (.-message channel) (fn [event]
-      (recieve-data peer (.-data event)))))
+    (set! (.-onmessage channel) (fn [event]
+      (receive-data peer (crypt/str-to-uint8-array (.-data event))))))
 
   (send-data [client string]
     (.send channel string))
@@ -116,7 +117,6 @@
           reserved (crypt/byteArrayToString [00 00 00 00 00 00 00 00])
           info-hash (crypt/byteArrayToString (@torrent :info-hash))
           data (str protocol-name reserved info-hash @peer-id)]
-      (.log js/console "about to send")
       (protocol/send-data client msg-handshake data)))
 
   (send-choke [client]

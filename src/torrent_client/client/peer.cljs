@@ -14,16 +14,22 @@
 (defn peer-machine
   "A state machine for managing the channel with the peer
   this oversees the channel process and the subsequent channel
-  management"
-  [torrent channel peer-data]
+  management
+  Hanshake indicates if this peer should begin the handshake"
+  [torrent channel peer-data handshake]
 
   (let [me (machine {:label :peer-machine :current :init})
+        bittorrent-client (generate-protocol torrent channel me)
         peer-data (atom (merge peer-data {
                          ; Is this client choking the peer,
                          :choking true 
                          ; Is peer interested in this client
-                         :interested false}))
-        bitorrent-client (generate-protocol torrent channel me)]
+                         :interested false}))]
+
+    (dispatch/react-to #{[:choke-peer (@peer-data :peer-id)]} 
+      #(state/trigger me :choke-peer))
+    (dispatch/react-to #{[:unchoke-peer (@peer-data :peer-id)]} 
+      #(state/trigger me :unchoke-peer))
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
@@ -34,12 +40,12 @@
         (state/set me :handshaken)))
 
     (defevent me :receive-choke []
-      (transition :not-choked-not-interested :choked-not-interested)
-      (transition :not-choked-interested :choked-interested))
+      (transition me :not-choked-not-interested :choked-not-interested)
+      (transition me :not-choked-interested :choked-interested))
 
     (defevent me :receive-unchoke []
-      (transition :choked-not-interested :not-choked-not-interested)
-      (transition :choked-interested :not-choked-interested))
+      (transition me :choked-not-interested :not-choked-not-interested)
+      (transition me :choked-interested :not-choked-interested))
 
     (defevent me :receive-interested []
       (swap! peer-data assoc :interested true)
@@ -54,14 +60,13 @@
       (bitfield/set! (@peer-data :bitfield) index true)
       ; Check the peer has pieces that we need
       (if (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield))
-        (transition :not-choked-not-interested :not-choked-interested)
-        (transition :choked-not-interested :choked-interested)))
+        (transition me :not-choked-not-interested :not-choked-interested)
+        (transition me :choked-not-interested :choked-interested)))
 
     (defevent me :receive-bitfield [bitfield]
       "The client has sent us a valid bitfield detailing the
       pieces of the torrent they have"
       (swap! peer-data assoc :bitfield bitfield)
-      (.log js/console "bitfield" (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield)))
       (if (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield))
         (state/set me :choked-interested)
         (state/set me :choked-not-interested)))
@@ -72,14 +77,14 @@
       (if-not (@peer-data :choked)
         (if (bitfield/get (@peer-data :bitfield) index)
           (if-let [data (get-piece (torrent :files) index)]
-            (protocol/send-piece index data)))))
+            (protocol/send-piece bittorrent-client index data)))))
 
     (defevent me :receive-piece [piece]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
       (state/trigger torrent :receive-piece piece)
       (if (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield))
-        (protocol/send-request (get-next-piece torrent))))
+        (protocol/send-request bittorrent-client (get-next-piece torrent))))
 
     (defevent me :receive-cancel [index begin length]
 
@@ -87,11 +92,12 @@
 
     (defevent me :choke-peer []
       (swap! peer-data assoc :choked true)
-      (protocol/send-unchoke bitorrent-client))
+      (protocol/send-unchoke bittorrent-client))
 
     (defevent me :unchoke-peer []
+      (.log js/console "UNCHOKE BITCH" peer-data)
       (swap! peer-data assoc :choked false)
-      (protocol/send-unchoke bitorrent-client))
+      (protocol/send-unchoke bittorrent-client))
 
     (defstate me :init)
 
@@ -101,31 +107,33 @@
       (in []
         (do
           (state/set me :choked-not-interested)
-          (.log js/console "received bitfield")
-          (protocol/send-bitfield bitorrent-client))))
+          (protocol/send-bitfield bittorrent-client))))
 
     (defstate me :choked-not-interested
-      (in [] (protocol/send-not-interested bitorrent-client)))
+      (in [] (protocol/send-not-interested bittorrent-client)))
 
     (defstate me :choked-interested
-      (in [] (protocol/send-interested bitorrent-client)))
+      (in [] (protocol/send-interested bittorrent-client)))
 
     (defstate me :not-choked-not-interested
-      (in [] (protocol/send-not-interested bitorrent-client)))
+      (in [] (protocol/send-not-interested bittorrent-client)))
 
     ; This is when downloading actually occurs
     (defstate me :not-choked-interested 
       (in []
-        (protocol/send-interested bitorrent-client)
-        (protocol/send-request bitorrent-client (get-next-piece torrent))))
+        (protocol/send-interested bittorrent-client)
+        (protocol/send-request bittorrent-client (get-next-piece torrent))))
 
-    ; Immediately handshake with the peer
-    ; consider this the (in) of init
-    (protocol/send-handshake bitorrent-client)
+    ; Handshake if this is the first client
+    (when handshake
+      (protocol/send-handshake bittorrent-client))
+
+    ; Return some info on the peer
+    peer-data
 
 ))
 
 (defn generate-peer
   "Given a channel create a bittorrent peer and track the state"
-  [torrent channel peer-data]
-  (peer-machine torrent channel peer-data))
+  [torrent channel peer-id handshake]
+  (peer-machine torrent channel {:peer-id peer-id} handshake))

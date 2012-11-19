@@ -189,12 +189,9 @@
     (defstate me :has-files
       "Once the files are checked/created move to ready"
       (in []
-        ; Fill up the array buffer as we have all the pieces
-        (dotimes [n (quot (@torrent :pieces-length) 8)]
-          (aset (bitfield/byte-array (@torrent :bitfield)) n 255))
-        (.log js/console "bitfield woo" (@torrent :bitfield))
-        (state/set me :ready)
-        ))
+        (when-not (zero? (count file-entries))
+          (bitfield/fill-bitfield (@torrent :bitfield) (@torrent :pieces-length)))
+        (state/set me :ready)))
 
     (defstate me :ready
       (in []
@@ -214,10 +211,6 @@
 ; or you say, here is an existing torrent hashmap, use it.
 ; ergo: file restore doesn't do read-torrent-file
 ; file create *does*
-
-; (dispatch/react-to #{:started-torrent} (fn [_ torrent]
-;       (.log js/console "start torrent" torrent)
-;       ))
 
 ; When a torrent is loaded from the db
 (dispatch/react-to #{:add-metainfo-object} (fn [_ metainfo]
@@ -241,7 +234,6 @@
 
 ; When I'm testing...
 (dispatch/react-to #{:add-metainfo-file-and-files} (fn [_ [metainfo-file files]]
-  (.log js/console "whaa")
   (let [torrent (torrent-machine {} metainfo-file files)]
     (.log js/console "torrent-machine"))
 

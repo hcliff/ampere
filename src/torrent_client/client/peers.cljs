@@ -1,12 +1,15 @@
 (ns torrent-client.client.peers
-  (:use [torrent-client.client.peer :only [generate-peer]])
+  (:use 
+    [torrent-client.client.main :only [torrents]]
+    [torrent-client.client.peer :only [generate-peer]]
+    [waltz.state :only [trigger]])
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
     [goog.Timer :as Timer]
     [goog.events :as events]))
 
 ; 30 seconds
-(def optimistic-unchoke-period (* 30 1000))
+(def optimistic-unchoke-period (* 10 1000))
 
 ; how many peers should we download from at once
 (def download-count 4)
@@ -16,10 +19,10 @@
 (def unchoked (atom {}))
 
 ; Optimistically unchoke a torrent periodically
-(dispatch/react-to #{:started-torrent} (fn [torrent]
+(dispatch/react-to #{:started-torrent} (fn [_ torrent]
   (let [timer (goog/Timer. optimistic-unchoke-period)]
     (.start timer)
-    (events/listen timer Timer/TICK #(unoptimistic (@torrent :pretty-info-hash)))
+    ; (events/listen timer Timer/TICK #(unoptimistic (@torrent :pretty-info-hash)))
     (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
   )))
 
@@ -43,12 +46,17 @@
   ; TODO: pause timer
   ))
 
-(dispatch/react-to #{:add-channel} (fn [_ [torrent channel peer-data]]
-  "A new channel has been established to get torrent data" 
-  (let [peer (generate-peer torrent channel peer-id)]
+(dispatch/react-to #{:add-channel} (fn [_ [peer-id channel & flags]]
+  "A new channel has been established to get torrent data"
+  (let [; If this peer is initiating the handshake
+        handshake (contains? (set flags) :handshake)
+        ; Find the torrent this channel is for
+        info-hash (.-label channel)
+        torrent (@torrents info-hash)
+        peer (generate-peer torrent channel peer-id handshake)]
     ; add the peer to the list of peers for this torrent
-    (swap! peers (partial merge-with concat) {(@torrent :pretty-info-hash) [peer]}))
-  ))
+    (.log js/console "peer" peer)
+    (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
 (dispatch/react-to #{:add-block} (fn [_ [torrent block]]
   "When a peer sends us a block we didn't have before"
@@ -64,20 +72,21 @@
   "Update the currently unchoked peers, choking & unchoking peers where 
   appropriate"
   [info-hash]
-  (let [peers (order-by (juxt :optimistic :interested :upload) (peers info-hash))
+  (let [peers (sort-by (comp (juxt :optimistic :interested :upload) deref) 
+                        (@peers info-hash))
+        first-peer-status ((juxt :optimistic :interested) (deref (first peers)))
         ; is the first peer is optimistically unchoked but not interested
-        optimistic-uninterested (= [true false] 
-                                   ((juxt :optimistic :interested) (first peers)))
+        optimistic-uninterested (= [true false] first-peer-status)
         ; if the optimisticly unchoked peer isn't interested allow 5 active peers
         ; otherwise just have the 4 active peers
         active (subvec peers 0 (if first-peer-unop 5 4))
         inactive (subvec peers (if first-peer-unop 5 4))]
     ; Unchoke the peers in the top 4 that are currently choked
-    (doseq [peer (filter choked active)]
-      (trigger peer :unchoke))
+    (doseq [peer (filter (comp :choked deref) active)]
+      (dispatch/fire [:unchoke (peer :peer-id)]))
     ; choke inactive peers that are unchoked
-    (doseq [peer (remove :choked inactive)]
-      (trigger peer :choke))
+    (doseq [peer (remove (comp :choked deref) inactive)]
+      (dispatch/fire [:choke (peer :peer-id)]))
     (swap! unchoked assoc info-hash active)))
 
 (defn unoptimistic
@@ -87,13 +96,16 @@
   (let [optimistic (first (filter :optimistic peers))]
     (trigger optimistic :unoptimistic)))
 
-(defn optimistic-unchoke 
+(defn optimistic-unchoke
   "Unchoke a peer regardless of its upload speed"
   [info-hash]
-  (let [random-peer (rand-nth (remove :optimistic 
-          (filter :choked (@peers (torrent :pretty-info-hash)))))]
-    (trigger random-peer :unchoke-peer)
-    (set-unchoked! info-hash)))
+  ; HC: why can't I if-let this?
+  (if (contains? @peers info-hash)
+    (let [eligible-peers (remove (comp :optimistic deref)
+            (filter (comp :choking deref) (@peers info-hash)))
+          random-peer (rand-nth eligible-peers)]
+      (dispatch/fire [:unchoke-peer (@random-peer :peer-id)])
+      (set-unchoked! info-hash))))
 
 (defn change-interested 
   "A peer hash changed its interested status"

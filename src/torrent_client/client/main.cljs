@@ -31,12 +31,13 @@
 ;;************************************************
 
 ; A vector of the torrents currently in use
-(def torrents (atom []))
+; the key is the pretty-info-hash
+(def torrents (atom {}))
 
 ; When a torrent is started, add it to the torrents
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   (.log js/console "Adding to torrents atom" torrent)
-  (swap! torrents conj torrent)))
+  (swap! torrents assoc (@torrent :pretty-info-hash) torrent)))
 
 ; A vector of files currently being used in the create form
 (def create-form-files (atom []))
