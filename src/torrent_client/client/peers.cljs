@@ -82,10 +82,11 @@
         active (subvec peers 0 (if first-peer-unop 5 4))
         inactive (subvec peers (if first-peer-unop 5 4))]
     ; Unchoke the peers in the top 4 that are currently choked
-    (doseq [peer (filter (comp :choked deref) active)]
+    ; H.C (comp :choking deref not working...?)
+    (doseq [peer (filter :choking (map deref active))]
       (dispatch/fire [:unchoke (peer :peer-id)]))
     ; choke inactive peers that are unchoked
-    (doseq [peer (remove (comp :choked deref) inactive)]
+    (doseq [peer (remove :choking (map deref inactive))]
       (dispatch/fire [:choke (peer :peer-id)]))
     (swap! unchoked assoc info-hash active)))
 

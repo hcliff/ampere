@@ -1,6 +1,7 @@
 (ns torrent-client.client.pieces
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
+    [torrent-client.client.bitfield :as bitfield]
     [filesystem.entry :as entry]
     )
   (:use-macros 
@@ -93,12 +94,26 @@
    :block-end   (Math/ceil  (/ (file :pos-end)   (@torrent :piece-length)))})
 
 
-; (defn get-next-piece [torrent peer-bitfield]
-; 	(let [piece (first @need)]
-; 		(swap! need rest)
-; 		(swap! working assoc piece)
-; 		piece
+; H.C update, use a bitwise op to comp our bitfield and the peers
+; then use the indexed to return the index
 
-; 	))
+; TODO: switch this over to rarity based search
+(defn get-next-block
+  "Given a torrent and a peers bitfield, return the index of 
+  the first needed block"
+  [torrent peer-bitfield]
 
-(.log js/console "not last")
+  (let [torrent-bitfield (bitfield/byte-array (@torrent :bitfield))
+        peer-bitfield (bitfield/byte-array peer-bitfield)
+        ; Inverse the bitfield so 1 represents a wanted block
+        ; Find blocks that are wanted and the peer has
+        needed (map bit-and-not peer-bitfield torrent-bitfield)
+        ; Add an index to our vector
+        indexed (map-indexed vec needed)
+        ; Get the first wanted block
+        block (some #(when-not (zero? %2) %) indexed)
+        ]
+    (js* "debugger;")
+    (.log js/console "needed" needed)
+		block
+	))

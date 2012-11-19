@@ -3,6 +3,7 @@
     [torrent-client.client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.client.waltz :only [machine transition]]
     [torrent-client.client.bitfield :only [bitfield-unique]]
+    [torrent-client.client.pieces :only [get-next-block]]
     )
   (:require
     [torrent-client.client.core.dispatch :as dispatch]
@@ -122,7 +123,8 @@
     (defstate me :not-choked-interested 
       (in []
         (protocol/send-interested bittorrent-client)
-        (protocol/send-request bittorrent-client (get-next-piece torrent))))
+        (let [block-index (get-next-block torrent (@peer-data :bitfield))]
+          (protocol/send-request bittorrent-client block-index))))
 
     ; Handshake if this is the first client
     (when handshake
