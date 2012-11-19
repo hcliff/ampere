@@ -70,10 +70,11 @@
     (trigger p :receive-have data)))
 
 (defmethod receive-data msg-bitfield [p data]
-  (trigger p :receive-bitfield (bitfield/bitfield (rest data))))
+  (js* "debugger;")
+  (trigger p :receive-bitfield (bitfield/bitfield (subarray data 1))))
 
 (defmethod receive-data msg-request [p data]
-  (let [[index begin length] (crypt/unpack [:int :int :int] (rest data))]
+  (let [[index begin length] (crypt/unpack [:int :int :int] (subarray data 1))]
     (trigger p :receive-request index begin length)))
 
 (defmethod receive-data msg-piece [p data]
@@ -109,7 +110,10 @@
   (send-data [client type data]
     (if (string? data)
       (protocol/send-data client (str type data))
-      (protocol/send-data client (str type (crypt/byteArrayToString data)))))
+      (do
+        (.log js/console "encoded " (str type (crypt/byteArrayToString data)))
+        (protocol/send-data client (str type (crypt/byteArrayToString data)))))
+    )
 
   (send-handshake [client]
     "Generate a handshake string"
@@ -137,6 +141,7 @@
 
   (send-bitfield [client]
     (let [byte-array (bitfield/byte-array (@torrent :bitfield))]
+      (js* "debugger;")
       (protocol/send-data client msg-bitfield byte-array)))
 
   (send-request [client index begin piece]
@@ -188,7 +193,7 @@
     ([array f]
        (ci-reduce array f))
     ([array f start]
-       (ci-reduce array f start))))
+       (ci-reduce array f start)))
 
   ; IHash
   ; (-hash [this] 
@@ -201,12 +206,13 @@
   ; ISeq
   ; (-first [coll] (aget coll 0))
   ; (-rest [coll] (subarray coll 1))
+  )
 
 (defn subarray 
   ([coll start]
-    (.subarray array start))
+    (.subarray coll start))
   ([coll start finish]
-    (.subarray array start finish)))
+    (.subarray coll start finish)))
 
 (defn generate-protocol [torrent channel peer]
   "Generate an instance of the protocol, and start watching the 

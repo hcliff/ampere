@@ -9,7 +9,7 @@
 (defn transition [sm required states & context]
   "Only transition to var states when the current state
   of state machine (var sm) is the required state (var required)"
-  (when (state/in? sm required)
+  (if (state/in? sm required)
     (state/set sm states context)))
 
 (defn machine [{:keys [label current]}]

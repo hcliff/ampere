@@ -1,4 +1,5 @@
-(ns torrent-client.client.bitfield)
+(ns torrent-client.client.bitfield
+  (:use [jayq.util :only [clj->js]]))
 
 (defprotocol BitfieldProtocol
   (get [bitfield index] "Return if a piece exists within the bitfield")
@@ -6,6 +7,10 @@
   )
 
 (deftype Bitfield [byte-array]
+
+  Object
+  (toString [this]
+    (pr-str byte-array))
 
   BitfieldProtocol
   (get [bitfield index]
@@ -47,8 +52,10 @@
       (Bitfield. byte-array))
     ; Construct a bitfield from an existing one
     ; (recieved from peer)
-    (let [byte-array (js/Uint8Array. bits)]
-      (Bitfield. byte-array))))
+    (do
+      (js* "debugger;")
+      (let [byte-array (js/Uint8Array. bits)]
+        (Bitfield. byte-array)))))
 
 (defn fill-bitfield 
   "Given a bitfield mark that we have all the pieces"

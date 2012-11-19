@@ -125,9 +125,9 @@
   "Given an offer; connect to a peer and add it to our connections list"
   [offer-description peer-id]
   (async [success-callback]
-    (if (contains? @connections :peer-id)
+    (if (contains? @connections peer-id)
       ; If we have allready connected to this peer then return it
-      (success-callback (@connections (peer :peer-id)))
+      (success-callback (@connections peer-id))
       ; Otherwise connect first
       (let [peer-connection (peer-connection-ice)
             offer-description (session-description "offer" offer-description)]
@@ -136,6 +136,7 @@
         ; allow multiple channels to one peer by sniffing the channel label
         (set! (.-ondatachannel peer-connection) (fn [event]
           (let [channel (.-channel event)]
+            (.log js/console "from ondatachannel" peer-id)
             (dispatch/fire :add-channel [peer-id channel]))))
 
         (set-remote-description peer-connection offer-description)

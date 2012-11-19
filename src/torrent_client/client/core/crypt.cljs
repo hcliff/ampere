@@ -4,6 +4,8 @@
     [goog.crypt.Sha1 :as Sha1])
   (:use 
     [torrent-client.client.core.bencode :only [int char]]
+    [torrent-client.client.core.bencode :only 
+      [encode decode uint8-array push-back-reader]]
     [goog.crypt :only [byteArrayToString]]
     [jayq.util :only [clj->js]]))
 
@@ -27,7 +29,6 @@
 
 (defn pack [formatters data]
   (let [reader (push-back-reader [])]
-
     (doseq [format formatters]
       (pack-data format data))
     data))

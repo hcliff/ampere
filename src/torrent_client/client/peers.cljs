@@ -23,7 +23,7 @@
   (let [timer (goog/Timer. optimistic-unchoke-period)]
     (.start timer)
     ; (events/listen timer Timer/TICK #(unoptimistic (@torrent :pretty-info-hash)))
-    (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
+    ; (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
   )))
 
 (dispatch/react-to #{:stopped-torrent} (fn [torrent]
@@ -72,23 +72,24 @@
   "Update the currently unchoked peers, choking & unchoking peers where 
   appropriate"
   [info-hash]
-  (let [peers (sort-by (comp (juxt :optimistic :interested :upload) deref) 
-                        (@peers info-hash))
-        first-peer-status ((juxt :optimistic :interested) (deref (first peers)))
-        ; is the first peer is optimistically unchoked but not interested
-        optimistic-uninterested (= [true false] first-peer-status)
-        ; if the optimisticly unchoked peer isn't interested allow 5 active peers
-        ; otherwise just have the 4 active peers
-        active (subvec peers 0 (if first-peer-unop 5 4))
-        inactive (subvec peers (if first-peer-unop 5 4))]
-    ; Unchoke the peers in the top 4 that are currently choked
-    ; H.C (comp :choking deref not working...?)
-    (doseq [peer (filter :choking (map deref active))]
-      (dispatch/fire [:unchoke (peer :peer-id)]))
-    ; choke inactive peers that are unchoked
-    (doseq [peer (remove :choking (map deref inactive))]
-      (dispatch/fire [:choke (peer :peer-id)]))
-    (swap! unchoked assoc info-hash active)))
+  (if-let [peers (@peers info-hash)]
+    (let [peers (sort-by (comp (juxt :optimistic :interested :upload) deref) 
+                          peers)
+          first-peer-status ((juxt :optimistic :interested) (deref (first peers)))
+          ; is the first peer is optimistically unchoked but not interested
+          optimistic-uninterested (= [true false] first-peer-status)
+          ; if the optimisticly unchoked peer isn't interested allow 5 active peers
+          ; otherwise just have the 4 active peers
+          active (subvec peers 0 (if first-peer-unop 5 4))
+          inactive (subvec peers (if first-peer-unop 5 4))]
+      ; Unchoke the peers in the top 4 that are currently choked
+      ; H.C (comp :choking deref not working...?)
+      ; (doseq [peer (filter :choking (map #(deref %) active))]
+      ;   (dispatch/fire [:unchoke (peer :peer-id)]))
+      ; ; choke inactive peers that are unchoked
+      ; (doseq [peer (remove :choking (map #(deref %) inactive))]
+      ;   (dispatch/fire [:choke (peer :peer-id)]))
+      (swap! unchoked assoc info-hash active))))
 
 (defn unoptimistic
   "The optimistic downloader is protected for the first 30 seconds

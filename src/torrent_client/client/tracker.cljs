@@ -93,9 +93,9 @@
     (let-async [offer (create-connection-send-offer)
                 :let channel (.subscribe @pusher (@torrent :pretty-info-hash))]
       ; Normalize our events
-      (.bind channel "answer" (fn [data] 
+      (.bind channel (str "answer" @peer-id) (fn [data] 
         (dispatch/fire :answer (js->clj data :keywordize-keys true))))
-      (.bind channel "offer"  (fn [data] 
+      (.bind channel (str "answer" @peer-id)  (fn [data] 
         (dispatch/fire :offer  (js->clj data :keywordize-keys true))))
       ; Send all our offers to the server
       (announce announce-url :started torrent {:offers [offer]} (fn [peers]
@@ -123,8 +123,9 @@
 (dispatch/react-to #{:need-offer} (fn [_ {:keys [peer_id info_hash]}]
   "The tracker has requested an offer from this client"
   (let-async [peer-connection (create-connection-send-offer peer_id)
-              :let offer (-> peer-connection .-localDescription .-sdp)]
-    (announce announce-url :offer torrent {:offer offer})
+              :let offer (-> peer-connection .-localDescription .-sdp)
+              :let event (str "answer" peer_id)]
+    (announce announce-url event torrent {:offer offer})
   )))
 
 (dispatch/react-to #{:answer} (fn [_ {:keys [peer_id info_hash answer]}]
@@ -136,6 +137,7 @@
         channel (create-data-channel peer-connection info_hash)]
     ; When the channel we opened is successful announce it
     (set! (.-onopen channel) (fn [event]
+      (.log js/console "from onopen" peer_id)
       (dispatch/fire :add-channel [peer_id channel :handshake])))
   )))
 
@@ -145,10 +147,11 @@
   (.log js/console peer_id info_hash offer)
   (let-async [peer-connection (receive-offer-send-answer offer peer_id)
               :let answer (-> peer-connection .-localDescription .-sdp)
-              :let torrent (@torrents "8ac3731ad4b039c05393b5404afa6e7397810b41")]
+              :let torrent (@torrents "8ac3731ad4b039c05393b5404afa6e7397810b41")
+              :let event (str "answer" peer_id)]
     ; The client that sent the offer will create the datachannel after it
     ; gets this clients offer
-    (announce announce-url :answer torrent {:answer answer} #() "http://localhost:8090/answer"))))
+    (announce announce-url event torrent {:answer answer} #() "http://localhost:8090/answer"))))
 
 ;;************************************************
 ;; Keepalive and statistics
