@@ -93,10 +93,6 @@
   {:block-start (Math/floor (/ (file :pos-start) (@torrent :piece-length)))
    :block-end   (Math/ceil  (/ (file :pos-end)   (@torrent :piece-length)))})
 
-
-; H.C update, use a bitwise op to comp our bitfield and the peers
-; then use the indexed to return the index
-
 ; TODO: switch this over to rarity based search
 (defn get-next-block
   "Given a torrent and a peers bitfield, return the index of 
@@ -112,3 +108,27 @@
         ; Get the first wanted block
         block (some #(if-not (zero? (second %)) (first %)) indexed)]
 		block))
+
+(defn block-length 
+  "If this is the last block return the last-piece-length"
+  [torrent block-index]
+  (if (= block-index (dec (@torrent :pieces-length)))
+    (@torrent :last-piece-length)
+    (@torrent :piece-length)))
+
+; The bytes in a block partial (32kb)
+(def partial-length 32768)
+
+(defn block-partials
+  "Given a block, return all the partials within it"
+  [torrent block-index]
+  (let [block-length (block-length torrent block-index )]
+    (loop [offset 0
+           partials []]
+      ; If we havn't finished splitting up this block
+      (if-not (= offset block-length)
+        ; Add another partial to the partials vector
+        (recur (+ offset (min partial-length (- block-length offset)))
+               (conj partials [offset (+ offset partial-length)]))
+        ; Return all the partial parts
+        partials))))
