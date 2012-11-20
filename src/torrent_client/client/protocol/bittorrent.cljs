@@ -6,7 +6,6 @@
     [goog.events :as events])
   (:use 
     [torrent-client.client.peer-id :only [peer-id]]
-    [torrent-client.client.core.bencode :only [subarray]]
     [waltz.state :only [trigger]]))
 
 (defn ^boolean array-buffer-view? [candidate]
@@ -70,7 +69,6 @@
     (trigger p :receive-have data)))
 
 (defmethod receive-data msg-bitfield [p data]
-  (js* "debugger;")
   (trigger p :receive-bitfield (bitfield/bitfield (subarray data 1))))
 
 (defmethod receive-data msg-request [p data]
@@ -141,10 +139,13 @@
 
   (send-bitfield [client]
     (let [byte-array (bitfield/byte-array (@torrent :bitfield))]
-      (js* "debugger;")
       (protocol/send-data client msg-bitfield byte-array)))
 
   (send-request [client index begin piece]
+    ; for (var start = 0; start < piecelength; start += Math.pow(2, 15)) {
+    ;   peers_random[i].sendRequest(val, start, ((start + Math.pow(2, 15)) <= piecelength ? Math.pow(2, 15) : (piecelength - start)));
+    ; H.C Implement whatever this is                                
+
     (let [data (crypt/pack :int index :int begin :int piece)]
       (protocol/send-data client msg-request data)))
 

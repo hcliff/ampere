@@ -28,10 +28,19 @@
                          ; Is peer interested in this client
                          :interested false}))]
 
-    ; (dispatch/react-to #{[:choke-peer (@peer-data :peer-id)]} 
-    ;   #(state/trigger me :choke-peer))
-    ; (dispatch/react-to #{[:unchoke-peer (@peer-data :peer-id)]} 
-    ;   #(state/trigger me :unchoke-peer))
+    ; the peers management has determined choking/unchoking
+    ; of this peer
+    ; TODO: make this granular to the info-hash
+    (dispatch/react-to #{[:choke-peer (@peer-data :peer-id)]} 
+      #(state/trigger me :choke-peer))
+    (dispatch/react-to #{[:unchoke-peer (@peer-data :peer-id)]}
+      (fn [_]
+        (.log js/console "dispatched")
+        (state/trigger me :unchoke-peer)))
+
+    (dispatch/react-to #{:dicks} (fn [_]
+      (state/trigger me :unchoke-peer)
+      ))
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
@@ -40,9 +49,8 @@
       (if (and (= (vec (@torrent :info-hash)) info-hash)
                (= (@peer-data :peer-id) peer-id))
         (do
-          (.log js/console "should I reply?" handshake)
-          ; (transition me :init :sent-handshake)
-          ; (transition me :sent-handshake :sent-bitfield)
+          (transition me :sent-handshake :sent-bitfield)
+          (transition me :init :sent-handshake)
           )))
 
     (defevent me :receive-choke []
@@ -55,11 +63,11 @@
 
     (defevent me :receive-interested []
       (swap! peer-data assoc :interested true)
-      (dispatch/fire [:receive-interested] torrent))
+      (dispatch/fire :receive-interested torrent))
 
     (defevent me :receive-not-interested []
       (swap! peer-data assoc :interested false)
-      (dispatch/fire [:receive-not-interested] torrent))
+      (dispatch/fire :receive-not-interested torrent))
 
     (defevent me :receive-have [index]
       "Update the bitfield to mark we have the correct piece"
@@ -73,14 +81,14 @@
       "The client has sent us a valid bitfield detailing the
       pieces of the torrent they have"
       (swap! peer-data assoc :bitfield bitfield)
-      (js* "debugger;")
-      (if (state/in? me :sent-bitfield)
-        ; If the client has allready sent their bitfield then send interested
-        (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
-          (state/set me :choked-interested)
-          (state/set me :choked-not-interested))
-        ; Otherwise, send the bitfield
-        (state/set me :sent-bitfield)))
+      ; If we havn't yet sent a bitfield, do so!
+      (if-not (state/in? me :sent-bitfield)
+        (state/set me :sent-bitfield))
+      ; If the client has allready sent their bitfield then send interested
+      (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
+        (state/set me :choked-interested)
+        (state/set me :choked-not-interested))
+      )
 
     (defevent me :receieve-request [index]
       "If we have a given piece send it to the peer 
@@ -107,6 +115,7 @@
 
     (defevent me :unchoke-peer []
       (swap! peer-data assoc :choked false)
+      (.log js/console "actually do the damn thing")
       (protocol/send-unchoke bittorrent-client))
 
     (defstate me :init)
@@ -131,14 +140,14 @@
       (in []
         (protocol/send-interested bittorrent-client)
         (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
-          (protocol/send-request bittorrent-client block-index))
-          (state/set me :not-choked-not-interested)))
+          (protocol/send-request bittorrent-client block-index)
+          (state/set me :not-choked-not-interested))))
 
     ; Handshake if this is the first client
     (if handshake
       (do
         (.log js/console "INITIATE HANDSHAKE")
-        (state/set me :sent-handshake)))
+        (state/set-ex me :init :sent-handshake)))
 
     ; Return some info on the peer
     peer-data

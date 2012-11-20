@@ -52,10 +52,8 @@
       (Bitfield. byte-array))
     ; Construct a bitfield from an existing one
     ; (recieved from peer)
-    (do
-      (js* "debugger;")
-      (let [byte-array (js/Uint8Array. bits)]
-        (Bitfield. byte-array)))))
+    (let [byte-array (js/Uint8Array. bits)]
+      (Bitfield. byte-array))))
 
 (defn fill-bitfield 
   "Given a bitfield mark that we have all the pieces"

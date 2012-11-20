@@ -13,7 +13,7 @@
     [torrent-client.client.core.string :only [partition-string pad-string-left]]
     [torrent-client.client.core.url :only [http-scheme?]]
     [torrent-client.client.core.bencode :only [encode decode uint8-array push-back-reader]]
-    [torrent-client.client.core.crypt :only [sha1]]
+    [torrent-client.client.core.crypt :only [sha1 str-to-uint8-array]]
     [torrent-client.client.storage :only [connection]]
     [torrent-client.client.pieces :only [files]]
     )
@@ -52,13 +52,14 @@
             ; Used as a key to refer to the torrent
             pretty-info-hash (pad-string-left (crypt/byteArrayToHex info-hash) "0" 40)
             
-            ; The pieces in the file, how many in the file and which ones we have
+            ; The blocks in the file
+            ; each 20 byte hash represents a block
             pieces-hash (partition-string 20 (info "pieces"))
             pieces-length (count pieces-hash)
-            ; number of bytes in each piece (integer)
+            ; number of bytes in each block (integer)
             piece-length (info "piece length")
-            ; A bitfield representing the pieces
-            ; each bit represents a piece
+            ; A bitfield representing the blocks
+            ; each bit represents a block
             bitfield (bitfield/bitfield pieces-length)
 
             ; Build an array of the announce list
@@ -119,7 +120,6 @@
 ; files are the actual files for distribution
 (defn build-files [torrent files success-callback]
   ; First build out the file system access
-  ; (js* "debugger;")
   (let-async [:let requested-bytes (@torrent :total-length)
               granted-bytes (filesystem/request-quota :PERSISTENT requested-bytes)
               fs (filesystem/request-file-system :PERSISTENT granted-bytes)]

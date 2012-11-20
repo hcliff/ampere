@@ -102,18 +102,13 @@
   "Given a torrent and a peers bitfield, return the index of 
   the first needed block"
   [torrent peer-bitfield]
-
   (let [torrent-bitfield (bitfield/byte-array (@torrent :bitfield))
         peer-bitfield (bitfield/byte-array peer-bitfield)
         ; Inverse the bitfield so 1 represents a wanted block
         ; Find blocks that are wanted and the peer has
         needed (map bit-and-not peer-bitfield torrent-bitfield)
         ; Add an index to our vector
-        indexed (map-indexed vec needed)
+        indexed (map-indexed vector needed)
         ; Get the first wanted block
-        block (some #(when-not (zero? %2) %) indexed)
-        ]
-    (js* "debugger;")
-    (.log js/console "needed" needed)
-		block
-	))
+        block (some #(if-not (zero? (second %)) (first %)) indexed)]
+		block))

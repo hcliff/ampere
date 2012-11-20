@@ -95,7 +95,7 @@
       ; Normalize our events
       (.bind channel (str "answer" @peer-id) (fn [data] 
         (dispatch/fire :answer (js->clj data :keywordize-keys true))))
-      (.bind channel (str "answer" @peer-id)  (fn [data] 
+      (.bind channel (str "offer" @peer-id)  (fn [data] 
         (dispatch/fire :offer  (js->clj data :keywordize-keys true))))
       ; Send all our offers to the server
       (announce announce-url :started torrent {:offers [offer]} (fn [peers]
@@ -149,6 +149,7 @@
               :let answer (-> peer-connection .-localDescription .-sdp)
               :let torrent (@torrents "8ac3731ad4b039c05393b5404afa6e7397810b41")
               :let event (str "answer" peer_id)]
+    (.log js/console "react to offer"event)
     ; The client that sent the offer will create the datachannel after it
     ; gets this clients offer
     (announce announce-url event torrent {:answer answer} #() "http://localhost:8090/answer"))))
