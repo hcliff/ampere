@@ -100,18 +100,23 @@
   (watch-channel [client]
     "Watch a datachannel for incoming data"
     (set! (.-onmessage channel) (fn [event]
-      (receive-data peer (crypt/str-to-uint8-array (.-data event))))))
+      ; Handshakes are sent as strings, everything else as arraybuffer
+      (if (string? (.-data event))
+        (receive-data peer (crypt/str-to-uint8-array (.-data event)))
+        (receive-data peer (js/Uint8Array. (.-data event)))))))
 
   (send-data [client string]
     (.send channel string))
 
-  (send-data [client type data]
-    (if (string? data)
-      (protocol/send-data client (str type data))
-      (do
-        (.log js/console "encoded " (str type (crypt/byteArrayToString data)))
-        (protocol/send-data client (str type (crypt/byteArrayToString data)))))
-    )
+  ; TODO: send arraybuffer instead of string where appropriate
+  ; issue lies in prepending it with the msg-type char
+  ; (send-data [client type data]
+  ;   (if (string? data)
+  ;     (protocol/send-data client (str type data))
+  ;     (do
+  ;       (.log js/console "encoded " (str type (crypt/byteArrayToString data)))
+  ;       (protocol/send-data client (str type (crypt/byteArrayToString data)))))
+  ;   )
 
   (send-handshake [client]
     "Generate a handshake string"
@@ -141,13 +146,9 @@
     (let [byte-array (bitfield/byte-array (@torrent :bitfield))]
       (protocol/send-data client msg-bitfield byte-array)))
 
-  (send-request [client index begin piece]
-    ; for (var start = 0; start < piecelength; start += Math.pow(2, 15)) {
-    ;   peers_random[i].sendRequest(val, start, ((start + Math.pow(2, 15)) <= piecelength ? Math.pow(2, 15) : (piecelength - start)));
-    ; H.C Implement whatever this is                                
-
-    (let [data (crypt/pack :int index :int begin :int piece)]
-      (protocol/send-data client msg-request data)))
+  ; (send-request [client index begin piece]
+  ;   (let [data (crypt/pack :int index :int begin :int piece)]
+  ;     (protocol/send-data client msg-request data)))
 
   ; H.C REVIEW
   (send-piece [client index begin piece]
@@ -156,7 +157,7 @@
       (protocol/send-data client msg-piece data piece)))
 
   (send-cancel [client index begin piece]
-    (let [data (crypt/pack :int index :int begin :int piece)]
+    (let [data (crypt/pack :int index :int begin piece)]
       (protocol/send-data client msg-cancel data)))
 
   ; (send-keep-alive [client]

@@ -3,7 +3,7 @@
     [torrent-client.client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.client.waltz :only [machine transition]]
     [torrent-client.client.bitfield :only [bitfield-unique]]
-    [torrent-client.client.pieces :only [get-next-block]]
+    [torrent-client.client.pieces :only [get-next-block block-partials]]
     [torrent-client.client.peer-id :only [peer-id]]
     )
   (:require
@@ -93,7 +93,8 @@
     (defevent me :receieve-request [index]
       "If we have a given piece send it to the peer 
       if they havn't been choked"
-      (if-not (@peer-data :choked)
+      (js* "debugger;")
+      (if-not (@peer-data :choking)
         (if (bitfield/get (@peer-data :bitfield) index)
           (if-let [data (get-piece (torrent :files) index)]
             (protocol/send-piece bittorrent-client index data)))))
@@ -139,8 +140,12 @@
     (defstate me :not-choked-interested 
       (in []
         (protocol/send-interested bittorrent-client)
+        ; TODO switch this over to a queue/task system
+        (js* "debugger;")
         (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
-          (protocol/send-request bittorrent-client block-index)
+          (doseq [[begin length] (block-partials torrent block-index)]
+            (.log js/console "block" block-index begin length)
+            (protocol/send-request bittorrent-client block-index begin length))
           (state/set me :not-choked-not-interested))))
 
     ; Handshake if this is the first client

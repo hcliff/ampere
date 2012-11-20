@@ -1,6 +1,8 @@
 (ns torrent-client.client.core.bencode
   (:require [goog.crypt :as crypt])
-  (:use [clojure.walk :only [keywordize-keys]]))
+  (:use 
+    [clojure.walk :only [keywordize-keys]]
+    [jayq.util :only [clj->js]]))
 
 (defprotocol PushbackReader
   (read [reader length] "Returns the next char from the Reader,
@@ -33,9 +35,13 @@ nil if the end of stream has been reached"))
   (.subarray array-buffer-view begin end))
 
 (defn char [characters]
-  (if (goog.isNumber characters)
-    (.fromCharCode js/String characters)
-    (.apply (.-fromCharCode js/String) nil characters)))
+  (cond
+    (goog.isNumber characters)
+      (.fromCharCode js/String characters)
+    (vector? characters)
+      (.apply (.-fromCharCode js/String) nil (clj->js characters))
+    :else
+      (.apply (.-fromCharCode js/String) nil characters)))
 
 (defn int [number]
   (js/parseInt number))

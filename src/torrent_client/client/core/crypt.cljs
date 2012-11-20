@@ -27,11 +27,19 @@
   :double (/ 64 8)
   })
 
-(defn pack [formatters data]
-  (let [reader (push-back-reader [])]
-    (doseq [format formatters]
-      (pack-data format data))
-    data))
+(defn pack [& formatters]
+  (let [reader (push-back-reader [])
+        formatters (partition 2 formatters)]
+    (apply str (map pack-data formatters))))
+
+(defmulti pack-data (fn [[format data]] format))
+
+(defmethod pack-data :int [[_ data]]
+  (char [(bit-and 0xff (bit-shift-right data 24))
+         (bit-and 0xff (bit-shift-right data 16))
+         (bit-and 0xff (bit-shift-right data 8))
+         (bit-and 0xff data)]))
+
 
 (defn unpack [formatters data]
   (let [reader (push-back-reader data)]
@@ -39,11 +47,13 @@
       (unpack-data format data))
     data))
 
-(defmulti packdata (fn [format data] format))
+(defmulti unpack-data (fn [format data] format))
 
-(defmethod packdata :int [data]
-  (let [bytes-to-read (sizes :int)]
-    (int (char (reader bytes-to-read)))))
+(defmethod unpack-data :int [_ data]
+  (or (bit-shift-left (nth data 0) 24)
+      (bit-shift-left (nth data 1) 16)
+      (bit-shift-left (nth data 2) 8)
+      (nth data 3)))
 
 (defn str-to-uint8-array
   "The same as googles stringToByteArray
