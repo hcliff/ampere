@@ -110,13 +110,13 @@
 
   ; TODO: send arraybuffer instead of string where appropriate
   ; issue lies in prepending it with the msg-type char
-  ; (send-data [client type data]
-  ;   (if (string? data)
-  ;     (protocol/send-data client (str type data))
-  ;     (do
-  ;       (.log js/console "encoded " (str type (crypt/byteArrayToString data)))
-  ;       (protocol/send-data client (str type (crypt/byteArrayToString data)))))
-  ;   )
+  (send-data [client type data]
+    (if (string? data)
+      (protocol/send-data client (str type data))
+      (do
+        (.log js/console "encoded " (str type (crypt/byteArrayToString data)))
+        (protocol/send-data client (str type (crypt/byteArrayToString data)))))
+    )
 
   (send-handshake [client]
     "Generate a handshake string"
@@ -146,9 +146,9 @@
     (let [byte-array (bitfield/byte-array (@torrent :bitfield))]
       (protocol/send-data client msg-bitfield byte-array)))
 
-  ; (send-request [client index begin piece]
-  ;   (let [data (crypt/pack :int index :int begin :int piece)]
-  ;     (protocol/send-data client msg-request data)))
+  (send-request [client index begin piece]
+    (let [data (crypt/pack :int index :int begin :int piece)]
+      (protocol/send-data client msg-request data)))
 
   ; H.C REVIEW
   (send-piece [client index begin piece]
@@ -166,7 +166,7 @@
   )
 
 (defprotocol SubArray
-  (subarray [array start finish] "Return a subarray of the array immediately"))
+  (subarray [array start] [array start finish] "Return a subarray of the array immediately"))
 
 (extend-type js/Uint8Array
   ISeqable
@@ -196,6 +196,12 @@
        (ci-reduce array f))
     ([array f start]
        (ci-reduce array f start)))
+
+  SubArray
+  (subarray [array start]
+    (.subarray array start))
+  (subarray [array start finish]
+    (.subarray array start finish))
 
   ; IHash
   ; (-hash [this] 

@@ -2,9 +2,8 @@
   (:use [jayq.util :only [clj->js]]))
 
 (defprotocol BitfieldProtocol
-  (get [bitfield index] "Return if a piece exists within the bitfield")
   (byte-array [bitfield] "Returns the internal byte-array")
-  )
+  (nth-piece [bitfield n] "Return a piece - not a block"))
 
 (deftype Bitfield [byte-array]
 
@@ -13,18 +12,21 @@
     (pr-str byte-array))
 
   BitfieldProtocol
-  (get [bitfield index]
-    (let [; What byte does this position pack into
-          byte-index (bit-shift-right index 3)
-          byte (aget byte-array byte-index)
-          ; The piece bit within the byte is the remainder
-          piece-bit (bit-shift-left 1 (mod index 8))])
-      ; If there is no overlap between the byte and our piece-bit
-      ; it must be a 0 and thus not downloaded
-      (not= (bit-and byte index-bit) 0))
-
   (byte-array [bitfield]
     byte-array)
+  (nth-piece [bitfield n]
+    (let [; What byte does this position pack into
+          byte-index (bit-shift-right n 3)
+          byte (nth byte-array byte-index)
+          ; The piece bit within the byte is the remainder
+          piece-bit (bit-shift-left 1 (mod n 8))]
+          ; If there is no overlap between the byte and our piece-bit
+          ; it must be a 0 and thus not downloaded
+          (not= (bit-and byte index-bit) 0)))
+
+  IIndexed
+  (-nth [bitfield n]
+    (aget byte-array n))
 
   IFn
   (-invoke [bitfield] byte-array)
@@ -40,7 +42,6 @@
         ; Otherwise remove it
         (aset byte-array byte-index (bit-xor byte piece-bit)))
     ))
-
   )
 
 (defn bitfield [bits]

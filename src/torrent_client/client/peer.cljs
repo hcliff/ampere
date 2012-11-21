@@ -3,15 +3,16 @@
     [torrent-client.client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.client.waltz :only [machine transition]]
     [torrent-client.client.bitfield :only [bitfield-unique]]
-    [torrent-client.client.pieces :only [get-next-block block-partials]]
+    [torrent-client.client.pieces :only [get-next-block block-partials get-partial]]
     [torrent-client.client.peer-id :only [peer-id]]
     )
   (:require
     [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.protocol.main :as protocol]
     [waltz.state :as state])
-  (:use-macros [waltz.macros :only [in out defstate defevent]])
-  )
+  (:use-macros 
+    [waltz.macros :only [in out defstate defevent]]
+    [async.macros :only [async let-async]]))
 
 (defn peer-machine
   "A state machine for managing the channel with the peer
@@ -90,14 +91,14 @@
         (state/set me :choked-not-interested))
       )
 
-    (defevent me :receieve-request [index]
+    (defevent me :receive-request [block-index offset length]
       "If we have a given piece send it to the peer 
       if they havn't been choked"
-      (js* "debugger;")
       (if-not (@peer-data :choking)
-        (if (bitfield/get (@peer-data :bitfield) index)
-          (if-let [data (get-piece (torrent :files) index)]
-            (protocol/send-piece bittorrent-client index data)))))
+        ; If we have the block, we have the piece
+        (if-not (zero? (nth (@torrent :bitfield) block-index))
+          (let-async [data (get-partial torrent block-index offset length)]
+            (protocol/send-piece bittorrent-client block-index offset data)))))
 
     (defevent me :receive-piece [piece]
       "Inform the torrent of the piece we have just received
@@ -111,11 +112,11 @@
       )
 
     (defevent me :choke-peer []
-      (swap! peer-data assoc :choked true)
+      (swap! peer-data assoc :choking true)
       (protocol/send-unchoke bittorrent-client))
 
     (defevent me :unchoke-peer []
-      (swap! peer-data assoc :choked false)
+      (swap! peer-data assoc :choking false)
       (.log js/console "actually do the damn thing")
       (protocol/send-unchoke bittorrent-client))
 
@@ -141,10 +142,8 @@
       (in []
         (protocol/send-interested bittorrent-client)
         ; TODO switch this over to a queue/task system
-        (js* "debugger;")
         (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
           (doseq [[begin length] (block-partials torrent block-index)]
-            (.log js/console "block" block-index begin length)
             (protocol/send-request bittorrent-client block-index begin length))
           (state/set me :not-choked-not-interested))))
 

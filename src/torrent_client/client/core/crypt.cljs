@@ -1,7 +1,8 @@
 (ns torrent-client.client.core.crypt
   (:require
     [goog.crypt :as crypt]
-    [goog.crypt.Sha1 :as Sha1])
+    [goog.crypt.Sha1 :as Sha1]
+    [torrent-client.client.core.bencode :as bencode])
   (:use 
     [torrent-client.client.core.bencode :only [int char]]
     [torrent-client.client.core.bencode :only 
@@ -27,9 +28,10 @@
   :double (/ 64 8)
   })
 
+; H.C currently packs to string
+; if we change communication to bytearray will need changing
 (defn pack [& formatters]
-  (let [reader (push-back-reader [])
-        formatters (partition 2 formatters)]
+  (let [formatters (partition 2 formatters)]
     (apply str (map pack-data formatters))))
 
 (defmulti pack-data (fn [[format data]] format))
@@ -40,20 +42,26 @@
          (bit-and 0xff (bit-shift-right data 8))
          (bit-and 0xff data)]))
 
-
 (defn unpack [formatters data]
   (let [reader (push-back-reader data)]
-    (doseq [format formatters]
-      (unpack-data format data))
-    data))
+    (loop [formatters formatters
+           data []]
+      (if-let [formatter (first formatters)]
+        (let [bytes (bencode/read reader (sizes formatter))]
+          (recur (rest formatters)
+                 ; Execute this formatter add the result to the data
+                 (conj data (unpack-data formatter bytes))))
+        ; And return the data when we're done
+        data)
+      )))
 
 (defmulti unpack-data (fn [format data] format))
 
 (defmethod unpack-data :int [_ data]
-  (or (bit-shift-left (nth data 0) 24)
-      (bit-shift-left (nth data 1) 16)
-      (bit-shift-left (nth data 2) 8)
-      (nth data 3)))
+  (max (bit-shift-left (nth data 0) 24)
+       (bit-shift-left (nth data 1) 16)
+       (bit-shift-left (nth data 2) 8)
+       (nth data 3)))
 
 (defn str-to-uint8-array
   "The same as googles stringToByteArray

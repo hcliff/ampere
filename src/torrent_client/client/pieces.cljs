@@ -2,10 +2,12 @@
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.bitfield :as bitfield]
+
     [filesystem.entry :as entry]
     )
+  (:use [async.helpers :only [map-async]])
   (:use-macros 
-    [async.macros :only [let-async]])
+    [async.macros :only [async let-async]])
   )
 
 (def files (atom {}))
@@ -23,16 +25,21 @@
   (-meta [this] meta)
 
   ILookup
+  ; Does this file contain a given block index
   (-lookup [this k]
-    (aget file k))
-  ;   ([array k not-found]
-  ;      (-nth file k not-found))
+    (-lookup this k nil))
+  (-lookup [this k not-found]
+    (-contains-key? this k))
 
   IFn
   (-invoke [this k]
     (-lookup this k))
   (-invoke [this k not-found]
     (-lookup this k not-found))
+
+  IAssociative
+  (-contains-key? [this k]
+    (<= (meta :block-start) k (meta :block-end)))
 
   )
 
@@ -43,7 +50,6 @@
 
 (dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
   "A file has been added to this torrent"
-
   (let [file (generate-file torrent file-entry file-data)]
     (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]})
   )))
@@ -53,9 +59,11 @@
     ; Attach information on the block boundaries to the file
     (with-meta (block-file file-entry) (merge file-data boundaries))))
 
-; (defn needs-piece [block-position file]
-;   (and (<= block-position (file :block-end))
-;        (>= block-position (file :block-start))))
+(defn needs-block 
+  "Given the co-ordinates of a block and a file, determine if the block
+   or part of it lies within the file"
+  [block-index file]
+  (<= (file :block-start) block-index (file :block-end)))
 
 ; (dispatch/react-to #{:receive-piece} (fn [torrent block-position block-data]
 ;   (let [torrent-files (@files (@torrent :pretty-info-hash))
@@ -122,7 +130,7 @@
 (defn block-partials
   "Given a block, return all the partials within it"
   [torrent block-index]
-  (let [block-length (block-length torrent block-index )]
+  (let [block-length (block-length torrent block-index)]
     (loop [offset 0
            partials []]
       ; If we havn't finished splitting up this block
@@ -132,3 +140,28 @@
                (conj partials [offset (+ offset partial-length)]))
         ; Return all the partial parts
         partials))))
+
+(defn- get-file-partial [offset end file]
+  (async [success-callback]
+    (let-async [file (filesystem/filereader file)
+                :let offset (min offset (file :block-start))
+                :let end (min end (file :block-end))]
+      (success-callback (subarray file offset end)))))
+
+; TODO rewrite to grab block and hold it until all
+; the pieces have been requested
+; this would require one fileread as opposed to n
+(defn get-partial [torrent block-index offset length]
+  (async [success-callback]
+    (let [block-offset (* block-index (@torrent :piece-size))
+          torrent-hash (@torrent :pretty-info-hash)
+          offset (+ block-offset offset)
+          end (+ offset length)
+          ; A block that straddles two files may have a partial that
+          ; stradles two files, establish which files use this block
+          files (filter #(contains? % block-index) (@files torrent-hash))]
+      (js* "debugger;")
+      ; Retrieve the partials from the files
+      (let-async [data (map-async #(get-file-partial offset end %) files)]
+        (.log js/console "called back" data)
+        (success-callback (apply conj data))))))
