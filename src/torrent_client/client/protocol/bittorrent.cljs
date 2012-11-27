@@ -5,6 +5,7 @@
     [torrent-client.client.protocol.main :as protocol]
     [goog.events :as events])
   (:use 
+    [torrent-client.client.core.bencode :only [uint8-array]]
     [torrent-client.client.peer-id :only [peer-id]]
     [waltz.state :only [trigger]]))
 
@@ -29,11 +30,15 @@
   IHash
   (-hash [this] 
     (goog.string/hashCode (pr-str this)))
+
+  ICounted
+  (-count [array] 1)
   )
 
 (defn char [code]
   (Char. code))
 
+; H.C switch over to \x05
 (def msg-choke (char 00))
 (def msg-unchoke (char 01))
 (def msg-interested (char 02))
@@ -103,20 +108,51 @@
       ; Handshakes are sent as strings, everything else as arraybuffer
       (if (string? (.-data event))
         (receive-data peer (crypt/str-to-uint8-array (.-data event)))
-        (receive-data peer (js/Uint8Array. (.-data event)))))))
+        (receive-data peer (.-data event))))))
 
   (send-data [client string]
     (.send channel string))
 
-  ; TODO: send arraybuffer instead of string where appropriate
-  ; issue lies in prepending it with the msg-type char
   (send-data [client type data]
-    (if (string? data)
+    (cond
+      (nil? data)
+      (protocol/send-data client (str type))
+
+      (string? data)
       (protocol/send-data client (str type data))
-      (do
-        (.log js/console "encoded " (str type (crypt/byteArrayToString data)))
-        (protocol/send-data client (str type (crypt/byteArrayToString data)))))
-    )
+
+      :else
+      (let [; Turn our data into a vector if it isn't
+            data (if (vector? data) data (vector data))
+            ; stringify 
+            data (map #(crypt/byteArrayToString %) data)
+            string (str type (apply str data))
+            ]
+        (.log js/console "wurd" data string)
+        (js* "debugger;")
+        (protocol/send-data client string))))
+    
+  ; H.C commented out for the legacy demo
+  ; (send-data [client & data]
+  ;   (if (string? (second data))
+  ;     (protocol/send-data client (apply str data))
+  ;     (let [; Build a buffer big enough to hold our data
+  ;           ; only count byte arrays, add one for the msg-type
+  ;           buffer-size (inc (reduce + (map count (rest data))))
+  ;           byte-array (uint8-array buffer-size)]
+  ;       (js* "debugger;")
+  ;       (.set byte-array [(first data)])
+  ;       (loop [data (rest data)
+  ;              offset 1]
+  ;         (if-let [item (first data)]
+  ;           (do
+  ;             ; Add all the data to the buffer at the correct offset
+  ;             (.log js/console item offset)
+  ;             (.set byte-array item offset)
+  ;             (recur (rest data) (+ offset (count item))))
+  ;           ; Finally send the buffer
+  ;           (protocol/send-data client (.-buffer byte-array)))))
+  ;     ))
 
   (send-handshake [client]
     "Generate a handshake string"
@@ -148,13 +184,13 @@
 
   (send-request [client index begin piece]
     (let [data (crypt/pack :int index :int begin :int piece)]
+      (js* "debugger;")
       (protocol/send-data client msg-request data)))
 
   ; H.C REVIEW
-  (send-piece [client index begin piece]
-    (let [piece (.next-piece (@torrent :pieces))
-          data (crypt/pack :int index :int begin :int piece)]
-      (protocol/send-data client msg-piece data piece)))
+  (send-piece [client block-index begin piece]
+    (let [data (crypt/pack :int block-index :int begin)]
+      (protocol/send-data client [msg-piece data piece])))
 
   (send-cancel [client index begin piece]
     (let [data (crypt/pack :int index :int begin piece)]
@@ -209,6 +245,9 @@
 
   ; ISeqable
   ; (-seq [coll] coll)
+
+  ICounted
+  (-count [array] (.-length array))
 
   ; ASeq
   ; ISeq

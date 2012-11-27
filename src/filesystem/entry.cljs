@@ -6,6 +6,16 @@
   (async [success-callback error-callback]
     (.createWriter file-entry success-callback error-callback)))
 
-(defn get-file [filesystem path options]
-  (async [success-callback error-callback]
-    (.getFile (.-root filesystem) path (clj->js options) success-callback error-callback)))
+(defn get-entry
+	"Return a fileentry (information on the file)"
+	([filesystem path] (get-file filesystem path {}))
+  ([filesystem path options]
+	  (async [success-callback error-callback]
+	    (.getFile (.-root filesystem) path (clj->js options) 
+	    	success-callback error-callback))))
+
+(defn file
+	"Given a FileEntry return the underlying file object"
+	[entry]
+	(async [success-callback error-callback]
+		(.file entry success-callback)))

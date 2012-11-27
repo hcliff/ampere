@@ -25,6 +25,10 @@
                :when (identical? (type value) js/File)] 
       value))))
 
+(defn param [obj]
+  (.log js/console "PARAM YO")
+  (.param js/jQuery (clj->js obj)))
+
 (defn modal [$elem params]
   (.modal $elem params))
 

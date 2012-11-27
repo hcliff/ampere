@@ -2,51 +2,18 @@
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.bitfield :as bitfield]
-
-    [filesystem.entry :as entry]
-    )
-  (:use [async.helpers :only [map-async]])
+    [filesystem.filesystem :as filesystem]
+    [filesystem.blockfile :as blockfile]
+    [filesystem.entry :as entry])
+  (:use 
+    [async.helpers :only [map-async]]
+    [filesystem.blockfile :only [block-file]]
+    [torrent-client.client.core.bencode :only [uint8-array]])
   (:use-macros 
     [async.macros :only [async let-async]])
   )
 
 (def files (atom {}))
-
-(deftype BlockFile [meta file]
-
-  Object
-  (toString [this]
-    (pr-str this))
-
-  IWithMeta
-  (-with-meta [this meta] (BlockFile. meta file))
-
-  IMeta
-  (-meta [this] meta)
-
-  ILookup
-  ; Does this file contain a given block index
-  (-lookup [this k]
-    (-lookup this k nil))
-  (-lookup [this k not-found]
-    (-contains-key? this k))
-
-  IFn
-  (-invoke [this k]
-    (-lookup this k))
-  (-invoke [this k not-found]
-    (-lookup this k not-found))
-
-  IAssociative
-  (-contains-key? [this k]
-    (<= (meta :block-start) k (meta :block-end)))
-
-  )
-
-(defn block-file [file]
-  (BlockFile. nil file))
-
-; H.C TODO: ADD BASIC LOOKUPS ON FILE TO ALLOW FOR (file :name)
 
 (dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
   "A file has been added to this torrent"
@@ -141,18 +108,30 @@
         ; Return all the partial parts
         partials))))
 
-(defn- get-file-partial [offset end file]
+(defn- get-file-partial 
+  [offset length file]
   (async [success-callback]
-    (let-async [file (filesystem/filereader file)
-                :let offset (min offset (file :block-start))
-                :let end (min end (file :block-end))]
-      (success-callback (subarray file offset end)))))
+    (let-async [:let offset (min offset ((meta file) :block-start))
+                :let end (min (+ offset length) ((meta file) :block-end))
+                ; :let length (- end offset)
+                ; Get a filereader on the block-files underlying file
+                file (entry/file (blockfile/get-file file))
+                data (filesystem/filereader file)]
+      (success-callback (uint8-array data offset length))
+      )))
+
+
+; H.C this works, investigate why prod doesn't
+; (dispatch/react-to #{:document-ready} (fn [_]
+;   (let-async [pat (get-file-partial 0 50 "Rescue You.mp3")]
+;     (.log js/console "done"))))
 
 ; TODO rewrite to grab block and hold it until all
 ; the pieces have been requested
 ; this would require one fileread as opposed to n
 (defn get-partial [torrent block-index offset length]
   (async [success-callback]
+    (.log js/console "get-partial called")
     (let [block-offset (* block-index (@torrent :piece-size))
           torrent-hash (@torrent :pretty-info-hash)
           offset (+ block-offset offset)
@@ -160,8 +139,11 @@
           ; A block that straddles two files may have a partial that
           ; stradles two files, establish which files use this block
           files (filter #(contains? % block-index) (@files torrent-hash))]
-      (js* "debugger;")
       ; Retrieve the partials from the files
-      (let-async [data (map-async #(get-file-partial offset end %) files)]
-        (.log js/console "called back" data)
-        (success-callback (apply conj data))))))
+      (let-async [data (get-file-partial offset end (first files))]
+        (success-callback data)
+        )
+      ; (let-async [data (map-async #(get-file-partial offset end %) files)]
+      ;   (success-callback (apply conj data)))
+
+      )))

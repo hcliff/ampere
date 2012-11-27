@@ -100,8 +100,9 @@
 (defn- write-input-to-file 
   "Write data to file"
   [fs path data]
+  (.log js/console "write-input-to-file" path data)
   (async [success-callback]
-    (let-async [entry (entry/get-file fs path {:create true})
+    (let-async [entry (entry/get-entry fs path {:create true})
                 writer (entry/create-writer entry)]
       (set! (.-onwriteend writer) #(success-callback entry))
       ; If we have no data for this file immidiately write it
@@ -165,6 +166,7 @@
     (defevent me :add-files [files]
       "Given torrent information and the files it pertains to 
       access them on the filesystem and add the entry to the torrent"
+      (.log js/console ":add-files")
       (build-files torrent files #(state/trigger me :file %)))
 
     (defevent me :file [file]

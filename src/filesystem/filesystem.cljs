@@ -1,4 +1,5 @@
 (ns filesystem.filesystem
+  (:use [filesystem.blockfile :only [get-file]])
   (:require [filesystem.prefix :as prefix])
   (:use-macros [async.macros :only [let-async async]]))
 
@@ -18,11 +19,11 @@
   (let-async [granted-bytes (request-quota type size)]
     (request-file-system type granted-bytes)))
 
-(defn filereader [file]
+(defn filereader [obj]
   (async [success-callback]
     (let [reader (js/FileReader.)
           ; onloadend actually triggers a progress event
           ; we want the actual file contents
           success-callback #(success-callback (.-result (.-currentTarget %)))]
       (set! (.-onloadend reader) success-callback)
-      (.readAsArrayBuffer reader file))))
+      (.readAsArrayBuffer reader obj))))

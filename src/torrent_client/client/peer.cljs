@@ -94,6 +94,7 @@
     (defevent me :receive-request [block-index offset length]
       "If we have a given piece send it to the peer 
       if they havn't been choked"
+      (js* "debugger;")
       (if-not (@peer-data :choking)
         ; If we have the block, we have the piece
         (if-not (zero? (nth (@torrent :bitfield) block-index))
@@ -117,7 +118,6 @@
 
     (defevent me :unchoke-peer []
       (swap! peer-data assoc :choking false)
-      (.log js/console "actually do the damn thing")
       (protocol/send-unchoke bittorrent-client))
 
     (defstate me :init)

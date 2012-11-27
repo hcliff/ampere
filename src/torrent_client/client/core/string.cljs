@@ -33,4 +33,6 @@
           (str "%" part))))
 
 (defn a2b-hex [string]
+  (.log js/console "a2b-hex" string (clojure.string/join (map a2b-part (partition 2 string))))
   (clojure.string/join (map a2b-part (partition 2 string))))
+

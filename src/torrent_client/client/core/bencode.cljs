@@ -27,7 +27,8 @@ nil if the end of stream has been reached"))
   (ArrayPushbackReader. array (atom 0)))
 
 ; There must be a better way to do this
-(defn uint8-array 
+(defn uint8-array
+  ([length] (js/Uint8Array. length))
   ([array-buffer offset] (js/Uint8Array. array-buffer offset))
   ([array-buffer offset length] (js/Uint8Array. array-buffer offset length)))
 

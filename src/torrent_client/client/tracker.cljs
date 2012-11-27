@@ -2,10 +2,11 @@
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
     [goog.Timer :as Timer]
-    [goog.events :as events])
+    [goog.events :as events]
+    [clojure.string :as string])
   (:use
-
     [jayq.core :only [ajax]]
+    [torrent-client.jayq.core :only [param]]
     [torrent-client.client.main :only [torrents]]
     [torrent-client.client.peer-id :only [peer-id]]
     [torrent-client.client.core.string :only [a2b-hex]]
@@ -42,11 +43,19 @@
   (let [info-hash (@torrent :pretty-info-hash)
         ; TODO - obviously wrong
         announce-url (or an "http://localhost:8090/announce")
-        data {
-          :info_hash (a2b-hex info-hash)
-          :event (if-not (nil? event) (name event) "")
-          :peer_id @peer-id}
-        data (merge data (or extra-data {}))]
+        ; Manually build a string to avoid urlencoding
+        ; data {
+        ;   "event"   (if-not (nil? event) (name event) "")
+        ;   "peer_id" @peer-id
+        ;     }
+        ; data (param (merge data (or extra-data {})))
+        ; data (str "?" data "&info_hash=" (a2b-hex info-hash))
+        data {:event (if-not (nil? event) (name event) "")
+              :peer_id @peer-id}
+        data (param (merge data (or extra-data {})))
+        data (str data "&info_hash=" (a2b-hex info-hash))
+        ]
+    (.log js/console "ajax data" data)
     (ajax (str announce-url) {:data data :dataType "json" :success success-callback})))
 
 ;;************************************************
@@ -132,7 +141,7 @@
   "When the tracker sends an answer for an offer we send"
   (let [; Retrieve the peer connection
         peer-connection (recieve-answer answer peer_id)
-        torrent (@torrents "8ac3731ad4b039c05393b5404afa6e7397810b41")
+        torrent (@torrents info_hash)
         ; Build a channel on this connection for the torrent
         channel (create-data-channel peer-connection info_hash)]
     ; When the channel we opened is successful announce it
@@ -147,7 +156,7 @@
   (.log js/console peer_id info_hash offer)
   (let-async [peer-connection (receive-offer-send-answer offer peer_id)
               :let answer (-> peer-connection .-localDescription .-sdp)
-              :let torrent (@torrents "8ac3731ad4b039c05393b5404afa6e7397810b41")
+              :let torrent (@torrents info_hash)
               :let event (str "answer" peer_id)]
     (.log js/console "react to offer"event)
     ; The client that sent the offer will create the datachannel after it
