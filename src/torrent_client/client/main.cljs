@@ -1,6 +1,7 @@
 (ns torrent-client.client.main
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
+    [torrent-client.client.bitfield :as bitfield]
     [noir.cljs.client.watcher :as watcher]
     [clojure.browser.repl :as repl]
     [goog.events :as events]
@@ -144,6 +145,7 @@
 (def elements (atom {}))
 
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
+
   (let [element (torrent-row torrent)
         file (@files (@torrent :pretty-info-hash))]
     ; Render the torrent row and add it to the atom
@@ -163,8 +165,14 @@
               negative-class-name))]
     (bound torrent which-class)))
 
-(defn download-percent [torrent]
-  (str "50%"))
+(defn download-percent 
+  "Rapidly determine the download progress by examining the
+  bitfield completion, not 100% accurate due to variable
+  last block size, but good enough"
+  [torrent]
+  (let [current-blocks (reduce + (.-byte-array (torrent :bitfield)))
+        current-size (* current-blocks (torrent :piece-length))]
+    (str (/ current-size (torrent :total-length) 0.01) "%")))
 
 (defn total-length-to-string [{:keys [total-length]}]
   (string/lower-case (numBytesToString total-length)))
@@ -190,7 +198,8 @@
       [:div {:class (bound-class torrent active? 
                       "progress progress-striped active"
                       "progress progress-striped")}
-        [:div.bar {:style {:width (bound torrent download-percent)}}]
+        [:div.bar {:style 
+          {:width (bound torrent download-percent)}}]
         [:label {:class (bound-class torrent active? "label" "label hide")} 
           (bound torrent time-remaining-to-string)]
       ]]

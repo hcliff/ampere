@@ -36,7 +36,7 @@
 ;   (let [torrent-files (@files (@torrent :pretty-info-hash))
 ;         ; At what byte does this piece start
 ;         block-start (* block-position (@torrent :block-length))
-;         ; If this is the last byte it may be partial
+;         ; If this is the last byte it may be piece
 ;         block-size (if (= block-position (@torrent :blocks-length))
 ;                         (@torrent :last-block-length)
 ;                         (@torrent :block-length))
@@ -91,59 +91,132 @@
     (@torrent :last-piece-length)
     (@torrent :piece-length)))
 
-; The bytes in a block partial (32kb)
-(def partial-length 32768)
+; The bytes in a block piece (32kb)
+(def piece-length 32768)
 
-(defn block-partials
-  "Given a block, return all the partials within it"
+(defn block-pieces
+  "Given a block, return all the pieces within it"
   [torrent block-index]
   (let [block-length (block-length torrent block-index)]
     (loop [offset 0
-           partials []]
+           pieces []]
       ; If we havn't finished splitting up this block
       (if-not (= offset block-length)
-        ; Add another partial to the partials vector
-        (recur (+ offset (min partial-length (- block-length offset)))
-               (conj partials [offset (+ offset partial-length)]))
-        ; Return all the partial parts
-        partials))))
+        ; Add another piece to the pieces vector
+        (recur (+ offset (min piece-length (- block-length offset)))
+               (conj pieces [offset (+ offset piece-length)]))
+        ; Return all the piece parts
+        pieces))))
 
-(defn- get-file-partial 
+(defn- get-file-piece
   [offset length file]
   (async [success-callback]
     (let-async [:let offset (min offset ((meta file) :block-start))
                 :let end (min (+ offset length) ((meta file) :block-end))
                 ; :let length (- end offset)
                 ; Get a filereader on the block-files underlying file
-                file (entry/file (blockfile/get-file file))
+                file (entry/file (.-file file))
                 data (filesystem/filereader file)]
+      (.log js/console "get-file-piece")
       (success-callback (uint8-array data offset length))
       )))
 
 
 ; H.C this works, investigate why prod doesn't
 ; (dispatch/react-to #{:document-ready} (fn [_]
-;   (let-async [pat (get-file-partial 0 50 "Rescue You.mp3")]
+;   (let-async [pat (get-file-piece 0 50 "Rescue You.mp3")]
 ;     (.log js/console "done"))))
 
 ; TODO rewrite to grab block and hold it until all
 ; the pieces have been requested
 ; this would require one fileread as opposed to n
-(defn get-partial [torrent block-index offset length]
+(defn get-piece [torrent block-index offset length]
   (async [success-callback]
-    (.log js/console "get-partial called")
+    (.log js/console "get-piece called")
     (let [block-offset (* block-index (@torrent :piece-size))
           torrent-hash (@torrent :pretty-info-hash)
           offset (+ block-offset offset)
           end (+ offset length)
-          ; A block that straddles two files may have a partial that
+          ; A block that straddles two files may have a piece that
           ; stradles two files, establish which files use this block
           files (filter #(contains? % block-index) (@files torrent-hash))]
-      ; Retrieve the partials from the files
-      (let-async [data (get-file-partial offset end (first files))]
+      ; Retrieve the pieces from the files
+      (let-async [data (get-file-piece offset end (first files))]
+        (.log js/console "get-piece is ready")
         (success-callback data)
         )
-      ; (let-async [data (map-async #(get-file-partial offset end %) files)]
+      ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))
 
       )))
+
+;;************************************************
+;; Wait for a block to have all its pieces before
+;; writing. This avoids disk thrashing,
+;; prematurely announcing have-piece and allows
+;; hash verification of the block. 
+;;************************************************
+
+; Create a queue to store the pieces waiting for filewriter
+; (defqueue pieces-to-write (fn [info-hash [block-index _ _]]
+;   ; Section the queue by the torrent and the block this piece
+;   ; pertians too
+;   [info-hash block-index]))
+
+(defn- consume!
+  ([queue-atom] 
+    (consume! queue-atom []))
+  ([queue-atom data] 
+    (cons data 
+          (lazy-seq (consume! queue-atom (consume-entry! queue))))))
+
+(defn- consume-entry! 
+  "Remove and return the head of an atom"
+  [queue]
+  (let [entry (first @queue)]
+    (swap! queue rest)
+    entry))
+
+(def pieces-to-write (atom {}))
+(def blocks-to-write (atom []))
+
+(dispatch/react-to #{:receive-piece} (fn [_ data]
+  ; Add this piece to the queue of pieces to write
+  (swap! pieces-to-write 
+    (partial merge-with concat) {[info-hash block-index] data})
+  ; Fetch all the pieces for this block
+  (let [pieces (get @pieces-to-write [info-hash block-index])]
+    ; If we've fetched all the pieces for this block
+    (if (= (count pieces) (block-pieces block-index))
+      (let [block (block pieces)
+            block-hash (hash block)]
+        ; If the hash of the block we have is correct, use the block
+        (if (= block-hash (nth (@torrent :pieces-hash) block-index))
+          (swap! blocks-to-write conj 
+            (with-meta block {:info-hash info-hash :block-index block-index}))
+          ; Otherwise destroy it and announce the invalidity
+          (dispatch/fire :invalid-block [info-hash block-index]))
+  )))))
+
+(add-watch blocks-to-write (fn [_ _ _ _]
+  (doseq [block (consume! blocks-to-write)]
+    (let [torrent (@torrents (block :info-hash))
+          files (filter #(contains? % (block :block-index)) (@torrent :files))]
+      (doseq [file files]
+        (let [; Get the data stored in the meta about this files blocks
+              file-meta (meta file)
+              ; where in this file should we seek too
+              seek-position (max 0 (- (block :begin) (file-meta :block-start)))
+              ; trim the start of the block
+              block-start (max 0 (- (file-meta :block-start) block-start))
+              ; trim the end of the block
+              block-end (min (count block) (- (file-meta :block-end) (block :begin)))
+              block (subarray block block-start block-end)]
+          (let-async [writer (entry/create-writer file)]
+            ; When the block finishes writing
+            (set! (.-onwriteend writer) (fn [_]
+              ; And inform that it has been written
+              (dispatch/fire :written-block [info-hash block-index])))
+            (.seek writer offset)
+            (.write writer (block :data)))
+    ))))))

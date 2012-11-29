@@ -5,7 +5,7 @@
   (byte-array [bitfield] "Returns the internal byte-array")
   (nth-piece [bitfield n] "Return a piece - not a block"))
 
-(deftype Bitfield [byte-array]
+(deftype Bitfield [byte-array watches]
 
   Object
   (toString [this]
@@ -42,6 +42,7 @@
         ; Otherwise remove it
         (aset byte-array byte-index (bit-xor byte piece-bit)))
     ))
+
   )
 
 (defn bitfield [bits]
@@ -50,11 +51,11 @@
     ; of bits in it
     (let [length (Math/ceil (/ bits 8))
           byte-array (js/Uint8Array. length)]
-      (Bitfield. byte-array))
+      (Bitfield. byte-array nil))
     ; Construct a bitfield from an existing one
     ; (recieved from peer)
     (let [byte-array (js/Uint8Array. bits)]
-      (Bitfield. byte-array))))
+      (Bitfield. byte-array nil))))
 
 (defn fill-bitfield 
   "Given a bitfield mark that we have all the pieces"

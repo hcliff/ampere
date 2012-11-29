@@ -83,7 +83,7 @@
 (defmethod receive-data msg-piece [p data]
   (let [[index begin] (crypt/unpack [:int :int] (subarray data 1 8))
         piece (subarray data 8)]
-    (trigger p :receive-have index begin data)))
+    (trigger p :receive-piece index begin data)))
 
 (defmethod receive-data msg-cancel [p data]
   (let [[index begin length] (crypt/unpack [:int :int :int] (rest data))]
@@ -124,12 +124,8 @@
       :else
       (let [; Turn our data into a vector if it isn't
             data (if (vector? data) data (vector data))
-            ; stringify 
-            data (map #(crypt/byteArrayToString %) data)
-            string (str type (apply str data))
-            ]
-        (.log js/console "wurd" data string)
-        (js* "debugger;")
+            ; Concat all our data with the type at the start
+            string (str type (apply str data))]
         (protocol/send-data client string))))
     
   ; H.C commented out for the legacy demo
@@ -184,13 +180,12 @@
 
   (send-request [client index begin piece]
     (let [data (crypt/pack :int index :int begin :int piece)]
-      (js* "debugger;")
       (protocol/send-data client msg-request data)))
 
   ; H.C REVIEW
   (send-piece [client block-index begin piece]
     (let [data (crypt/pack :int block-index :int begin)]
-      (protocol/send-data client [msg-piece data piece])))
+      (protocol/send-data client msg-piece [data piece])))
 
   (send-cancel [client index begin piece]
     (let [data (crypt/pack :int index :int begin piece)]
@@ -205,6 +200,7 @@
   (subarray [array start] [array start finish] "Return a subarray of the array immediately"))
 
 (extend-type js/Uint8Array
+
   ISeqable
   (-seq [array] (array-seq array 0))
 
@@ -239,21 +235,15 @@
   (subarray [array start finish]
     (.subarray array start finish))
 
-  ; IHash
-  ; (-hash [this] 
-  ;   (goog.string/hashCode (pr-str this)))
-
-  ; ISeqable
-  ; (-seq [coll] coll)
-
   ICounted
   (-count [array] (.-length array))
 
-  ; ASeq
-  ; ISeq
-  ; (-first [coll] (aget coll 0))
-  ; (-rest [coll] (subarray coll 1))
   )
+
+; H.C Object on type gives error?
+(set! js/Uint8Array.prototype.toString (fn []
+  (this-as self
+    (crypt/byteArrayToString self))))
 
 (defn subarray 
   ([coll start]
