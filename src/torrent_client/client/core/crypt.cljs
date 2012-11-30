@@ -2,20 +2,17 @@
   (:require
     [goog.crypt :as crypt]
     [goog.crypt.Sha1 :as Sha1]
-    [torrent-client.client.core.bencode :as bencode])
+    [torrent-client.client.core.reader :as reader])
   (:use 
-    [torrent-client.client.core.bencode :only [int char]]
-    [torrent-client.client.core.bencode :only 
-      [encode decode uint8-array push-back-reader]]
-    [goog.crypt :only [byteArrayToString]]
+    [torrent-client.client.core.bencode :only [char]]
     [jayq.util :only [clj->js]]))
 
 (defn sha1 
   "A wrapper around the SHA class to get the
   computed value without subsequent calls"
-  [string]
+  [obj]
   (let [sha1 (crypt/Sha1.)]
-    (.update sha1 string)
+    (.update sha1 obj)
     (.digest sha1)))
 
 (def sizes {
@@ -43,11 +40,11 @@
          (bit-and 0xff data)]))
 
 (defn unpack [formatters data]
-  (let [reader (push-back-reader data)]
+  (let [reader (reader/push-back-reader data)]
     (loop [formatters formatters
            data []]
       (if-let [formatter (first formatters)]
-        (let [bytes (bencode/read reader (sizes formatter))]
+        (let [bytes (reader/read reader (sizes formatter))]
           (recur (rest formatters)
                  ; Execute this formatter add the result to the data
                  (conj data (unpack-data formatter bytes))))
@@ -63,7 +60,7 @@
        (bit-shift-left (nth data 2) 8)
        (nth data 3)))
 
-(defn str-to-uint8-array
+(defn str->byte-array
   "The same as googles stringToByteArray
   but works on a typed array instead!"
   [string]
@@ -81,10 +78,7 @@
 (defn b64-decode [string]
   (.atob js/window string))
 
-; allegedly (:use) supports rename, I can't get it working
-(def goog-byteArrayToString byteArrayToString)
-
-(defn byteArrayToString
+(defn byte-array->str
   "Wrapper around the closure library to feed it cljs datatypes"
   [array]
-  (goog-byteArrayToString (clj->js array)))
+  (crypt/byteArrayToString (clj->js array)))

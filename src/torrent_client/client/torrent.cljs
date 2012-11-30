@@ -12,8 +12,9 @@
     [torrent-client.client.waltz :only [machine]]
     [torrent-client.client.core.string :only [partition-string pad-string-left]]
     [torrent-client.client.core.url :only [http-scheme?]]
-    [torrent-client.client.core.bencode :only [encode decode uint8-array push-back-reader]]
-    [torrent-client.client.core.crypt :only [sha1 str-to-uint8-array]]
+    [torrent-client.client.core.reader :only [push-back-reader]]
+    [torrent-client.client.core.bencode :only [encode decode uint8-array]]
+    [torrent-client.client.core.crypt :only [sha1 str->byte-array]]
     [torrent-client.client.storage :only [connection]]
     [torrent-client.client.pieces :only [files]]
     )

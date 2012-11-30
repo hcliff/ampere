@@ -1,39 +1,15 @@
 (ns torrent-client.client.core.bencode
-  (:require [goog.crypt :as crypt])
-  (:use 
-    [clojure.walk :only [keywordize-keys]]
+  (:require 
+    [goog.crypt :as crypt]
+    [torrent-client.client.core.reader :as reader])
+  (:use
     [jayq.util :only [clj->js]]))
-
-(defprotocol PushbackReader
-  (read [reader length] "Returns the next char from the Reader,
-nil if the end of stream has been reached"))
-
-; Using two atoms is less idomatic, but saves the repeat overhead of map creation
-(deftype ArrayPushbackReader [array index-atom]
-  PushbackReader
-  (read [reader length]
-    (let [idx @index-atom
-          length (or length 1)
-          buffer-view (subarray array idx (+ idx length))]
-      (swap! index-atom + length)
-      ; If reading only 1 character return just the character
-      ; otherwise return an array of characters
-      (if (= length 1)
-        (aget buffer-view 0)
-        buffer-view))))
-
-(defn push-back-reader [array]
-  "Creates an ArrayPushbackReader from a given array"
-  (ArrayPushbackReader. array (atom 0)))
 
 ; There must be a better way to do this
 (defn uint8-array
   ([length] (js/Uint8Array. length))
   ([array-buffer offset] (js/Uint8Array. array-buffer offset))
   ([array-buffer offset length] (js/Uint8Array. array-buffer offset length)))
-
-(defn subarray [array-buffer-view begin end]
-  (.subarray array-buffer-view begin end))
 
 (defn char [characters]
   (cond
@@ -48,7 +24,7 @@ nil if the end of stream has been reached"))
   (js/parseInt number))
 
 (defn decode [stream & i]
-  (let [indicator (if (nil? i) (read stream) (first i))]
+  (let [indicator (if (nil? i) (reader/read stream) (first i))]
     (cond 
       ; indicator is a number (indicates a string)
       (and (>= indicator 48) (<= indicator 57)) (decode-string stream indicator)
@@ -60,19 +36,19 @@ nil if the end of stream has been reached"))
       (= indicator 100) (decode-map stream))))
 
 (defn- decode-number [stream delimeter & ch]
-  (loop [i (if (nil? ch) (read stream) (first ch)), result ""]
+  (loop [i (if (nil? ch) (reader/read stream) (first ch)), result ""]
     (let [c (char i)]
       (if (= c delimeter)
         (int result)
-        (recur (read stream) (str result c))))))
+        (recur (reader/read stream) (str result c))))))
 
 (defn- decode-string [stream ch]
   (let [length (decode-number stream ":" ch)]
-    (char (read stream length))))
+    (char (reader/read stream length))))
 
 (defn- decode-list [stream]
   (loop [result []]
-    (let [c (read stream)]
+    (let [c (reader/read stream)]
       ; If c is e - the end character then return the result
       (if (= c 101)
         result
@@ -88,8 +64,7 @@ nil if the end of stream has been reached"))
 
 
 (defprotocol ArrayOutputStream
-  (write [array bytes] "append the bytes to the array")
-  (toByteArray [array] "represent the array as a bytearray"))
+  (write [array bytes] "append the bytes to the array"))
 
 (deftype ByteArrayOutputStream [array]
   ArrayOutputStream
@@ -97,8 +72,7 @@ nil if the end of stream has been reached"))
     (if (number? bytes)
       (.push array bytes)
       (.apply (.-push array) array bytes)))
-  (toByteArray [stream]
-    array))
+  )
 
 (defn byte-array-output-stream []
   "Generate a new ByteArrayOutputStream with a native
@@ -108,7 +82,7 @@ nil if the end of stream has been reached"))
 (defn encode [obj]
   (let [stream (byte-array-output-stream)] 
     (encode-object obj stream)
-    (toByteArray stream)))
+    (.-array stream)))
 
 (defn- encode-object [obj stream]
   (cond (string?  obj) (encode-string obj stream)

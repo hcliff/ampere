@@ -5,9 +5,10 @@
     [torrent-client.client.protocol.main :as protocol]
     [goog.events :as events])
   (:use 
-    [torrent-client.client.core.bencode :only [uint8-array]]
+    [torrent-client.client.core.byte-array :only [uint8-array subarray]]
     [torrent-client.client.peer-id :only [peer-id]]
-    [waltz.state :only [trigger]]))
+    [waltz.state :only [trigger]])
+  )
 
 (defn ^boolean array-buffer-view? [candidate]
   ; Incorrect; but js/ArrayBufferView doesn't exist
@@ -81,7 +82,7 @@
     (trigger p :receive-request index begin length)))
 
 (defmethod receive-data msg-piece [p data]
-  (let [[index begin] (crypt/unpack [:int :int] (subarray data 1 8))
+  (let [[index begin] (crypt/unpack [:int :int] (subarray data 1 9))
         piece (subarray data 8)]
     (trigger p :receive-piece index begin data)))
 
@@ -91,7 +92,7 @@
 
 (defmethod receive-data :default [p data]
   (let [info-hash (vec (subarray data 28 48))
-        peer-id (crypt/byteArrayToString (vec (subarray data 48 68)))]
+        peer-id (crypt/byte-array->str (vec (subarray data 48 68)))]
     (trigger p :receive-handshake info-hash peer-id)))
 
 ;;************************************************
@@ -107,7 +108,7 @@
     (set! (.-onmessage channel) (fn [event]
       ; Handshakes are sent as strings, everything else as arraybuffer
       (if (string? (.-data event))
-        (receive-data peer (crypt/str-to-uint8-array (.-data event)))
+        (receive-data peer (crypt/str->byte-array (.-data event)))
         (receive-data peer (.-data event))))))
 
   (send-data [client string]
@@ -153,8 +154,8 @@
   (send-handshake [client]
     "Generate a handshake string"
     (let [protocol-name "BitTorrent protocol"
-          reserved (crypt/byteArrayToString [00 00 00 00 00 00 00 00])
-          info-hash (crypt/byteArrayToString (@torrent :info-hash))
+          reserved (crypt/byte-array->str [00 00 00 00 00 00 00 00])
+          info-hash (crypt/byte-array->str (@torrent :info-hash))
           data (str protocol-name reserved info-hash @peer-id)]
       (protocol/send-data client msg-handshake data)))
 
@@ -195,61 +196,6 @@
   ;   (protocol/send-data client ""))
 
   )
-
-(defprotocol SubArray
-  (subarray [array start] [array start finish] "Return a subarray of the array immediately"))
-
-(extend-type js/Uint8Array
-
-  ISeqable
-  (-seq [array] (array-seq array 0))
-
-  ICounted
-  (-count [a] (alength a))
-
-  IIndexed
-  (-nth
-    ([array n]
-       (if (< n (alength array)) (aget array n)))
-    ([array n not-found]
-       (if (< n (alength array)) (aget array n)
-           not-found)))
-
-  ILookup
-  (-lookup
-    ([array k]
-       (aget array k))
-    ([array k not-found]
-       (-nth array k not-found)))
-
-  IReduce
-  (-reduce
-    ([array f]
-       (ci-reduce array f))
-    ([array f start]
-       (ci-reduce array f start)))
-
-  SubArray
-  (subarray [array start]
-    (.subarray array start))
-  (subarray [array start finish]
-    (.subarray array start finish))
-
-  ICounted
-  (-count [array] (.-length array))
-
-  )
-
-; H.C Object on type gives error?
-(set! js/Uint8Array.prototype.toString (fn []
-  (this-as self
-    (crypt/byteArrayToString self))))
-
-(defn subarray 
-  ([coll start]
-    (.subarray coll start))
-  ([coll start finish]
-    (.subarray coll start finish)))
 
 (defn generate-protocol [torrent channel peer]
   "Generate an instance of the protocol, and start watching the 

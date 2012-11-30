@@ -1,5 +1,4 @@
 (ns filesystem.filesystem
-  (:use [filesystem.blockfile :only [get-file]])
   (:require [filesystem.prefix :as prefix])
   (:use-macros [async.macros :only [let-async async]]))
 

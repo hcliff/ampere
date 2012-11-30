@@ -100,13 +100,15 @@
           (let-async [data (get-piece torrent block-index offset length)]
             (protocol/send-piece bittorrent-client block-index offset data)))))
 
-    (defevent me :receive-piece [piece]
+    (defevent me :receive-piece [block-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
       (.log js/console "received a piece")
-      (state/trigger torrent :receive-piece piece)
-      (if (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield))
-        (protocol/send-request bittorrent-client (get-next-piece torrent))))
+      (dispatch/fire :receive-piece 
+        [torrent block-index begin data])
+      ; (if (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield))
+      ;   (protocol/send-request bittorrent-client (get-next-piece torrent)))
+      )
 
     (defevent me :receive-cancel [index begin length]
 
