@@ -43,6 +43,11 @@
       (state/trigger me :unchoke-peer)
       ))
 
+    (dispatch/react-to #{:written-block} (fn [_ _]
+      (.log js/console "written-block")
+      (state/trigger me :written-block)
+      ))
+
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
       peer-id and the torrent info-hash"
@@ -103,16 +108,20 @@
     (defevent me :receive-piece [block-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
-      (.log js/console "received a piece")
-      (dispatch/fire :receive-piece 
-        [torrent block-index begin data])
-      ; (if (bitfield-unique (@torrent :bitfield) (@peer-data :bitfield))
-      ;   (protocol/send-request bittorrent-client (get-next-piece torrent)))
-      )
+      (dispatch/fire :receive-piece [torrent block-index begin data]))
+
+    (defevent me :written-block []
+      (js* "debugger;")
+      (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
+        (doseq [[begin length] (block-pieces torrent block-index)]   
+          (protocol/send-request bittorrent-client block-index begin length))))
 
     (defevent me :receive-cancel [index begin length]
 
       )
+
+    (defevent me :add-block []
+      (.log js/console "add block called"))
 
     (defevent me :choke-peer []
       (swap! peer-data assoc :choking true)

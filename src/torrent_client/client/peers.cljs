@@ -1,6 +1,6 @@
 (ns torrent-client.client.peers
   (:use 
-    [torrent-client.client.main :only [torrents]]
+    [torrent-client.client.torrents :only [torrents]]
     [torrent-client.client.peer :only [generate-peer]]
     [waltz.state :only [trigger]])
   (:require 
@@ -58,10 +58,10 @@
     (.log js/console "peer" peer)
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
-(dispatch/react-to #{:add-block} (fn [_ [torrent block]]
+(dispatch/react-to #{:written-block} (fn [_ [torrent block]]
   "When a peer sends us a block we didn't have before"
   ; Inform all our peers we have it
-  (doseq [peer (@peers (torrent :info-hash))]
+  (doseq [peer (@peers (@torrent :info-hash))]
     (trigger peer :add-block block))))
 
 ; listen for changes in the peers interest

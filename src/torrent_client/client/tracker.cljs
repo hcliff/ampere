@@ -7,15 +7,14 @@
   (:use
     [jayq.core :only [ajax]]
     [torrent-client.jayq.core :only [param]]
-    [torrent-client.client.main :only [torrents]]
+    [torrent-client.client.torrents :only [torrents]]
     [torrent-client.client.peer-id :only [peer-id]]
     [torrent-client.client.core.string :only [a2b-hex]]
     [torrent-client.client.connection :only 
       [create-connection-send-offer 
        recieve-answer
        receive-offer-send-answer
-       create-data-channel]]
-    [torrent-client.client.channel :only [generate-channel]])
+       create-data-channel]])
   (:use-macros [async.macros :only [let-async async]]))
 
 ;;************************************************

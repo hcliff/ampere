@@ -1,6 +1,6 @@
 (ns torrent-client.client.speed
   ; (:use 
-  ;   [torrent-client.client.main :only [torrents]]
+  ;   [torrent-client.client.torrents :only [torrents]]
   ;   [goog :only [now]])
   ; (:require
   ;   [torrent-client.client.core.dispatch :as dispatch]

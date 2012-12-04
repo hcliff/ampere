@@ -83,8 +83,8 @@
 
 (defmethod receive-data msg-piece [p data]
   (let [[index begin] (crypt/unpack [:int :int] (subarray data 1 9))
-        piece (subarray data 8)]
-    (trigger p :receive-piece index begin data)))
+        piece (subarray data 9)]
+    (trigger p :receive-piece index begin piece)))
 
 (defmethod receive-data msg-cancel [p data]
   (let [[index begin length] (crypt/unpack [:int :int :int] (rest data))]
@@ -137,7 +137,6 @@
   ;           ; only count byte arrays, add one for the msg-type
   ;           buffer-size (inc (reduce + (map count (rest data))))
   ;           byte-array (uint8-array buffer-size)]
-  ;       (js* "debugger;")
   ;       (.set byte-array [(first data)])
   ;       (loop [data (rest data)
   ;              offset 1]

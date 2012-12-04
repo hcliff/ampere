@@ -74,9 +74,6 @@
                     (submit-button {:class "btn btn-primary" :form "seed-form"} "create")]
                   ]
 
-
-
-
                 [:div.navbar.navbar-fixed-top
                   [:div.navbar-inner
                     [:div.container-fluid
@@ -108,9 +105,9 @@
                         [:table.table.table-striped.body
                           [:thead
                             [:tr
-                              [:th.flex3 "Name"]
+                              [:th.flex2.name "Name"]
                               [:th.flex1.size "Size"]
-                              [:th.flex5 "Progress"]
+                              [:th.flex5.progress-td "Progress"]
                               [:th.flex1.speed "Speed"]
                               [:th.actions ""]
                             ]]

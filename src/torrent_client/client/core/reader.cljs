@@ -1,6 +1,5 @@
 (ns torrent-client.client.core.reader
-  (:use
-    [torrent-client.client.core.byte-array :only [subarray]]))
+  (:use [torrent-client.client.core.byte-array :only [subarray]]))
 
 (defprotocol PushbackReader
   (read [reader length] "Returns the next char from the Reader,

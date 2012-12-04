@@ -34,7 +34,7 @@
   ([elements total new-elements]
     (if (empty? elements)
       new-elements
-      (let [new-total (+ total ("length" (first elements)))
+      (let [new-total (+ total (get (first elements) :length))
             pos {:pos-start total :pos-end new-total}
             new-element (merge (first elements) pos)]
         (recur (rest elements) new-total (conj new-elements new-element))
@@ -92,6 +92,7 @@
          :comment (info "comment")
          :name (info "name")
          :files files
+         :current-length 0
          :total-length total-length
          :last-piece-length last-piece-length
         })
@@ -201,7 +202,7 @@
         (do
           (swap! torrent assoc :status :processed)
           (.log js/console "about to :add-torrent")
-          (dispatch/fire :started-torrent torrent))))
+          (dispatch/fire :processed-torrent torrent))))
 
     ; Trigger the (in) on the requested state
     (state/set me current)

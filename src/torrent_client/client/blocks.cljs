@@ -1,14 +1,7 @@
 (ns torrent-client.client.blocks
-  (:use [torrent-client.client.core.crypt :only [sha1 byte-array->str]]
-        [torrent-client.client.core.byte-array :only [uint8-array]])
-  )
-
-(defprotocol IFile 
-  (-file [this] "Return the underlying file"))
-
-(extend-type js/File
-  IFile
-  (-file [this] this))
+  (:use 
+    [torrent-client.client.core.crypt :only [sha1 byte-array->str]]
+    [torrent-client.client.core.byte-array :only [uint8-array]]))
 
 (deftype BlockFile [meta file]
 
@@ -40,11 +33,9 @@
 
   IAssociative
   (-contains-key? [this k]
-    (<= (meta :block-start) k (meta :block-end)))
-
-  IFile
-  (-file [this] file)
-
+    "Check if a block-index is required by this file"
+    (if-not (nil? meta)
+      (<= (meta :block-start) k (meta :block-end))))
   )
 
 (defn block-file [file]
@@ -52,16 +43,21 @@
 
 (deftype Block [meta byte-array ^:mutable __hash]
 
+  ICounted
+  (-count [a] (count byte-array))
+
   IHash
   (-hash [_]
     ; H.C; check caching-hash macro
     (if-not (nil? __hash)
       __hash
       ; sha1 does not return a Uint8Array, it returns a regular array
-      (let [hash-str (crypt/byte-array->str (sha1 byte-array))]
+      (let [hash-str (byte-array->str (sha1 byte-array))]
+        ; H.C; this causes a compile fail?
+        ; (set! __hash hash-str)
+
         ; If the hash didn't previously exist generate it and
-        (set! __hash hash-str)
-        __hash)))
+        hash-str)))
 
   IWithMeta
   (-with-meta [_ meta] (Block. meta byte-array __hash))

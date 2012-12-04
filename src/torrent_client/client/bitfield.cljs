@@ -1,5 +1,6 @@
 (ns torrent-client.client.bitfield
-  (:use [jayq.util :only [clj->js]]))
+  (:use [jayq.util :only [clj->js]])
+  (:require [torrent-client.client.core.dispatch :as dispatch]))
 
 (defprotocol BitfieldProtocol
   (byte-array [bitfield] "Returns the internal byte-array")
@@ -76,3 +77,7 @@
     ; Return the second bitfields unique pieces
     ; ie: pieces only the peer has
     (bit-and bitfield2 xor)))
+
+(dispatch/react-to #{:written-block} (fn [_ [torrent block-index]]
+  (let [bitfield (@torrent :bitfield)]
+    (assoc bitfield block-index true))))

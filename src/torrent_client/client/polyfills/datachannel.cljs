@@ -11,7 +11,8 @@
 
 (.log js/console "start shim")
 
-(js/DCPF_install "wss://datachannel-polyfill.nodejitsu.com")
+; (js/DCPF_install "wss://datachannel-polyfill.nodejitsu.com")
+(js/DCPF_install "wss://datachannel-piranna.dotcloud.com")
 
 (defprotocol RTCPeerConnection
   (local-id [this] "Returns a unique id for this connections local desc")

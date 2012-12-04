@@ -60,6 +60,12 @@
        (bit-shift-left (nth data 2) 8)
        (nth data 3)))
 
+(defn b64-encode [string]
+  (.btoa js/window string))
+
+(defn b64-decode [string]
+  (.atob js/window string))
+
 (defn str->byte-array
   "The same as googles stringToByteArray
   but works on a typed array instead!"
@@ -69,14 +75,7 @@
     (doseq [i (range (count string))
             :let [byte (.charCodeAt string i)]]
       (aset buffer-view i byte))
-    buffer-view
-  ))
-
-(defn b64-encode [string]
-  (.btoa js/window string))
-
-(defn b64-decode [string]
-  (.atob js/window string))
+    buffer-view))
 
 (defn byte-array->str
   "Wrapper around the closure library to feed it cljs datatypes"
