@@ -1,6 +1,7 @@
 # Ampere
 
 A bittorrent client that runs in the browser without plugins.
+
 DEMO: http://hcliff.github.com/ampere
 
 ## Tech
