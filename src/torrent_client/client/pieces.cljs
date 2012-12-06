@@ -59,9 +59,16 @@
         candidates (remove #(contains? currently-working (first %)) indexed)
         ; Get the first wanted block
         block (some #(if-not (zero? (second %)) (first %)) candidates)]
-    ; Add this block to the works in progress
-    (swap! working (partial merge-with set/union) {info-hash #{block}})
 		block))
+
+(defn work-next-block
+  "Marks that we have started fetching a current block"
+  [torrent peer-bitfield]
+  (let [info-hash (@torrent :pretty-info-hash)
+        block-index (get-next-block torrent peer-bitfield)]
+    ; Add this block to the works in progress
+    (swap! working (partial merge-with set/union) {info-hash #{block-index}})
+    block-index))
 
 ; (dispatch/react-to #{:written-block :invalid-block} (fn [_ torrent block-index]
 ;   "When a block has finished or is invalid, remove it from the in-progress"
@@ -92,13 +99,14 @@
 (defn- get-file-piece
   [offset length file]
   (async [success-callback]
-    (let-async [:let offset (min offset ((meta file) :block-start))
-                :let end (min (+ offset length) ((meta file) :block-end))
+    (let-async [:let offset (max offset ((meta file) :pos-start))
+                :let end (min (+ offset length) ((meta file) :pos-end))
                 ; :let length (- end offset)
+                :let length piece-length
                 ; Get a filereader on the block-files underlying file
                 file (entry/file (.-file file))
                 data (filesystem/filereader file)]
-      (.log js/console "get-file-piece")
+      (.log js/console "get-file-piece" offset length)
       (success-callback (uint8-array data offset length))
       )))
 
@@ -107,8 +115,7 @@
 ; this would require one fileread as opposed to n
 (defn get-piece [torrent block-index offset length]
   (async [success-callback]
-    (.log js/console "get-piece called")
-    (let [block-offset (* block-index (@torrent :piece-size))
+    (let [block-offset (* block-index (@torrent :piece-length))
           info-hash (@torrent :pretty-info-hash)
           offset (+ block-offset offset)
           end (+ offset length)
@@ -132,22 +139,15 @@
 ;; hash verification of the block. 
 ;;************************************************
 
-(defn- consume!
-  ([queue-atom] 
-    (consume! queue-atom (consume-entry! queue-atom)))
-  ([queue-atom data] 
-    (cons data 
-          (lazy-seq (consume! queue-atom (consume-entry! queue-atom))))))
-
-(defn- consume-entry! 
-  "Remove and return the head of an atom"
-  [queue]
-  (let [entry (first @queue)]
-    (swap! queue rest)
-    entry))
-
 (def pieces-to-write (atom {}))
-(def blocks-to-write (atom []))
+(def file-write-queue (atom {}))
+
+
+(defn queue! [queue queue-key queue-data]
+  (swap! queue (partial merge-with concat) {(hash queue-key) [queue-data]}))
+
+(defn consume! [queue queue-key]
+  (swap! queue assoc (hash queue-key) (rest (@queue (hash queue-key)))))
 
 (dispatch/react-to #{:receive-piece} (fn [_ [torrent block-index begin data]]
   ; Add this piece to the queue of pieces to write
@@ -159,42 +159,56 @@
     (let [pieces (get @pieces-to-write queue-key)]
       ; If we've fetched all the pieces for this block
       (if (= (count pieces) (count (block-pieces torrent block-index)))
-        (let [block (blocks/block pieces)]
+        (let [block (blocks/block pieces)
+              block-hash (hash block)]
+          (.log js/console "block hash" block-hash (nth (@torrent :pieces-hash) block-index))
           ; If the hash of the block we have is correct, use the block
           (if (= (hash block) (nth (@torrent :pieces-hash) block-index))
-            (swap! blocks-to-write conj 
-              (with-meta block {:info-hash info-hash :block-index block-index}))
+            (dispatch/fire :receive-block [info-hash block-index block])
             ; Otherwise destroy it and announce the invalidity
             (dispatch/fire :invalid-block [torrent block-index])
       ))))
   )))
 
-(add-watch blocks-to-write nil (fn [_ _ _ _]
-  ; Loop through all the blocks waiting to write
-  (doseq [block @blocks-to-write]
-    ; Grab their meta info
-    (let [{:keys [info-hash block-index]} (meta block)
-          torrent (@torrents info-hash)
-          block-offset (* block-index (@torrent :piece-length))
-          files (filter #(contains? % block-index) (@files info-hash))]
-      ; For every file that needs this block
-      (doseq [file files]
-        (let [; Get the data stored in the meta about this files blocks
-              {:keys [pos-start pos-end]} (meta file)
-              ; where in this file should we seek too
-              seek-position (max 0 (- block-offset pos-start))
-              ; trim the start of the block (inverse of seek)
-              block-start (max 0 (- pos-start block-offset))
-              ; trim the end of the block
-              block-end (- (min (count block) (- pos-end pos-start))
-                           block-start)
-              block-data (subarray (.-byte-array block) block-start block-end)]
-          (let-async [writer (entry/create-writer (.-file file))]
-            ; When the block finishes writing
-            (set! (.-onwriteend writer) (fn [_]
-              ; And inform that it has been written
-              (dispatch/fire :written-block [torrent block-index])))
-            (.seek writer seek-position)
-            ; H.C: for now only blobs can be written
-            (.write writer (js/Blob. (js/Array. block-data)))
-    )))))))
+(dispatch/react-to #{:receive-block} (fn [_ [info-hash block-index block]]
+  ; Grab their meta info
+  (let [torrent (@torrents info-hash)
+        block-offset (* block-index (@torrent :piece-length))
+        files (filter #(contains? % block-index) (@files info-hash))]
+    ; For every file that needs this block
+    (doseq [file files]
+      (let [; Get the data stored in the meta about this files blocks
+            {:keys [pos-start pos-end]} (meta file)
+            ; where in this file should we seek too
+            seek-position (max 0 (- block-offset pos-start))
+            ; trim the start of the block (inverse of seek)
+            block-start (max 0 (- pos-start block-offset))
+            ; trim the end of the block
+            block-end (- (min (count block) (- pos-end pos-start))
+                         block-start)
+            block-data (subarray (.-byte-array block) block-start block-end)]
+        ; Add this to list of blocks to write for this file
+        (queue! file-write-queue file [block-index seek-position block-data])
+        ; And potentially initiate a writer
+        (dispatch/fire :write-file [torrent file])
+  )))))
+
+(dispatch/react-to #{:write-file} (fn [_ [torrent file]]
+  ; This will simply fail if a writer exists
+  (let-async [writer (entry/create-writer (.-file file))]
+    (seek-then-write torrent file writer))))
+
+(defn- seek-then-write [torrent file writer]
+  ; Grab the next block when possible
+  (when-let [[block-index seek-position block-data] (@file-write-queue (hash file))]
+    ; When the block finishes writing
+    (set! (.-onwriteend writer) (fn [_]
+      ; Consume this block from the queue
+      (consume! file-write-queue file)
+      ; And inform that it has been written
+      (dispatch/fire :written-block [torrent block-index])
+      ; grab the next one if applicable
+      (seek-then-write torrent file writer)))
+    (.seek writer seek-position)
+    ; H.C: for now only blobs can be written
+    (.write writer (js/Blob. (js/Array. block-data)))))

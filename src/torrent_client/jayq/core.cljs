@@ -34,3 +34,9 @@
 
 (defn tab [$elem params]
   (.tab $elem params))
+
+(defn css
+  ([$elem opts]
+     (.css $elem (clj->js opts)))
+  ([$elem p v]
+     (.css $elem (name p) v)))

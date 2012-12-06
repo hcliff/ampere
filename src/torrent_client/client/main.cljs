@@ -2,16 +2,15 @@
   (:require 
     [torrent-client.client.core.dispatch :as dispatch]
     [torrent-client.client.bitfield :as bitfield]
-    [noir.cljs.client.watcher :as watcher]
-    [clojure.browser.repl :as repl]
     [goog.events :as events]
     [goog.events.FileDropHandler :as FileDropHandler]
     [goog.string :as gstring]
     [clojure.string :as string]
-    [waltz.state :as state])
+    [waltz.state :as state]
+    [crate.core :as crate])
   (:use
     [jayq.core :only [$ on attr document-ready empty text]]
-    [torrent-client.jayq.core :only [append input-files event-files modal tab]]
+    [torrent-client.jayq.core :only [append input-files event-files modal tab css]]
     [torrent-client.client.waltz :only [machine]]
     [torrent-client.client.pieces :only [files]]
     [torrent-client.client.torrents :only [torrents]]
@@ -25,7 +24,7 @@
 ;; Dev stuff
 ;;************************************************
 
-(watcher/init)
+; (watcher/init)
 ; (repl/connect "http://localhost:9000/repl")
 
 ;;************************************************
@@ -204,11 +203,13 @@
           [:i {:class (bound-class torrent active? "icon-pause" "icon-play")}]]
         [:a {:href (file-url torrent) 
              :target "_blank" 
-             :class (bound-class torrent completed? "btn" "btn hide")}
+             :class (bound-class torrent completed? "btn" "btn")}
           [:i.icon-folder-open]]
         [:button.btn [:i.icon-trash]]
       ]]])
 
+(dispatch/react-to #{:written-block} (fn [_ _]
+  (css ($ ".bar") :width "+=1")))
 
 (defn active? [torrent]
   "Take either a collection or atom and return it's active status"
@@ -291,6 +292,6 @@
 ;       ))))
 
 (document-ready (fn [e]
-  (dispatch/fire :document-ready {})))
+  (dispatch/fire :document-ready)))
 
-(.log js/console "js loaded ok")
+(.log js/console "js loaded")

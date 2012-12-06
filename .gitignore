@@ -6,3 +6,5 @@ pom.xml
 .lein-git-deps
 resources/public/cljs/
 *log
+.repl/
+target/

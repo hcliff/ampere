@@ -178,8 +178,8 @@
     (let [byte-array (bitfield/byte-array (@torrent :bitfield))]
       (protocol/send-data client msg-bitfield byte-array)))
 
-  (send-request [client index begin piece]
-    (let [data (crypt/pack :int index :int begin :int piece)]
+  (send-request [client index begin length]
+    (let [data (crypt/pack :int index :int begin :int length)]
       (protocol/send-data client msg-request data)))
 
   ; H.C REVIEW
@@ -187,8 +187,8 @@
     (let [data (crypt/pack :int block-index :int begin)]
       (protocol/send-data client msg-piece [data piece])))
 
-  (send-cancel [client index begin piece]
-    (let [data (crypt/pack :int index :int begin piece)]
+  (send-cancel [client index begin length]
+    (let [data (crypt/pack :int index :int begin :int length)]
       (protocol/send-data client msg-cancel data)))
 
   ; (send-keep-alive [client]

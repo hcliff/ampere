@@ -3,7 +3,7 @@
     [torrent-client.client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.client.waltz :only [machine transition]]
     [torrent-client.client.bitfield :only [bitfield-unique]]
-    [torrent-client.client.pieces :only [get-next-block block-pieces get-piece]]
+    [torrent-client.client.pieces :only [get-next-block block-pieces get-piece work-next-block]]
     [torrent-client.client.peer-id :only [peer-id]]
     )
   (:require
@@ -43,10 +43,8 @@
       (state/trigger me :unchoke-peer)
       ))
 
-    (dispatch/react-to #{:written-block} (fn [_ _]
-      (.log js/console "written-block")
-      (state/trigger me :written-block)
-      ))
+    (dispatch/react-to #{:written-block} 
+      #(state/trigger me :written-block))
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
@@ -103,18 +101,24 @@
         ; If we have the block, we have the piece
         (if-not (zero? (nth (@torrent :bitfield) block-index))
           (let-async [data (get-piece torrent block-index offset length)]
+            (.log js/console "aruuu")
             (protocol/send-piece bittorrent-client block-index offset data)))))
 
     (defevent me :receive-piece [block-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
+      (.log js/console "received piece" block-index begin)
       (dispatch/fire :receive-piece [torrent block-index begin data]))
 
     (defevent me :written-block []
-      (js* "debugger;")
-      (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
+      (if-let [block-index (work-next-block torrent (@peer-data :bitfield))]
         (doseq [[begin length] (block-pieces torrent block-index)]   
-          (protocol/send-request bittorrent-client block-index begin length))))
+          (protocol/send-request bittorrent-client block-index begin length))
+        ; (do
+        ;   (js* "debugger;")
+        ;   (.log js/console (@peer-data :bitfield)))
+        ; )
+      ))
 
     (defevent me :receive-cancel [index begin length]
 
@@ -153,7 +157,7 @@
       (in []
         (protocol/send-interested bittorrent-client)
         ; TODO switch this over to a queue/task system
-        (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
+        (if-let [block-index (work-next-block torrent (@peer-data :bitfield))]
           (doseq [[begin length] (block-pieces torrent block-index)]
             (protocol/send-request bittorrent-client block-index begin length))
           (state/set me :not-choked-not-interested))))
@@ -174,3 +178,5 @@
   [torrent channel peer-id handshake]
   (.log js/console "generate-peer" peer-id handshake)
   (peer-machine torrent channel {:peer-id peer-id} handshake))
+
+(.log js/console "loaded js")

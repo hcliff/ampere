@@ -36,6 +36,11 @@
     "Check if a block-index is required by this file"
     (if-not (nil? meta)
       (<= (meta :block-start) k (meta :block-end))))
+
+  IHash
+  (-hash [o]
+    (goog.getUid o))
+
   )
 
 (defn block-file [file]
