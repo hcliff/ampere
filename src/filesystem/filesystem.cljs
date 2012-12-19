@@ -19,10 +19,11 @@
     (request-file-system type granted-bytes)))
 
 (defn filereader [obj]
-  (async [success-callback]
+  (async [success-callback error-callback]
     (let [reader (js/FileReader.)
           ; onloadend actually triggers a progress event
           ; we want the actual file contents
           success-callback #(success-callback (.-result (.-currentTarget %)))]
+      (set! (.-onerror reader) error-callback)
       (set! (.-onloadend reader) success-callback)
       (.readAsArrayBuffer reader obj))))

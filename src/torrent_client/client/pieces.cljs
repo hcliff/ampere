@@ -98,7 +98,7 @@
 
 (defn- get-file-piece
   [offset length file]
-  (async [success-callback]
+  (async [success-callback _]
     (let-async [:let offset (max offset ((meta file) :pos-start))
                 :let end (min (+ offset length) ((meta file) :pos-end))
                 ; :let length (- end offset)
@@ -114,7 +114,7 @@
 ; the pieces have been requested
 ; this would require one fileread as opposed to n
 (defn get-piece [torrent block-index offset length]
-  (async [success-callback]
+  (async [success-callback _]
     (let [block-offset (* block-index (@torrent :piece-length))
           info-hash (@torrent :pretty-info-hash)
           offset (+ block-offset offset)
@@ -166,7 +166,9 @@
           (if (= (hash block) (nth (@torrent :pieces-hash) block-index))
             (dispatch/fire :receive-block [info-hash block-index block])
             ; Otherwise destroy it and announce the invalidity
-            (dispatch/fire :invalid-block [torrent block-index])
+            (do
+              (.log js/console "invalid hash")
+              (dispatch/fire :invalid-block [torrent block-index]))
       ))))
   )))
 
@@ -190,6 +192,7 @@
         ; Add this to list of blocks to write for this file
         (queue! file-write-queue file [block-index seek-position block-data])
         ; And potentially initiate a writer
+        (.log js/console "we should now be writing")
         (dispatch/fire :write-file [torrent file])
   )))))
 
@@ -200,15 +203,20 @@
 
 (defn- seek-then-write [torrent file writer]
   ; Grab the next block when possible
-  (when-let [[block-index seek-position block-data] (@file-write-queue (hash file))]
-    ; When the block finishes writing
-    (set! (.-onwriteend writer) (fn [_]
-      ; Consume this block from the queue
-      (consume! file-write-queue file)
-      ; And inform that it has been written
-      (dispatch/fire :written-block [torrent block-index])
-      ; grab the next one if applicable
-      (seek-then-write torrent file writer)))
-    (.seek writer seek-position)
-    ; H.C: for now only blobs can be written
-    (.write writer (js/Blob. (js/Array. block-data)))))
+  (if-let [next-block (first (@file-write-queue (hash file)))]
+    ; Destructure seperate to the if-let
+    ; (otherwise when clause allways executes)
+    (let [[block-index seek-position block-data] next-block]
+      (.log js/console "about to write" next-block)
+      ; When the block finishes writing
+      (set! (.-onwriteend writer) (fn [_]
+        ; Consume this block from the queue
+        (consume! file-write-queue file)
+        ; And inform that it has been written
+        (.log js/console "finished writing!")
+        (dispatch/fire :written-block [torrent block-index])
+        ; grab the next one if applicable
+        (seek-then-write torrent file writer)))
+      (.seek writer seek-position)
+      ; H.C: for now only blobs can be written
+      (.write writer (js/Blob. (js/Array. block-data))))))

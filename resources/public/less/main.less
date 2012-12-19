@@ -109,3 +109,37 @@ tr{
     overflow: hidden;
   }
 }
+
+#demo-torrent:hover{
+  text-decoration: none;
+}
+
+div.info{
+  margin-bottom: @gridGutterWidth;
+  color: @infoText;
+
+
+  &:hover{
+    background-color: @infoBackground;
+
+    strong{
+      text-decoration: underline;
+    }
+  }
+
+  img{
+    width: 60px;
+    height: 60px;
+    margin-right: @gridGutterWidth;
+    float: left;
+  }
+
+  div.wrapper{
+    display: table-cell;
+    height: 60px;
+    vertical-align: middle;
+  }
+  strong, small{
+    display: block;
+  }
+}

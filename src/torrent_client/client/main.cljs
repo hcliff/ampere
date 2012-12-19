@@ -11,12 +11,14 @@
   (:use
     [jayq.core :only [$ on attr document-ready empty text]]
     [torrent-client.jayq.core :only [append input-files event-files modal tab css]]
+    [torrent-client.jayq.async :only [ajax ajax-binary]]
     [torrent-client.client.waltz :only [machine]]
     [torrent-client.client.pieces :only [files]]
     [torrent-client.client.torrents :only [torrents]]
     [crate.binding :only [bound]]
     [goog.format :only [numBytesToString]])
-  (:use-macros 
+  (:use-macros
+    [async.macros :only [let-async]]
     [waltz.macros :only [in out defstate defevent]]
     [crate.def-macros :only [defpartial]]))
 
@@ -46,6 +48,7 @@
 (def $seed-modal ($ "#seed-modal"))
 (def $seed-form ($ "#seed-form"))
 (def $torrents ($ "tbody"))
+(def $demo-torrent ($ "#demo-torrent"))
 
 ;;************************************************
 ;; Adding metainfo and files
@@ -128,6 +131,18 @@
         file-entries [(first (input-files ($ "[name=files]" $seed-form)))]]
     (dispatch/fire :add-metainfo-file-and-files [metainfo file-entries])
   )))
+
+(on $demo-torrent :click (fn [e]
+  "When the user clicks the demo, download the .torrent and use it"
+  (.preventDefault e)
+  (let [url (attr $demo-torrent :href)
+        options {:xhrFields {:responseType "arraybuffer"} :dataType "binary"}]
+      ; Hide the demo, no longer relevant
+      (css $demo-torrent :display "none")
+      ; Given a .torrent URL, download it then use it
+      (let-async [file (ajax-binary url options)]
+        (dispatch/fire :add-metainfo-byte-array file)
+  ))))
 
 ;;************************************************
 ;; Templating

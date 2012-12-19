@@ -4340,6 +4340,34 @@ tr {
   text-overflow: ellipsis;
   overflow: hidden;
 }
+#demo-torrent:hover {
+  text-decoration: none;
+}
+div.info {
+  margin-bottom: 20px;
+  color: #3a87ad;
+}
+div.info:hover {
+  background-color: #d9edf7;
+}
+div.info:hover strong {
+  text-decoration: underline;
+}
+div.info img {
+  width: 60px;
+  height: 60px;
+  margin-right: 20px;
+  float: left;
+}
+div.info div.wrapper {
+  display: table-cell;
+  height: 60px;
+  vertical-align: middle;
+}
+div.info strong,
+div.info small {
+  display: block;
+}
 .pull-right {
   float: right;
 }

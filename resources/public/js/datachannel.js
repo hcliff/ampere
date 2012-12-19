@@ -43,6 +43,7 @@ function DCPF_install(ws_url)
 
     // Use a WebSocket as 'underlying data transport' to create the DataChannel
     this._udt = new WebSocket(ws_url)
+    this._udt.binaryType = "arraybuffer"
     this._udt.onerror = function(error)
     {
         if(self.onerror)
@@ -60,6 +61,7 @@ function DCPF_install(ws_url)
   function setId(pc, id)
   {
     var socket = new WebSocket(ws_url)
+        socket.binaryType = "arraybuffer"
         socket.onopen = function()
         {
             socket.onmessage = function(message)

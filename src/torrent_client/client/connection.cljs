@@ -30,10 +30,10 @@
 (defn create-data-channel [peer-connection label]
   (.createDataChannel peer-connection label))
 
-(defn create-offer [peer-connection success-callback]
-  (.createOffer peer-connection success-callback))
+(defn create-offer [peer-connection success-callback error-callback]
+  (.createOffer peer-connection success-callback error-callback))
 
-(defn create-answer [peer-connection success-callback]
+(defn create-answer [peer-connection success-callback error-callback]
   (.createAnswer peer-connection success-callback))
 
 (defn set-local-description [peer-connection description]
@@ -87,7 +87,7 @@
 (defn create-connection-send-offer
   "Given a torrent build a connection and create an offer"
   []
-  (async [success-callback]
+  (async [success-callback error-callback]
     ; Set up the connection and start listening for ice
     (let [peer-connection (peer-connection-ice)]
       (create-offer peer-connection (fn [description]
@@ -97,7 +97,7 @@
         (swap! pending-connections assoc (local-id peer-connection) peer-connection)
         ; And finally mark it complete
         (#(success-callback (.-sdp description)))
-        )))))
+        ) error-callback))))
 
 (defn recieve-answer
   "Given an answer by a peer (after we made an offer);
@@ -124,7 +124,7 @@
 (defn receive-offer-send-answer
   "Given an offer; connect to a peer and add it to our connections list"
   [offer-description peer-id]
-  (async [success-callback]
+  (async [success-callback error-callback]
     (if (contains? @connections peer-id)
       ; If we have allready connected to this peer then return it
       (success-callback (@connections peer-id))
@@ -141,10 +141,12 @@
 
         (set-remote-description peer-connection offer-description)
         ; Create an answer and set our local description
-        (create-answer peer-connection (fn [answer-description]
-          (set-local-description peer-connection answer-description)
-          (swap! connections assoc peer-id peer-connection)
-          (.log js/console "about to success")
-          (success-callback peer-connection)))
+        (create-answer peer-connection 
+          (fn [answer-description]
+            (set-local-description peer-connection answer-description)
+            (swap! connections assoc peer-id peer-connection)
+            (.log js/console "about to success")
+            (success-callback peer-connection)) 
+          error-callback)
       ))))
 

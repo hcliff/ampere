@@ -18,11 +18,13 @@
     ; an async let
     :else
     (let [[binding-name binding-value & remaining] bindings]
-      `(~binding-value (fn [binding-name#] 
-          (let [~binding-name binding-name#]
-            (let-async ~remaining ~@body))))
+      `(~binding-value 
+          (fn [binding-name#] 
+            (let [~binding-name binding-name#]
+              (let-async ~remaining ~@body)))
+          (fn [error#]
+            (.error js/console error#)))
       )))
-
 
 (defmacro async [bindings & body]
   `(fn ~bindings ~@body)

@@ -91,6 +91,14 @@
                               "Seed Torrent")]]]
                   ]]]
                 [:div.container-fluid
+                  (link-to {:id "demo-torrent"} "http://localhost:8091/Rescue%20You.mp3.torrent"
+                    [:div.row-fluid
+                      [:div.info
+                        [:img.promo {:src "http://localhost/the_weeknd.jpg"}]
+                        [:div.wrapper
+                          [:strong "Click here to start a demo torrent"]
+                          [:small "A song from The Weeknds debute mixtape, released for free, 4mb"]]
+                      ]])
                   [:div.row-fluid
                     [:ul.nav.nav-tabs
                       [:li.active 

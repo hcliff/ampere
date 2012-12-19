@@ -64,19 +64,24 @@
 (def trackers (atom {}))
 
 (defn tracker-socket [tracker]
-  (async [success-callback]
+  (async [success-callback error-callback]
     (if-let [tracker (@trackers tracker)]
       ; If we allready have a socket to this tracker return it
       (success-callback (@trackers tracker))
       ; Otherwise build one
       (let [socket (js/WebSocket. tracker)]
         (swap! trackers assoc tracker socket)
+        (set! (.-onerror tracker) error-callback)
         ; Continue once the socket is opened
         (set! (.-onopen tracker) (fn [data]
           (success-callback socket)))
         ; Listen for socket events
         (set! (.-onmessage tracker) (fn [data]
-          (dispatch/fire (data :event) (dissoc :event data))))
+          (let [data (assoc data :tracker tracker)
+                data (dissoc data :event)]
+          ; Check the peer isn't sending malicious events
+          (if (contains? #{"need-offer" "offer" "answer"} event)
+            (dispatch/fire (data :event) data)))))
       ))))
 
 ;;************************************************
@@ -128,13 +133,16 @@
 ;; Reactions to events sent by the tracker
 ;;************************************************
 
-(dispatch/react-to #{:need-offer} (fn [_ {:keys [peer_id info_hash]}]
+(dispatch/react-to #{:need-offer} (fn [_ {:keys [tracker peer_id info_hash]}]
   "The tracker has requested an offer from this client"
   (let-async [peer-connection (create-connection-send-offer peer_id)
-              :let offer (-> peer-connection .-localDescription .-sdp)
-              :let event (str "answer" peer_id)]
-    (announce announce-url event torrent {:offer offer})
-  )))
+              :let sdp (-> peer-connection .-localDescription .-sdp)]
+    ; Check the peer requested a torrent we have
+    (if-let [torrent (@torrents info_hash)]
+      ; TODO: also check numwant
+      (announce tracker "offer"
+        {:sdp sdp :info-hash info_hash :to-peer-id peer-id})
+  ))))
 
 (dispatch/react-to #{:answer} (fn [_ {:keys [peer_id info_hash answer]}]
   "When the tracker sends an answer for an offer we send"

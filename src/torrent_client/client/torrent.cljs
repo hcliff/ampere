@@ -40,72 +40,75 @@
         (recur (rest elements) new-total (conj new-elements new-element))
       ))))
 
+(defn read-metainfo-byte-array 
+  "Given a byte array of a torrent file, decode it then
+   extract the important bits of information"
+  [byte-array]
+  (let [reader (push-back-reader (uint8-array byte-array 0))
+      metadata (decode reader)
+      info (metadata "info")
+      info-hash (sha1 (encode info))
+      ; Used as a key to refer to the torrent
+      pretty-info-hash (pad-string-left (crypt/byteArrayToHex info-hash) "0" 40)
+      
+      ; The blocks in the file
+      ; each 20 byte hash represents a block
+      pieces-hash (partition-string 20 (info "pieces"))
+      pieces-length (count pieces-hash)
+      ; number of bytes in each block (integer)
+      piece-length (info "piece length")
+      ; A bitfield representing the blocks
+      ; each bit represents a block
+      bitfield (bitfield/bitfield pieces-length)
+
+      ; Build an array of the announce list
+      ; metadata announce-list may not exist
+      announce [(metadata "announce")]
+      announce-list (reduce conj announce (flatten (metadata "announce-list")))
+
+      ; NOTE: the actual torrent files are not referred to in
+      ; the torrent, they are managed seperately in pieces.cljs
+      files-list (js->clj (info "files") :keywordize true)
+      files (or files-list [{:path (info "name") :length (info "length")}])
+      files (set-file-data files)
+
+      total-length (reduce + (map :length files))
+      
+      last-piece-length (rem total-length piece-length)
+      ; If the remainder is 0 then the last piece must be a complete block
+      last-piece-length (if (zero? last-piece-length) 
+                          piece-length last-piece-length)]
+  {:info-hash info-hash
+   :pretty-info-hash pretty-info-hash
+   :encoding (metadata "encoding")
+   :pieces-hash pieces-hash
+   :pieces-length pieces-length
+   :piece-length piece-length
+   :bitfield bitfield
+   :announce-list (filter http-scheme? announce-list)
+   :comment (info "comment")
+   :name (info "name")
+   :files files
+   :current-length 0
+   :total-length total-length
+   :last-piece-length last-piece-length
+  }))
+
 (defn read-metainfo-file 
-  "Given a metainfo file read, decode and process it"
-  ([torrent-file] 
-    (read-torrent-file torrent-file #(dispatch/fire :add-torrent-data %)))
-  ([torrent-file success-callback]
+  "Given a metainfo file read, read it as an byte-array then process it"
+  [torrent-file]
+  (async [success-callback _]
     (let-async [torrent-file (filesystem/filereader torrent-file)]
-      (let [reader (push-back-reader (uint8-array torrent-file 0))
-            metadata (decode reader)
-            info (metadata "info")
-            info-hash (sha1 (encode info))
-            ; Used as a key to refer to the torrent
-            pretty-info-hash (pad-string-left (crypt/byteArrayToHex info-hash) "0" 40)
-            
-            ; The blocks in the file
-            ; each 20 byte hash represents a block
-            pieces-hash (partition-string 20 (info "pieces"))
-            pieces-length (count pieces-hash)
-            ; number of bytes in each block (integer)
-            piece-length (info "piece length")
-            ; A bitfield representing the blocks
-            ; each bit represents a block
-            bitfield (bitfield/bitfield pieces-length)
-
-            ; Build an array of the announce list
-            ; metadata announce-list may not exist
-            announce [(metadata "announce")]
-            announce-list (reduce conj announce (flatten (metadata "announce-list")))
-
-            ; NOTE: the actual torrent files are not referred to in
-            ; the torrent, they are managed seperately in pieces.cljs
-            files-list (js->clj (info "files") :keywordize true)
-            files (or files-list [{:path (info "name") :length (info "length")}])
-            files (set-file-data files)
-
-            total-length (reduce + (map :length files))
-            
-            last-piece-length (rem total-length piece-length)
-            ; If the remainder is 0 then the last piece must be a complete block
-            last-piece-length (if (zero? last-piece-length) 
-                                piece-length last-piece-length)]
-        (success-callback {
-         :info-hash info-hash
-         :pretty-info-hash pretty-info-hash
-         :encoding (metadata "encoding")
-         :pieces-hash pieces-hash
-         :pieces-length pieces-length
-         :piece-length piece-length
-         :bitfield bitfield
-         :announce-list (filter http-scheme? announce-list)
-         :comment (info "comment")
-         :name (info "name")
-         :files files
-         :current-length 0
-         :total-length total-length
-         :last-piece-length last-piece-length
-        })
-      )))
-  )
+      (success-callback (read-metainfo-byte-array torrent-file)))))
 
 (defn- write-input-to-file 
   "Write data to file"
   [fs path data]
   (.log js/console "write-input-to-file" path data)
-  (async [success-callback]
+  (async [success-callback error-callback]
     (let-async [entry (entry/get-entry fs path {:create true})
                 writer (entry/create-writer entry)]
+      (set! (.-onerror writer) error-callback)
       (set! (.-onwriteend writer) #(success-callback entry))
       ; If we have no data for this file immidiately write it
       (if (nil? data)
@@ -144,26 +147,15 @@
   ; A hash of torrent information
   ; File object
   ; Collection of file objects
-  [torrent-data torrent-file file-entries]
+  [torrent-data file-entries]
   (let [; If passed torrent data then start from has-torrent-data
-        current (if (empty? torrent-data) :need-metainfo :has-metainfo)
+        current :has-metainfo
         me (machine {:label :torrent-machine :current :init})
         torrent (atom torrent-data)]
 
     ; When the torrent atom changes update the database reference
     (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
       (write-metainfo-to-db new-metainfo)))
-
-    (defevent me :read-metainfo-file [file]
-      "Given a .torrent turn it into a hashmap of data"
-      (.log js/console "read-metainfo-file")
-      (read-metainfo-file file #(state/trigger me :add-metainfo %)))
-
-    (defevent me :add-metainfo [metainfo]
-      "Given a hashmap of torrent data add it to the internal atom"
-      (swap! torrent conj metainfo)
-      (.log js/console "alive....")
-      (state/set me :has-metainfo))
 
     (defevent me :add-files [files]
       "Given torrent information and the files it pertains to 
@@ -179,11 +171,6 @@
         (state/set me :has-files)))
 
     (defstate me :init)
-
-    (defstate me :need-metainfo
-      "Optional start state processeds a torrent file"
-      (in [] 
-        (state/trigger me :read-metainfo-file torrent-file)))
 
     (defstate me :has-metainfo
       "Once the metainfo is generated check the files"
@@ -218,27 +205,24 @@
 
 ; When a torrent is loaded from the db
 (dispatch/react-to #{:add-metainfo-object} (fn [_ metainfo]
-  (let [torrent (torrent-machine metainfo nil [])]
-    )))
+  (torrent-machine metainfo [])))
 
 ; When the add-torrent form is submitted generate a new torrent-machine
-(dispatch/react-to #{:add-metainfo-file} (fn [_ file]
-  (let [torrent (torrent-machine {} file [])]
-    ; As soon as the torrent file is read we need to 
-    (.log js/console "Word")
-    
-    )))
+(dispatch/react-to #{:add-metainfo-file} (fn [_ metainfo-file]
+  (let-async [metainfo (read-metainfo-file metainfo-file)]
+    (torrent-machine metainfo []))))
+
+; Given an byte-array of metainfo (metainfo from url)
+(dispatch/react-to #{:add-metainfo-byte-array} (fn [_ byte-array]
+  (let [metainfo (read-metainfo-byte-array byte-array)]
+    (torrent-machine metainfo []))))
 
 ; When a torrent is built from some files
 ; NOTES: not yet implimented
 (dispatch/react-to #{:add-metainfo-and-files} (fn [_ [metainfo files]]
-  (let [torrent (torrent-machine metainfo nil files)]
-    
-    )))
+  (torrent-machine metainfo files)))
 
 ; When I'm testing...
 (dispatch/react-to #{:add-metainfo-file-and-files} (fn [_ [metainfo-file files]]
-  (let [torrent (torrent-machine {} metainfo-file files)]
-    (.log js/console "torrent-machine"))
-
-  ))
+  (let-async [metainfo (read-metainfo-file metainfo-file)]
+    (torrent-machine metainfo files))))

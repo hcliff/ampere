@@ -53,7 +53,7 @@
 (defn open-database 
   "Manages versioning of object-stores for a database"
   [database version object-stores]
-  (async [success-callback]
+  (async [success-callback error-callback]
     (let [request (.open prefix/indexedDB database version)]
       (letfn [(success [e]
                 (let [db (.-result request)]
@@ -69,6 +69,6 @@
                         :autoIncrement (:auto-increment store)
                         })))
                   db))]
-
+        (set! (.-onerror request) error-callback)
         (set! (.-onsuccess request) success)
         (set! (.-onupgradeneeded request) upgrade-needed)))))
