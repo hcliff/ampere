@@ -11,7 +11,7 @@
   (send-have [client index] "")
   (send-bitfield [client] "")
   (send-request [client index begin piece] "")
-  (send-piece [client index begin piece] "")
+  (send-block [client index begin piece] "")
   (send-cancel [client index begin piece] "")
 
   (receive-handshake [client data])

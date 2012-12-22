@@ -84,7 +84,7 @@
 (defmethod receive-data msg-piece [p data]
   (let [[index begin] (crypt/unpack [:int :int] (subarray data 1 9))
         piece (subarray data 9)]
-    (trigger p :receive-piece index begin piece)))
+    (trigger p :receive-block index begin piece)))
 
 (defmethod receive-data msg-cancel [p data]
   (let [[index begin length] (crypt/unpack [:int :int :int] (rest data))]
@@ -175,16 +175,16 @@
       (protocol/send-data client msg-have data)))
 
   (send-bitfield [client]
-    (let [byte-array (bitfield/byte-array (@torrent :bitfield))]
+    (let [byte-array (.-byte-array (@torrent :bitfield))]
       (protocol/send-data client msg-bitfield byte-array)))
 
-  (send-request [client index begin length]
-    (let [data (crypt/pack :int index :int begin :int length)]
+  (send-request [client piece-index begin length]
+    (let [data (crypt/pack :int piece-index :int begin :int length)]
       (protocol/send-data client msg-request data)))
 
   ; H.C REVIEW
-  (send-piece [client block-index begin piece]
-    (let [data (crypt/pack :int block-index :int begin)]
+  (send-block [client piece-index begin piece]
+    (let [data (crypt/pack :int piece-index :int begin)]
       (protocol/send-data client msg-piece [data piece])))
 
   (send-cancel [client index begin length]

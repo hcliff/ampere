@@ -3,7 +3,7 @@
     [torrent-client.client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.client.waltz :only [machine transition]]
     [torrent-client.client.bitfield :only [bitfield-unique]]
-    [torrent-client.client.pieces :only [get-next-block block-pieces get-piece work-next-block]]
+    [torrent-client.client.pieces :only [get-next-piece piece-blocks get-block work-next-piece]]
     [torrent-client.client.peer-id :only [peer-id]]
     )
   (:require
@@ -77,7 +77,7 @@
       "Update the bitfield to mark we have the correct piece"
       (bitfield/set! (@peer-data :bitfield) index true)
       ; Check the peer has pieces that we need
-      (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
+      (if-let [block-index (get-next-piece torrent (@peer-data :bitfield))]
         (transition me :not-choked-not-interested :not-choked-interested)
         (transition me :choked-not-interested :choked-interested)))
 
@@ -89,36 +89,37 @@
       (if-not (state/in? me :sent-bitfield)
         (state/set me :sent-bitfield))
       ; If the client has allready sent their bitfield then send interested
-      (if-let [block-index (get-next-block torrent (@peer-data :bitfield))]
+      (if-let [block-index (get-next-piece torrent (@peer-data :bitfield))]
         (state/set me :choked-interested)
         (state/set me :choked-not-interested))
       )
 
-    (defevent me :receive-request [block-index offset length]
+    (defevent me :receive-request [piece-index offset length]
       "If we have a given piece send it to the peer 
       if they havn't been choked"
       (if-not (@peer-data :choking)
         ; If we have the block, we have the piece
         (if-not (zero? (nth (@torrent :bitfield) block-index))
-          (let-async [data (get-piece torrent block-index offset length)]
-            (.log js/console "aruuu")
-            (protocol/send-piece bittorrent-client block-index offset data)))))
+          (let-async [data (get-block torrent block-index offset length)]
+            (protocol/send-block bittorrent-client piece-index offset data)))))
 
-    (defevent me :receive-piece [block-index begin data]
+    (defevent me :receive-block [block-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
-      (.log js/console "received piece" block-index begin)
-      (dispatch/fire :receive-piece [torrent block-index begin data]))
+      (.log js/console "received block" block-index begin)
+      (dispatch/fire :receive-block [torrent block-index begin data]))
 
-    (defevent me :written-block []
-      (if-let [block-index (work-next-block torrent (@peer-data :bitfield))]
-        (doseq [[begin length] (block-pieces torrent block-index)]   
+    ; H.C crude, and introduces latancy between writing and requesting
+    ; swap this out for a queue
+    (defevent me :written-piece []
+      (.log js/console "written-piece")
+      (if-let [block-index (work-next-piece torrent (@peer-data :bitfield))]
+        (doseq [[begin length] (piece-blocks torrent block-index)]   
           (protocol/send-request bittorrent-client block-index begin length))
-        ; (do
-        ;   (js* "debugger;")
-        ;   (.log js/console (@peer-data :bitfield)))
-        ; )
-      ))
+        (do
+          (js* "debugger;")
+          (.log js/console (@peer-data :bitfield)))
+        ))
 
     (defevent me :receive-cancel [index begin length]
 
@@ -157,9 +158,9 @@
       (in []
         (protocol/send-interested bittorrent-client)
         ; TODO switch this over to a queue/task system
-        (if-let [block-index (work-next-block torrent (@peer-data :bitfield))]
-          (doseq [[begin length] (block-pieces torrent block-index)]
-            (protocol/send-request bittorrent-client block-index begin length))
+        (if-let [piece-index (work-next-piece torrent (@peer-data :bitfield))]
+          (doseq [[begin length] (piece-blocks torrent block-index)]
+            (protocol/send-request bittorrent-client piece-index begin length))
           (state/set me :not-choked-not-interested))))
 
     ; Handshake if this is the first client

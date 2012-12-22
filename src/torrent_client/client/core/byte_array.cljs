@@ -62,3 +62,7 @@
     (.subarray coll start))
   ([coll start finish]
     (.subarray coll start finish)))
+
+(defn ^boolean uint8-array? [candidate]
+  ; Incorrect; but js/ArrayBufferView doesn't exist
+  (instance? js/Uint8Array candidate))
