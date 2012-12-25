@@ -54,7 +54,6 @@
     ; Remove pieces currently working from the candidates
     (doseq [piece-index (@working info-hash)] 
       (assoc wanted-bitfield piece-index false))
-    (.log js/console wanted-bitfield wanted)
     ; Get the first wanted block
     (first wanted)))
 
@@ -65,17 +64,18 @@
         piece-index (get-next-piece torrent peer-bitfield)]
     ; Add this block to the works in progress
     (.log js/console "work-next-piece" piece-index)
-    (swap! working (partial merge-with conj) {info-hash [piece-index]})
+    (swap! working (partial merge-with concat) {info-hash [piece-index]})
     piece-index))
 
-; (dispatch/react-to #{:written-block :invalid-block} (fn [_ torrent block-index]
+; (dispatch/react-to #{:written-piece :invalid-block} (fn [_ torrent block-index]
 ;   "When a block has finished or is invalid, remove it from the in-progress"
 ;   (swap! working (partial merge-with set/difference) {info-hash #{block-index}})))
 
 (defn piece-length 
   "If this is the last piece return the last-piece-length"
   [torrent piece-index]
-  (if (= block-index (dec (@torrent :pieces-length)))
+  (.log js/console "piece-length" piece-index)
+  (if (= piece-index (dec (@torrent :pieces-length)))
     (@torrent :last-piece-length)
     (@torrent :piece-length)))
 
@@ -111,20 +111,19 @@
 ; TODO rewrite to grab piece and hold it until all
 ; the blocks have been requested
 ; this would require one fileread as opposed to n
-(defn get-block [torrent block-index offset length]
+(defn get-block [torrent piece-index offset length]
   (async [success-callback _]
-    (let [block-offset (* block-index (@torrent :piece-length))
+    (let [piece-offset (* piece-index (@torrent :piece-length))
           info-hash (@torrent :pretty-info-hash)
-          offset (+ block-offset offset)
-          end (+ offset length)
+          block-offset (+ piece-offset offset)
+          block-end (+ offset length)
           ; A piece that straddles two files may have a block that
           ; stradles two files, establish which files use this block
-          files (filter #(contains? % block-index) (@files info-hash))]
+          files (filter #(contains? % piece-index) (@files info-hash))]
       ; Retrieve the pieces from the files
-      (let-async [data (get-file-block offset end (first files))]
-        (.log js/console "get-block is ready")
-        (success-callback data)
-        )
+      (.log js/console "get-block" piece-index offset length)
+      (let-async [data (get-file-block block-offset block-end (first files))]
+        (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))
 
@@ -151,19 +150,20 @@
   ; Add this piece to the queue of pieces to write
   (let [info-hash (@torrent :pretty-info-hash)
         queue-key (str info-hash piece-index)
-        piece-queue (get @pieces-to-write queue-key)
+        blocks (get @pieces-to-write queue-key)
         block {:begin begin :data data}
-        working (@working :pretty-info-hash)]
-    (js* "debugger;")
+        working (@working info-hash)]
     ; This is a piece that we're currently trying to get
-    (if (and (contains? working piece-index) 
-             (not (contains? piece-queue block-index)))
-      (swap! blocks-to-write queue-key (assoc piece-queue block-index block)))
-    ; Fetch all the pieces for this block
-    (let [blocks piece-queue]
-      ; If we've fetched all the blocks for this piece
+    ; and we don't allready have it
+    (if (and (contains? (set working) piece-index)
+             (not (contains? (set (map :begin blocks)) begin)))
+      ; Add this block the list of blocks we have for this piece
+      ; NOTE: avoid distinct due to comparing data
+      (swap! pieces-to-write (partial merge-with concat) {queue-key [block]}))
+    ; If we've fetched all the pieces for this block
+    (let [blocks (get @pieces-to-write queue-key)]
       (if (= (count blocks) (count (piece-blocks torrent piece-index)))
-        (let [piece (blocks/block blocks)
+        (let [piece (pieces/piece blocks)
               piece-hash (hash piece)]
           (.log js/console "piece hash" piece-hash (nth (@torrent :pieces-hash) piece-index))
           ; If the hash of the piece we have is correct, use the piece
@@ -171,7 +171,7 @@
             (dispatch/fire :receive-piece [info-hash piece-index piece])
             ; Otherwise destroy it and announce the invalidity
             (do
-              (.log js/console "invalid hash")
+              (.error js/console "invalid hash")
               (dispatch/fire :invalid-piece [torrent piece-index]))
       ))))
   )))

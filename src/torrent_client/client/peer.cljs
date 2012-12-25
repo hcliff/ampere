@@ -43,8 +43,8 @@
       (state/trigger me :unchoke-peer)
       ))
 
-    (dispatch/react-to #{:written-block} 
-      #(state/trigger me :written-block))
+    (dispatch/react-to #{:written-piece} 
+      #(state/trigger me :written-piece))
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
@@ -97,25 +97,25 @@
     (defevent me :receive-request [piece-index offset length]
       "If we have a given piece send it to the peer 
       if they havn't been choked"
-      (if-not (@peer-data :choking)
+      (when-not (@peer-data :choking)
         ; If we have the block, we have the piece
-        (if-not (zero? (nth (@torrent :bitfield) block-index))
-          (let-async [data (get-block torrent block-index offset length)]
+        (if-not (zero? (nth (@torrent :bitfield) piece-index))
+          (let-async [data (get-block torrent piece-index offset length)]
             (protocol/send-block bittorrent-client piece-index offset data)))))
 
-    (defevent me :receive-block [block-index begin data]
+    (defevent me :receive-block [piece-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
-      (.log js/console "received block" block-index begin)
-      (dispatch/fire :receive-block [torrent block-index begin data]))
+      (.log js/console "received block" piece-index begin)
+      (dispatch/fire :receive-block [torrent piece-index begin data]))
 
     ; H.C crude, and introduces latancy between writing and requesting
     ; swap this out for a queue
     (defevent me :written-piece []
       (.log js/console "written-piece")
-      (if-let [block-index (work-next-piece torrent (@peer-data :bitfield))]
-        (doseq [[begin length] (piece-blocks torrent block-index)]   
-          (protocol/send-request bittorrent-client block-index begin length))
+      (if-let [piece-index (work-next-piece torrent (@peer-data :bitfield))]
+        (doseq [[begin length] (piece-blocks torrent piece-index)]   
+          (protocol/send-request bittorrent-client piece-index begin length))
         (do
           (js* "debugger;")
           (.log js/console (@peer-data :bitfield)))

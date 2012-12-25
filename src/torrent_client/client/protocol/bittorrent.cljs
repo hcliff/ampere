@@ -179,6 +179,7 @@
       (protocol/send-data client msg-bitfield byte-array)))
 
   (send-request [client piece-index begin length]
+    ; (js* "debugger;")
     (let [data (crypt/pack :int piece-index :int begin :int length)]
       (protocol/send-data client msg-request data)))
 

@@ -58,7 +58,7 @@
     (.log js/console "peer" peer)
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
-(dispatch/react-to #{:written-block} (fn [_ [torrent block]]
+(dispatch/react-to #{:written-piece} (fn [_ [torrent block]]
   "When a peer sends us a block we didn't have before"
   ; Inform all our peers we have it
   (doseq [peer (@peers (@torrent :info-hash))]

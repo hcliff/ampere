@@ -11,8 +11,9 @@
 
   IIndexed
   (-nth [bitfield n]
-    (let [piece (bit-shift-right n 3)
-          bit (bit-shift-left 1 (mod n 8))]
+    (let [n (+ n i)
+          piece (bit-shift-right n 3)
+          bit (bit-shift-right 128 (mod n 8))]
       (bit-and (aget byte-array piece) bit)))
 
   IFn
@@ -20,29 +21,29 @@
 
   IAssociative
   (-assoc [_ k v]
-    (let [piece (bit-shift-right k 3)
+    (let [k (+ k i)
+          byte-index (bit-shift-right k 3)
           byte (aget byte-array byte-index)
-          block-bit (bit-shift-left 1 (mod k 8))]
-      (if v
-        ; If we have the piece add it to the byte
-        (aset byte-array piece (bit-or byte block-bit))
-        ; Otherwise remove it
-        (aset byte-array piece (bit-xor byte block-bit)))
-    ))
+          ; bitorrent uses the high bit as 0
+          ; but bit-set/clear uses the low bit as 0
+          piece-bit (- 7 (mod k 8))
+          ; How are we modifying the byte?
+          f (if v bit-set bit-clear)]
+      (aset byte-array byte-index (f byte piece-bit))))
 
   ISeqable
   (-seq [this] this)
 
   ASeq
   ISeq
-  (-first [_] (nth byte-array 0))
+  (-first [bitfield] (nth bitfield 0))
   (-rest [bitfield] 
     (if (< (inc i) (count bitfield))
       (Bitfield. byte-array (inc i))))
 
   ICounted
   ; Return the number of bits in the bitfield
-  (-count [a] (* 8 (count byte-array)))
+  (-count [_] (* 8 (count byte-array)))
 
   )
 
@@ -89,12 +90,12 @@
         byte-array2 (.-byte-array b2)]
     ; loop over the byte array (each byte)
     ; not the bitfield (each bit)
-    (bitfield (map bit-and byte-array1 byte-array2))))
+    (bitfield (doall (map bit-and byte-array1 byte-array2)))))
 
 (defn union [b1 b2]
   (let [byte-array1 (.-byte-array b1)
         byte-array2 (.-byte-array b2)]
-    (bitfield (map bit-or byte-array1 byte-array2))))
+    (bitfield (doall (map bit-or byte-array1 byte-array2)))))
 
 ; Modelled after set/difference
 (defn difference
@@ -112,6 +113,6 @@
 ;; Event handling
 ;;************************************************
 
-(dispatch/react-to #{:written-block} (fn [_ [torrent block-index]]
+(dispatch/react-to #{:written-piece} (fn [_ [torrent block-index]]
   (let [bitfield (@torrent :bitfield)]
     (assoc bitfield block-index true))))

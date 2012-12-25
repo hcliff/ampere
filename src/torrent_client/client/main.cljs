@@ -41,6 +41,7 @@
 ;;************************************************
 
 (def $document ($ js/document))
+(def $window ($ js/window))
 (def $add-modal ($ "#add-modal"))
 (def $add-form ($ "#add-form"))
 (def $create-modal ($ "#create-modal"))
@@ -223,7 +224,7 @@
         [:button.btn [:i.icon-trash]]
       ]]])
 
-(dispatch/react-to #{:written-block} (fn [_ _]
+(dispatch/react-to #{:written-piece} (fn [_ _]
   (css ($ ".bar") :width "+=1")))
 
 (defn active? [torrent]
@@ -305,6 +306,24 @@
 ;       "notification title"
 ;       "notification content"
 ;       ))))
+
+(def online (atom nil))
+
+(on $window :offline (fn [_]
+  (reset! online false)))
+
+(on $window :online (fn [_]
+  (reset! online true)))
+
+(dispatch/react-to #{:document-ready} (fn []
+  (reset! online (.-onLine js/navigator))))
+
+(add-watch online nil (fn [_ _ old-val new-val]
+  (if (and (false? old-val) new-val)
+    (.log js/console "gone online"))
+  (if (and old-val (false? new-val))
+    (.log js/console "gone offline!"))
+  ))
 
 (document-ready (fn [e]
   (dispatch/fire :document-ready)))

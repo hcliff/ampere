@@ -55,10 +55,10 @@
 (defmulti unpack-data (fn [format data] format))
 
 (defmethod unpack-data :int [_ data]
-  (max (bit-shift-left (nth data 0) 24)
-       (bit-shift-left (nth data 1) 16)
-       (bit-shift-left (nth data 2) 8)
-       (nth data 3)))
+  (+ (bit-shift-left (nth data 0) 24)
+     (bit-shift-left (nth data 1) 16)
+     (bit-shift-left (nth data 2) 8)
+     (nth data 3)))
 
 (defn b64-encode [string]
   (.btoa js/window string))

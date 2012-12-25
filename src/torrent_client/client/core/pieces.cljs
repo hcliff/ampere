@@ -75,7 +75,7 @@
 (defn piece 
   "Build a piece from its component blocks"
   [blocks]
-  (let [pieces (sort :begin pieces)
+  (let [blocks (sort :begin blocks)
         piece-size (reduce + (map (comp count :data) blocks))
         ; Build a byte array long enough for all the blocks
         byte-array (uint8-array piece-size)]
