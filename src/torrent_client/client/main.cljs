@@ -175,9 +175,8 @@
   bitfield completion, not 100% accurate due to variable
   last block size, but good enough"
   [torrent]
-  (let [current-blocks (reduce + (.-byte-array (torrent :bitfield)))
-        current-size (* current-blocks (torrent :piece-length))]
-    (str (/ current-size (torrent :total-length) 0.01) "%")))
+  (let [percent (/ (torrent :pieces-written) (torrent :pieces-length))]
+    (str (/ percent 0.01) "%")))
 
 (defn total-length-to-string [{:keys [total-length]}]
   (string/lower-case (numBytesToString total-length)))
@@ -224,9 +223,6 @@
         [:button.btn [:i.icon-trash]]
       ]]])
 
-(dispatch/react-to #{:written-piece} (fn [_ _]
-  (css ($ ".bar") :width "+=1")))
-
 (defn active? [torrent]
   "Take either a collection or atom and return it's active status"
   (if-not (coll? torrent)
@@ -241,7 +237,7 @@
   "Take a collection or atom and determin if the torrent has finished"
   (if-not (coll? torrent)
     (downloading? @torrent)
-    (< (torrent :current-length) (torrent :total-length))))
+    (< (torrent :pieces-written) (torrent :pieces-length))))
 
 (def completed? (complement downloading?))
 
@@ -252,7 +248,7 @@
         ; Count the splings downloading (file size less than target size)
         downloading (count (filter downloading? torrents))
         ; If it's active and downloading
-        completed (- (count torrents) downloading)]
+        completed (count (filter completed? torrents))]
   (text ($ "#downloading-count") downloading)
   (text ($ "#completed-count") completed))))
 
@@ -270,7 +266,6 @@
       (in []
         (empty $torrents)
         (let [torrents (filter downloading? @torrents)
-          
               elements (map (comp @elements :pretty-info-hash deref) torrents)]
           (append $torrents elements))
         (tab ($ "#downloading-tab") "show")))

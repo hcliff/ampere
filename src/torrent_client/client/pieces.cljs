@@ -88,9 +88,9 @@
            blocks []]
       ; If we havn't finished splitting up this piece
       (if-not (= offset piece-length)
-        ; Add another piece to the pieces vector
-        (recur (+ offset (min block-length (- block-length offset)))
-               (conj blocks [offset (+ offset block-length)]))
+        (let [length (min block-length (- piece-length offset))]
+          ; Add another block to the vector
+          (recur (+ offset length) (conj blocks [offset length])))
         ; Return all the piece parts
         blocks))))
 
@@ -100,7 +100,7 @@
     (let-async [:let offset (max offset ((meta file) :pos-start))
                 :let end (min (+ offset length) ((meta file) :pos-end))
                 ; :let length (- end offset)
-                :let length block-length
+                :let length (- end offset)
                 ; Get a filereader on the piece-files underlying file
                 file (entry/file (.-file file))
                 data (filesystem/filereader file)]
@@ -116,13 +116,12 @@
     (let [piece-offset (* piece-index (@torrent :piece-length))
           info-hash (@torrent :pretty-info-hash)
           block-offset (+ piece-offset offset)
-          block-end (+ offset length)
           ; A piece that straddles two files may have a block that
           ; stradles two files, establish which files use this block
           files (filter #(contains? % piece-index) (@files info-hash))]
       ; Retrieve the pieces from the files
       (.log js/console "get-block" piece-index offset length)
-      (let-async [data (get-file-block block-offset block-end (first files))]
+      (let-async [data (get-file-block block-offset length (first files))]
         (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))
@@ -179,6 +178,7 @@
 (dispatch/react-to #{:receive-piece} (fn [_ [info-hash piece-index piece]]
   ; Grab their meta info
   (let [torrent (@torrents info-hash)
+        ; TODO: change to pieces prior
         piece-offset (* piece-index (@torrent :piece-length))
         files (filter #(contains? % piece-index) (@files info-hash))]
     ; For every file that needs this piece

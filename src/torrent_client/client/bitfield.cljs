@@ -113,6 +113,8 @@
 ;; Event handling
 ;;************************************************
 
-(dispatch/react-to #{:written-piece} (fn [_ [torrent block-index]]
+(dispatch/react-to #{:written-piece} (fn [_ [torrent piece-index]]
   (let [bitfield (@torrent :bitfield)]
-    (assoc bitfield block-index true))))
+    (assoc bitfield piece-index true)
+    (if (filter #(= % 0xff) (.-byte-array bitfield))
+      (dispatch/fire :finished-torrent torrent)))))

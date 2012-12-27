@@ -12,3 +12,10 @@
   (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
   (dispatch/fire :started-torrent torrent)
   ))
+
+(dispatch/react-to #{:written-piece} (fn [_ [torrent _]]
+  (let [pieces-written (inc (or (@torrent :pieces-written) 0))]
+    (swap! torrent assoc :pieces-written pieces-written)
+    ; If this torrent has all it's pieces mark as such
+    (if (= pieces-written pieces-length)
+      (dispatch/fire :completed-torrent torrent)))))

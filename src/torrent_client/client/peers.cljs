@@ -56,6 +56,11 @@
         peer (generate-peer torrent channel peer-id handshake)]
     ; add the peer to the list of peers for this torrent
     (.log js/console "peer" peer)
+    (set! (.-close channel) (fn [_]
+      ; Reconnect yo
+      (js* "debugger;")
+      (create-data-channel connection info-hash)
+      ))
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
 (dispatch/react-to #{:written-piece} (fn [_ [torrent block]]

@@ -115,11 +115,7 @@
       (.log js/console "written-piece")
       (if-let [piece-index (work-next-piece torrent (@peer-data :bitfield))]
         (doseq [[begin length] (piece-blocks torrent piece-index)]   
-          (protocol/send-request bittorrent-client piece-index begin length))
-        (do
-          (js* "debugger;")
-          (.log js/console (@peer-data :bitfield)))
-        ))
+          (protocol/send-request bittorrent-client piece-index begin length))))
 
     (defevent me :receive-cancel [index begin length]
 
