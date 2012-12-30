@@ -96,7 +96,7 @@
         ; Add it to the pending peers using the local description as a key
         (swap! pending-connections assoc (local-id peer-connection) peer-connection)
         ; And finally mark it complete
-        (#(success-callback (.-sdp description)))
+        (success-callback peer-connection)
         ) error-callback))))
 
 (defn recieve-answer

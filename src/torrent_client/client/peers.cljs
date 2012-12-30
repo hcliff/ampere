@@ -26,21 +26,23 @@
     ; (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
   )))
 
-(dispatch/react-to #{:stopped-torrent} (fn [torrent]
+(dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
   ; Cancel any pieces in transit
   (doseq [peer (@peers (torrent :info-hash))]
     (trigger peer :cancel))
   ; Remove all of our peers
   (swap! peers dissoc (torrent :info-hash))))
 
-(dispatch/react-to #{:completed-torrent} (fn [torrent]
-  (doseq [peer (@peers (torrent :info-hash))]
-    (trigger peer :cancel))
-  ; TODO: rework unchoke algorithm upon completion
-  ; TODO: do we change our interested status?
-  ))
+; TODO: impliment better end game stratgy
+; http://wiki.theory.org/BitTorrentSpecification#End_Game
+; (dispatch/react-to #{:completed-torrent} (fn [_ torrent]
+;   (doseq [peer (@peers (torrent :info-hash))]
+;     (trigger peer :cancel))
+;   ; TODO: rework unchoke algorithm upon completion
+;   ; TODO: do we change our interested status?
+;   ))
 
-(dispatch/react-to #{:paused-torrent} (fn [torrent]
+(dispatch/react-to #{:paused-torrent} (fn [_ torrent]
   ; TODO: cancel current pieces?
   ; TODO: do we change our interested status?
   ; TODO: pause timer

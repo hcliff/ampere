@@ -3,6 +3,6 @@
   (:use [noir.core :only [defpage]]
         [hiccup.core :only [html]]))
 
-(defpage "/" []
+(defpage index "/" []
          (common/layout
            [:div#content]))

@@ -154,8 +154,8 @@
         torrent (atom torrent-data)]
 
     ; When the torrent atom changes update the database reference
-    (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
-      (write-metainfo-to-db new-metainfo)))
+    ; (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
+    ;   (write-metainfo-to-db new-metainfo)))
 
     (defevent me :add-files [files]
       "Given torrent information and the files it pertains to 
@@ -181,7 +181,9 @@
       "Once the files are checked/created move to ready"
       (in []
         (when-not (zero? (count file-entries))
-          (bitfield/fill-bitfield (@torrent :bitfield) (@torrent :pieces-length)))
+          (bitfield/fill-bitfield (@torrent :bitfield) (@torrent :pieces-length))
+          (swap! torrent assoc :pieces-written (@torrent :pieces-length))
+          (dispatch/fire :completed-torrent torrent))
         (state/set me :ready)))
 
     (defstate me :ready

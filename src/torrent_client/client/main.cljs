@@ -154,8 +154,7 @@
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   (let [element (torrent-row torrent)]
     ; Render the torrent row and add it to the atom
-    (swap! elements (partial merge-with concat) 
-           {(@torrent :pretty-info-hash) [element]})
+    (swap! elements assoc (@torrent :pretty-info-hash) element)
     (append $torrents element))))
 
 (defpartial torrent-file-badge [content]
@@ -214,13 +213,14 @@
     [:td.flex1.speed (bound torrent torrent-speed-to-string)]
     [:td.actions
       [:div.btn-group
-        [:button.btn 
+        [:button.btn {:disabled true}
           [:i {:class (bound-class torrent active? "icon-pause" "icon-play")}]]
         [:a {:href (file-url torrent) 
              :target "_blank" 
-             :class (bound-class torrent completed? "btn" "btn")}
+             :class (bound-class torrent completed? "btn" "btn hide")}
           [:i.icon-folder-open]]
-        [:button.btn [:i.icon-trash]]
+        [:button.btn {:disabled true}
+          [:i.icon-trash]]
       ]]])
 
 (defn active? [torrent]
@@ -233,13 +233,13 @@
 
 (def paused? (complement active?))
 
-(defn downloading? [torrent]
+(defn completed? [torrent]
   "Take a collection or atom and determin if the torrent has finished"
   (if-not (coll? torrent)
-    (downloading? @torrent)
-    (< (torrent :pieces-written) (torrent :pieces-length))))
+    (completed? @torrent)
+    (>= (torrent :pieces-written) (torrent :pieces-length))))
 
-(def completed? (complement downloading?))
+(def downloading? (complement completed?))
 
 (dispatch/react-to #{:started-torrent :completed-torrent :stopped-torrent 
                      :paused-torrent :resumed-torrent} (fn [_ torrent]
@@ -255,27 +255,28 @@
 (defn tab-machine []
   (let [me (machine {:label :tab-machine :current :downloading})]
 
-    ; When a torrent finished automatically show the finished tab
-    ; (dispatch/react-to #{:completed-torrent} #(state/set me :completed)))
+    ; When a torrent finishes automatically show the completed tab
+    (dispatch/react-to #{:completed-torrent} #(state/set me :completed))
 
     (on ($ "#downloading-tab") :click #(state/set me :downloading))
-
     (on ($ "#completed-tab") :click #(state/set me :completed))
 
     (defstate me :downloading
       (in []
+        ; (js* "debugger;")
         (empty $torrents)
-        (let [torrents (filter downloading? @torrents)
+        (let [torrents (filter downloading? (vals @torrents))
               elements (map (comp @elements :pretty-info-hash deref) torrents)]
-          (append $torrents elements))
+          (append $torrents (doall elements)))
         (tab ($ "#downloading-tab") "show")))
 
     (defstate me :completed
       (in []
+        ; (js* "debugger;")
         (empty $torrents)
-        (let [torrents (filter completed? @torrents)
+        (let [torrents (filter completed? (vals @torrents))
               elements (map (comp @elements :pretty-info-hash deref) torrents)]
-          (append $torrents elements))
+          (append $torrents (doall elements)))
         (tab ($ "#completed-tab") "show")))
 
     ))

@@ -15,8 +15,7 @@
                 (include-css "/css/bootstrap.css")
                 (include-js "js/jquery.js" "/js/less.js" "/js/underscore.js" "js/humane.js"
                   "js/bootstrap/bootstrap-modal.js" "js/bootstrap/bootstrap-tab.js"
-                  "http://js.pusher.com/1.12/pusher.min.js" "js/idb_filesystem.js"
-                  "js/datachannel.js")
+                  "js/datachannel.js" "//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.10/socket.io.min.js")
               ]
               [:body
                 [:div#create-modal.modal.hide

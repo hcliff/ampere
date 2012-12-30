@@ -117,4 +117,4 @@
   (let [bitfield (@torrent :bitfield)]
     (assoc bitfield piece-index true)
     (if (filter #(= % 0xff) (.-byte-array bitfield))
-      (dispatch/fire :finished-torrent torrent)))))
+      (dispatch/fire :completed-torrent torrent)))))
