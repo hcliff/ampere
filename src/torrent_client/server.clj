@@ -1,9 +1,9 @@
 (ns torrent-client.server
   (:require [noir.server :as server]
             [noir.cljs.core :as cljs])
-	(:use [clojure.repl]
-				[cljs.repl :only (repl)]
-				[cljs.repl.browser :only (repl-env)]))
+  (:use [clojure.repl]
+        [cljs.repl :only (repl)]
+        [cljs.repl.browser :only (repl-env)]))
 
 (server/load-views-ns 'torrent-client.views)
 (def cljs-options {:advanced {:externs ["externs/jquery.js"]}})
@@ -17,4 +17,4 @@
 
 (def env (repl-env))
 (defn cljs-repl []
-	(repl env))
+  (repl env))

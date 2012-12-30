@@ -4,5 +4,4 @@
         [hiccup.core :only [html]]))
 
 (defpage index "/" []
-         (common/layout
-           [:div#content]))
+  (common/layout [:div#content]))
