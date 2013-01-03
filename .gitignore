@@ -1,0 +1,11 @@
+pom.xml
+*jar
+/lib/
+/classes/
+.lein-deps-sum
+.lein-git-deps
+.lein-env
+resources/public/cljs/*/
+*log
+.repl
+target
