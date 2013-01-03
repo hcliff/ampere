@@ -98,6 +98,7 @@ function DCPF_install(ws_url)
 
     channel._udt.onclose = function()
     {
+      debugger;
       if(pc.readyState == "closed")
         return;
 
