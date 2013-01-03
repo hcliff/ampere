@@ -6,7 +6,9 @@
         [cljs.repl.browser :only (repl-env)]))
 
 (server/load-views-ns 'torrent-client.views)
-(def cljs-options {:advanced {:externs ["externs/jquery.js"]}})
+(def cljs-options {
+  :advanced
+  {:pretty-print false :externs ["externs/jquery.js"]}})
 
 (defn -main [& m]
   (let [mode (keyword (or (first m) :dev))

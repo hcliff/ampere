@@ -13,7 +13,7 @@
 
 function humane_date(date_str){
 	var time_formats = [
-		[60, 'just now'],
+		[60, 'seconds'],
 		[90, '1 minute'], // 60*1.5
 		[3600, 'minutes', 60], // 60*60, 60
 		[5400, '1 hour'], // 60*60*1.5

@@ -4,7 +4,6 @@ pom.xml
 /classes/
 .lein-deps-sum
 .lein-git-deps
-resources/public/cljs/
+.lein-env
+resources/public/cljs/*/
 *log
-.repl/
-target/

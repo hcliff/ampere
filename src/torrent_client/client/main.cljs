@@ -7,7 +7,8 @@
     [goog.string :as gstring]
     [clojure.string :as string]
     [waltz.state :as state]
-    [crate.core :as crate])
+    [crate.core :as crate]
+    [noir.cljs.client.watcher :as watcher])
   (:use
     [jayq.core :only [$ on attr document-ready empty text]]
     [torrent-client.jayq.core :only [append input-files event-files modal tab css]]
@@ -26,7 +27,7 @@
 ;; Dev stuff
 ;;************************************************
 
-; (watcher/init)
+(watcher/init)
 ; (repl/connect "http://localhost:9000/repl")
 
 ;;************************************************
