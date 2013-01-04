@@ -54,7 +54,7 @@ function DCPF_install(ws_url)
     // BUGFIX: undefined onerror causes issues in some chrome versions
     this.send  = function(data, onerror){
       if(!onerror) onerror = function(){};
-      this._udt.send(data, onerror);
+      this._udt.send(data);
     }
 
     this.readyState = "connecting"
