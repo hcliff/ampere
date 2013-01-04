@@ -116,5 +116,6 @@
 (dispatch/react-to #{:written-piece} (fn [_ [torrent piece-index]]
   (let [bitfield (@torrent :bitfield)]
     (assoc bitfield piece-index true)
-    (if (filter #(= % 0xff) (.-byte-array bitfield))
-      (dispatch/fire :completed-torrent torrent)))))
+    ; (if (filter #(= % 0xff) (.-byte-array bitfield))
+    ;   (dispatch/fire :completed-torrent torrent))
+    )))

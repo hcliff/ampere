@@ -15353,11 +15353,8 @@ torrent_client.client.bitfield.difference = function() {
   return a
 }();
 torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.deref.call(null, c).call(null, "\ufdd0'bitfield");
-  cljs.core.assoc.call(null, e, d, !0);
-  return cljs.core.truth_(cljs.core.filter.call(null, function(a) {
-    return cljs.core._EQ_.call(null, a, 255)
-  }, e.byte_array)) ? torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", c) : null
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), c = cljs.core.deref.call(null, c).call(null, "\ufdd0'bitfield");
+  return cljs.core.assoc.call(null, c, d, !0)
 });
 clojure.set = {};
 clojure.set.bubble_max_key = function(a, b) {
