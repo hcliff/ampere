@@ -191,7 +191,7 @@
 )
 
 (defn torrent-speed-to-string [torrent]
-  "700kb/s"
+  ""
   )
 
 (defn file-url [torrent]
@@ -208,8 +208,8 @@
                       "progress progress-striped")}
         [:div.bar {:style 
           {:width (bound torrent download-percent)}}]
-        [:label {:class (bound-class torrent active? "label" "label hide")} 
-          (bound torrent time-remaining-to-string)]
+        ; [:label {:class (bound-class torrent active? "label" "label hide")} 
+        ;   (bound torrent time-remaining-to-string)]
       ]]
     [:td.flex1.speed (bound torrent torrent-speed-to-string)]
     [:td.actions

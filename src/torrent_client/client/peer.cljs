@@ -39,23 +39,17 @@
         (.log js/console "dispatched")
         (state/trigger me :unchoke-peer)))
 
-    (dispatch/react-to #{:dicks} (fn [_]
-      (state/trigger me :unchoke-peer)
-      ))
-
-    (dispatch/react-to #{:written-piece} 
-      #(state/trigger me :written-piece))
+    (dispatch/react-to #{:written-piece :invalid-piece} 
+      #(state/trigger me :request-piece))
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
       peer-id and the torrent info-hash"
       (.log js/console "recieve handshake" (@peer-data :peer-id) peer-id)
-      (if (and (= (vec (@torrent :info-hash)) info-hash)
-               (= (@peer-data :peer-id) peer-id))
-        (do
-          (transition me :sent-handshake :sent-bitfield)
-          (transition me :init :sent-handshake)
-          )))
+      (when (and (= (vec (@torrent :info-hash)) info-hash)
+                 (= (@peer-data :peer-id) peer-id))
+        (transition me :sent-handshake :sent-bitfield)
+        (transition me :init :sent-handshake)))
 
     (defevent me :receive-choke []
       (transition me :not-choked-not-interested :choked-not-interested)
@@ -111,18 +105,16 @@
 
     ; H.C crude, and introduces latancy between writing and requesting
     ; swap this out for a queue
-    (defevent me :written-piece []
+    (defevent me :request-piece []
       (.log js/console "written-piece")
       (if-let [piece-index (work-next-piece torrent (@peer-data :bitfield))]
         (doseq [[begin length] (piece-blocks torrent piece-index)]   
           (protocol/send-request bittorrent-client piece-index begin length))))
 
+    ; TODO: impliment
     (defevent me :receive-cancel [index begin length]
 
       )
-
-    (defevent me :add-block []
-      (.log js/console "add block called"))
 
     (defevent me :choke-peer []
       (swap! peer-data assoc :choking true)
@@ -160,10 +152,9 @@
           (state/set me :not-choked-not-interested))))
 
     ; Handshake if this is the first client
-    (if handshake
-      (do
-        (.log js/console "INITIATE HANDSHAKE")
-        (state/set-ex me :init :sent-handshake)))
+    (when handshake
+      (.log js/console "INITIATE HANDSHAKE")
+      (state/set-ex me :init :sent-handshake))
 
     ; Return some info on the peer
     peer-data

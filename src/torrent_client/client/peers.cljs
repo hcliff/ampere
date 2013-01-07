@@ -26,12 +26,12 @@
     ; (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
   )))
 
-(dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
-  ; Cancel any pieces in transit
-  (doseq [peer (@peers (torrent :info-hash))]
-    (trigger peer :cancel))
-  ; Remove all of our peers
-  (swap! peers dissoc (torrent :info-hash))))
+; (dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
+;   ; Cancel any pieces in transit
+;   (doseq [peer (@peers (torrent :info-hash))]
+;     (trigger peer :cancel))
+;   ; Remove all of our peers
+;   (swap! peers dissoc (torrent :info-hash))))
 
 ; TODO: impliment better end game stratgy
 ; http://wiki.theory.org/BitTorrentSpecification#End_Game
@@ -65,11 +65,11 @@
       ))
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
-(dispatch/react-to #{:written-piece} (fn [_ [torrent block]]
-  "When a peer sends us a block we didn't have before"
-  ; Inform all our peers we have it
-  (doseq [peer (@peers (@torrent :info-hash))]
-    (trigger peer :add-block block))))
+; (dispatch/react-to #{:written-piece} (fn [_ [torrent block]]
+;   "When a peer sends us a block we didn't have before"
+;   ; Inform all our peers we have it
+;   (doseq [peer (@peers (@torrent :info-hash))]
+;     (trigger peer :add-block block))))
 
 ; listen for changes in the peers interest
 (dispatch/react-to #{:receive-interested :receive-not-interested} (fn [_ torrent]
@@ -80,34 +80,33 @@
   appropriate"
   [info-hash]
   (if-let [peers (@peers info-hash)]
-    (let [peers (sort-by (comp (juxt :optimistic :interested :upload) deref) 
-                          peers)
+    (let [peers (sort-by (comp (juxt :optimistic :interested :upload) deref) peers)
           first-peer-status ((juxt :optimistic :interested) (deref (first peers)))
           ; is the first peer is optimistically unchoked but not interested
           optimistic-uninterested (= [true false] first-peer-status)
           ; the first n peers are active
           active-peers-count (min (count peers) (if first-peer-unop 5 4))
-          ; if the optimisticly unchoked peer isn't interested allow 5 active peers
-          ; otherwise just have the 4 active peers
+          ; if the optimisticly unchoked peer isn't interested allow 5 active 
+          ; peers otherwise just have the 4 active peers
           active (subvec peers 0 active-peers-count)
-
           inactive (if (< active-peers-count (count peers))
-                       (subvec peers active-peers-count))]
+                      (subvec peers active-peers-count))]
       ; Unchoke the peers in the top 4 that are currently choked
       ; H.C (comp :choking deref not working...?)
       (doseq [peer (filter (comp :choking deref) active)]
-        (dispatch/fire :dicks))
+        (dispatch/fire [:unchoke-peer (@peer :peer-id)]))
       ; ; choke inactive peers that are unchoked
-      ; (doseq [peer (remove :choking (map #(deref %) inactive))]
-      ;   (dispatch/fire [:choke (peer :peer-id)]))
+      (doseq [peer (remove :choking (map #(deref %) inactive))]
+        (dispatch/fire [:choke (@peer :peer-id)]))
       (swap! unchoked assoc info-hash active))))
 
 (defn unoptimistic
   "The optimistic downloader is protected for the first 30 seconds
   after that it has to fight for itself"
   [info-hash]
-  (let [optimistic (first (filter :optimistic peers))]
-    (trigger optimistic :unoptimistic)))
+  (if-let [peers (@peers info-hash)]
+    (let [peer (first (filter (comp :optimistic deref) peers))]
+      (dispatch/fire [:unoptimistic (@peer :peer-id)]))))
 
 (defn optimistic-unchoke
   "Unchoke a peer regardless of its upload speed"

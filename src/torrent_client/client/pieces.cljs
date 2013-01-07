@@ -55,7 +55,7 @@
     (doseq [piece-index (@working info-hash)] 
       (assoc wanted-bitfield piece-index false))
     ; Get the first wanted block
-    (first wanted)))
+    (if-not (empty? wanted) (rand-nth wanted))))
 
 (defn work-next-piece
   "Marks that we have started fetching a piece"
@@ -67,9 +67,10 @@
     (swap! working (partial merge-with concat) {info-hash [piece-index]})
     piece-index))
 
-; (dispatch/react-to #{:written-piece :invalid-block} (fn [_ torrent block-index]
-;   "When a block has finished or is invalid, remove it from the in-progress"
-;   (swap! working (partial merge-with set/difference) {info-hash #{block-index}})))
+(dispatch/react-to #{:written-piece :invalid-block} (fn [_ torrent block-index]
+  "When a block has finished or is invalid, remove it from the in-progress"
+  (let [blocks (remove #(= block-index %) (@working :info-hash))]
+    (swap! working assoc info-hash blocks))))
 
 (defn piece-length 
   "If this is the last piece return the last-piece-length"
@@ -78,6 +79,15 @@
   (if (= piece-index (dec (@torrent :pieces-length)))
     (@torrent :last-piece-length)
     (@torrent :piece-length)))
+
+(defn piece-offset [torrent piece-index]
+  "Given a torrent and a requested piece-index calculate the actual
+  offset in the file (e.g: given piece 5 and only piece one is written
+  the offset is one piece)"
+  (let [bitfield (@torrent :bitfield)
+        pieces-prior (take piece-index bitfield)
+        pieces-written (count (remove zero? pieces-prior))]
+    (* pieces-written (@torrent :piece-length))))
 
 (defn piece-blocks
   "Given a piece, return all the blocks within it"
@@ -113,7 +123,7 @@
 ; this would require one fileread as opposed to n
 (defn get-block [torrent piece-index offset length]
   (async [success-callback _]
-    (let [piece-offset (* piece-index (@torrent :piece-length))
+    (let [piece-offset (piece-offset torrent piece-index)
           info-hash (@torrent :pretty-info-hash)
           block-offset (+ piece-offset offset)
           ; A piece that straddles two files may have a block that
@@ -121,6 +131,7 @@
           files (filter #(contains? % piece-index) (@files info-hash))]
       ; Retrieve the pieces from the files
       (.log js/console "get-block" piece-index offset length)
+      ; TODO: support stradling files
       (let-async [data (get-file-block block-offset length (first files))]
         (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
@@ -179,7 +190,7 @@
   ; Grab their meta info
   (let [torrent (@torrents info-hash)
         ; TODO: change to pieces prior
-        piece-offset (* piece-index (@torrent :piece-length))
+        piece-offset (piece-offset torrent piece-index)
         files (filter #(contains? % piece-index) (@files info-hash))]
     ; For every file that needs this piece
     (doseq [file files]
