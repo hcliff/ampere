@@ -21274,8 +21274,9 @@ torrent_client.client.connection.set_remote_description = function(a, b) {
   return a.setRemoteDescription(b)
 };
 torrent_client.client.connection.add_ice_candidate = function(a, b) {
-  var c = cljs.core.ObjMap.fromObject(["\ufdd0'sdpMLineIndex", "\ufdd0'candidate"], {"\ufdd0'sdpMLineIndex":b.label, "\ufdd0'candidate":b.candidate}), c = new RTCIceCandidate(jayq.util.clj__GT_js.call(null, c));
-  return a.addIceCandidate(c)
+  var c = cljs.core.ObjMap.fromObject(["\ufdd0'sdpMLineIndex", "\ufdd0'candidate"], {"\ufdd0'sdpMLineIndex":b.label, "\ufdd0'candidate":b.candidate});
+  new RTCIceCandidate(jayq.util.clj__GT_js.call(null, c));
+  return a.addIceCandidate(b.candidate)
 };
 torrent_client.client.connection.session_description = function(a, b) {
   var c = jayq.util.clj__GT_js.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'type", "\ufdd0'sdp"], {"\ufdd0'type":a, "\ufdd0'sdp":b}));

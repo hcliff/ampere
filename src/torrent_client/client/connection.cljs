@@ -45,7 +45,7 @@
 (defn add-ice-candidate [peer-connection event]
   (let [options {:sdpMLineIndex (.-label event) :candidate (.-candidate event)}
         candidate (js/RTCIceCandidate. (clj->js options))]
-  (.addIceCandidate peer-connection candidate)))
+  (.addIceCandidate peer-connection (.-candidate event))))
 
 (defn session-description [type sdp]
   (let [options (clj->js {:type type :sdp sdp})]
