@@ -67,7 +67,7 @@
     (swap! working (partial merge-with concat) {info-hash [piece-index]})
     piece-index))
 
-(dispatch/react-to #{:written-piece :invalid-block} (fn [_ torrent block-index]
+(dispatch/react-to #{:written-piece :invalid-piece} (fn [_ torrent block-index]
   "When a block has finished or is invalid, remove it from the in-progress"
   (let [blocks (remove #(= block-index %) (@working :info-hash))]
     (swap! working assoc info-hash blocks))))
