@@ -21250,6 +21250,10 @@ jayq.core.document_ready.call(null, function() {
   return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'document-ready")
 });
 console.log("js loaded");
+torrent_client.client.protocols = {};
+torrent_client.client.protocols.dht = {};
+torrent_client.client.speed = {};
+console.log("not-last");
 torrent_client.client.connection = {};
 torrent_client.client.connection.peer_connection = function(a) {
   return new torrent_client.client.polyfills.prefix.RTCPeerConnection(jayq.util.clj__GT_js.call(null, a))
@@ -21270,7 +21274,7 @@ torrent_client.client.connection.set_remote_description = function(a, b) {
   return a.setRemoteDescription(b)
 };
 torrent_client.client.connection.add_ice_candidate = function(a, b) {
-  var c = cljs.core.ObjMap.fromObject(["\ufdd0'sdpMLineIndex", "\ufdd0'candidate"], {"\ufdd0'sdpMLineIndex":b.label, "\ufdd0'candidate":b.candidate}), c = new torrent_client.client.connection.RTCIceCandidate(jayq.util.clj__GT_js.call(null, c));
+  var c = cljs.core.ObjMap.fromObject(["\ufdd0'sdpMLineIndex", "\ufdd0'candidate"], {"\ufdd0'sdpMLineIndex":b.label, "\ufdd0'candidate":b.candidate}), c = new RTCIceCandidate(jayq.util.clj__GT_js.call(null, c));
   return a.addIceCandidate(c)
 };
 torrent_client.client.connection.session_description = function(a, b) {
@@ -21452,7 +21456,3 @@ torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'a
   }
 });
 console.log("not last in tracker");
-torrent_client.client.protocols = {};
-torrent_client.client.protocols.dht = {};
-torrent_client.client.speed = {};
-console.log("not-last");
