@@ -181,7 +181,7 @@
             (dispatch/fire :receive-piece [info-hash piece-index piece])
             ; Otherwise destroy it and announce the invalidity
             (do
-              (.error js/console "invalid hash")
+              (.error js/console "invalid hash" piece-index)
               (dispatch/fire :invalid-piece [torrent piece-index]))
       ))))
   )))
