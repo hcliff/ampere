@@ -55,7 +55,7 @@
     (doseq [piece-index (@working info-hash)] 
       (assoc wanted-bitfield piece-index false))
     ; Get the first wanted block
-    (if-not (empty? wanted) (rand-nth wanted))))
+    (if-not (empty? wanted) (first wanted))))
 
 (defn work-next-piece
   "Marks that we have started fetching a piece"
