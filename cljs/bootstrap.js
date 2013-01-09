@@ -709,6 +709,221 @@ goog.string.parseInt = function(a) {
   isFinite(a) && (a = "" + a);
   return goog.isString(a) ? /^\s*-?0x/i.test(a) ? parseInt(a, 16) : parseInt(a, 10) : NaN
 };
+goog.string.StringBuffer = function(a, b) {
+  null != a && this.append.apply(this, arguments)
+};
+goog.string.StringBuffer.prototype.buffer_ = "";
+goog.string.StringBuffer.prototype.set = function(a) {
+  this.buffer_ = "" + a
+};
+goog.string.StringBuffer.prototype.append = function(a, b, c) {
+  this.buffer_ += a;
+  if(null != b) {
+    for(var d = 1;d < arguments.length;d++) {
+      this.buffer_ += arguments[d]
+    }
+  }
+  return this
+};
+goog.string.StringBuffer.prototype.clear = function() {
+  this.buffer_ = ""
+};
+goog.string.StringBuffer.prototype.getLength = function() {
+  return this.buffer_.length
+};
+goog.string.StringBuffer.prototype.toString = function() {
+  return this.buffer_
+};
+goog.object = {};
+goog.object.forEach = function(a, b, c) {
+  for(var d in a) {
+    b.call(c, a[d], d, a)
+  }
+};
+goog.object.filter = function(a, b, c) {
+  var d = {}, e;
+  for(e in a) {
+    b.call(c, a[e], e, a) && (d[e] = a[e])
+  }
+  return d
+};
+goog.object.map = function(a, b, c) {
+  var d = {}, e;
+  for(e in a) {
+    d[e] = b.call(c, a[e], e, a)
+  }
+  return d
+};
+goog.object.some = function(a, b, c) {
+  for(var d in a) {
+    if(b.call(c, a[d], d, a)) {
+      return!0
+    }
+  }
+  return!1
+};
+goog.object.every = function(a, b, c) {
+  for(var d in a) {
+    if(!b.call(c, a[d], d, a)) {
+      return!1
+    }
+  }
+  return!0
+};
+goog.object.getCount = function(a) {
+  var b = 0, c;
+  for(c in a) {
+    b++
+  }
+  return b
+};
+goog.object.getAnyKey = function(a) {
+  for(var b in a) {
+    return b
+  }
+};
+goog.object.getAnyValue = function(a) {
+  for(var b in a) {
+    return a[b]
+  }
+};
+goog.object.contains = function(a, b) {
+  return goog.object.containsValue(a, b)
+};
+goog.object.getValues = function(a) {
+  var b = [], c = 0, d;
+  for(d in a) {
+    b[c++] = a[d]
+  }
+  return b
+};
+goog.object.getKeys = function(a) {
+  var b = [], c = 0, d;
+  for(d in a) {
+    b[c++] = d
+  }
+  return b
+};
+goog.object.getValueByKeys = function(a, b) {
+  for(var c = goog.isArrayLike(b), d = c ? b : arguments, c = c ? 0 : 1;c < d.length && !(a = a[d[c]], !goog.isDef(a));c++) {
+  }
+  return a
+};
+goog.object.containsKey = function(a, b) {
+  return b in a
+};
+goog.object.containsValue = function(a, b) {
+  for(var c in a) {
+    if(a[c] == b) {
+      return!0
+    }
+  }
+  return!1
+};
+goog.object.findKey = function(a, b, c) {
+  for(var d in a) {
+    if(b.call(c, a[d], d, a)) {
+      return d
+    }
+  }
+};
+goog.object.findValue = function(a, b, c) {
+  return(b = goog.object.findKey(a, b, c)) && a[b]
+};
+goog.object.isEmpty = function(a) {
+  for(var b in a) {
+    return!1
+  }
+  return!0
+};
+goog.object.clear = function(a) {
+  for(var b in a) {
+    delete a[b]
+  }
+};
+goog.object.remove = function(a, b) {
+  var c;
+  (c = b in a) && delete a[b];
+  return c
+};
+goog.object.add = function(a, b, c) {
+  if(b in a) {
+    throw Error('The object already contains the key "' + b + '"');
+  }
+  goog.object.set(a, b, c)
+};
+goog.object.get = function(a, b, c) {
+  return b in a ? a[b] : c
+};
+goog.object.set = function(a, b, c) {
+  a[b] = c
+};
+goog.object.setIfUndefined = function(a, b, c) {
+  return b in a ? a[b] : a[b] = c
+};
+goog.object.clone = function(a) {
+  var b = {}, c;
+  for(c in a) {
+    b[c] = a[c]
+  }
+  return b
+};
+goog.object.unsafeClone = function(a) {
+  var b = goog.typeOf(a);
+  if("object" == b || "array" == b) {
+    if(a.clone) {
+      return a.clone()
+    }
+    var b = "array" == b ? [] : {}, c;
+    for(c in a) {
+      b[c] = goog.object.unsafeClone(a[c])
+    }
+    return b
+  }
+  return a
+};
+goog.object.transpose = function(a) {
+  var b = {}, c;
+  for(c in a) {
+    b[a[c]] = c
+  }
+  return b
+};
+goog.object.PROTOTYPE_FIELDS_ = "constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" ");
+goog.object.extend = function(a, b) {
+  for(var c, d, e = 1;e < arguments.length;e++) {
+    d = arguments[e];
+    for(c in d) {
+      a[c] = d[c]
+    }
+    for(var f = 0;f < goog.object.PROTOTYPE_FIELDS_.length;f++) {
+      c = goog.object.PROTOTYPE_FIELDS_[f], Object.prototype.hasOwnProperty.call(d, c) && (a[c] = d[c])
+    }
+  }
+};
+goog.object.create = function(a) {
+  var b = arguments.length;
+  if(1 == b && goog.isArray(arguments[0])) {
+    return goog.object.create.apply(null, arguments[0])
+  }
+  if(b % 2) {
+    throw Error("Uneven number of arguments");
+  }
+  for(var c = {}, d = 0;d < b;d += 2) {
+    c[arguments[d]] = arguments[d + 1]
+  }
+  return c
+};
+goog.object.createSet = function(a) {
+  var b = arguments.length;
+  if(1 == b && goog.isArray(arguments[0])) {
+    return goog.object.createSet.apply(null, arguments[0])
+  }
+  for(var c = {}, d = 0;d < b;d++) {
+    c[arguments[d]] = !0
+  }
+  return c
+};
 goog.debug = {};
 goog.debug.Error = function(a) {
   Error.captureStackTrace ? Error.captureStackTrace(this, goog.debug.Error) : this.stack = Error().stack || "";
@@ -1122,221 +1337,6 @@ goog.array.shuffle = function(a, b) {
     a[d] = a[e];
     a[e] = f
   }
-};
-goog.object = {};
-goog.object.forEach = function(a, b, c) {
-  for(var d in a) {
-    b.call(c, a[d], d, a)
-  }
-};
-goog.object.filter = function(a, b, c) {
-  var d = {}, e;
-  for(e in a) {
-    b.call(c, a[e], e, a) && (d[e] = a[e])
-  }
-  return d
-};
-goog.object.map = function(a, b, c) {
-  var d = {}, e;
-  for(e in a) {
-    d[e] = b.call(c, a[e], e, a)
-  }
-  return d
-};
-goog.object.some = function(a, b, c) {
-  for(var d in a) {
-    if(b.call(c, a[d], d, a)) {
-      return!0
-    }
-  }
-  return!1
-};
-goog.object.every = function(a, b, c) {
-  for(var d in a) {
-    if(!b.call(c, a[d], d, a)) {
-      return!1
-    }
-  }
-  return!0
-};
-goog.object.getCount = function(a) {
-  var b = 0, c;
-  for(c in a) {
-    b++
-  }
-  return b
-};
-goog.object.getAnyKey = function(a) {
-  for(var b in a) {
-    return b
-  }
-};
-goog.object.getAnyValue = function(a) {
-  for(var b in a) {
-    return a[b]
-  }
-};
-goog.object.contains = function(a, b) {
-  return goog.object.containsValue(a, b)
-};
-goog.object.getValues = function(a) {
-  var b = [], c = 0, d;
-  for(d in a) {
-    b[c++] = a[d]
-  }
-  return b
-};
-goog.object.getKeys = function(a) {
-  var b = [], c = 0, d;
-  for(d in a) {
-    b[c++] = d
-  }
-  return b
-};
-goog.object.getValueByKeys = function(a, b) {
-  for(var c = goog.isArrayLike(b), d = c ? b : arguments, c = c ? 0 : 1;c < d.length && !(a = a[d[c]], !goog.isDef(a));c++) {
-  }
-  return a
-};
-goog.object.containsKey = function(a, b) {
-  return b in a
-};
-goog.object.containsValue = function(a, b) {
-  for(var c in a) {
-    if(a[c] == b) {
-      return!0
-    }
-  }
-  return!1
-};
-goog.object.findKey = function(a, b, c) {
-  for(var d in a) {
-    if(b.call(c, a[d], d, a)) {
-      return d
-    }
-  }
-};
-goog.object.findValue = function(a, b, c) {
-  return(b = goog.object.findKey(a, b, c)) && a[b]
-};
-goog.object.isEmpty = function(a) {
-  for(var b in a) {
-    return!1
-  }
-  return!0
-};
-goog.object.clear = function(a) {
-  for(var b in a) {
-    delete a[b]
-  }
-};
-goog.object.remove = function(a, b) {
-  var c;
-  (c = b in a) && delete a[b];
-  return c
-};
-goog.object.add = function(a, b, c) {
-  if(b in a) {
-    throw Error('The object already contains the key "' + b + '"');
-  }
-  goog.object.set(a, b, c)
-};
-goog.object.get = function(a, b, c) {
-  return b in a ? a[b] : c
-};
-goog.object.set = function(a, b, c) {
-  a[b] = c
-};
-goog.object.setIfUndefined = function(a, b, c) {
-  return b in a ? a[b] : a[b] = c
-};
-goog.object.clone = function(a) {
-  var b = {}, c;
-  for(c in a) {
-    b[c] = a[c]
-  }
-  return b
-};
-goog.object.unsafeClone = function(a) {
-  var b = goog.typeOf(a);
-  if("object" == b || "array" == b) {
-    if(a.clone) {
-      return a.clone()
-    }
-    var b = "array" == b ? [] : {}, c;
-    for(c in a) {
-      b[c] = goog.object.unsafeClone(a[c])
-    }
-    return b
-  }
-  return a
-};
-goog.object.transpose = function(a) {
-  var b = {}, c;
-  for(c in a) {
-    b[a[c]] = c
-  }
-  return b
-};
-goog.object.PROTOTYPE_FIELDS_ = "constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" ");
-goog.object.extend = function(a, b) {
-  for(var c, d, e = 1;e < arguments.length;e++) {
-    d = arguments[e];
-    for(c in d) {
-      a[c] = d[c]
-    }
-    for(var f = 0;f < goog.object.PROTOTYPE_FIELDS_.length;f++) {
-      c = goog.object.PROTOTYPE_FIELDS_[f], Object.prototype.hasOwnProperty.call(d, c) && (a[c] = d[c])
-    }
-  }
-};
-goog.object.create = function(a) {
-  var b = arguments.length;
-  if(1 == b && goog.isArray(arguments[0])) {
-    return goog.object.create.apply(null, arguments[0])
-  }
-  if(b % 2) {
-    throw Error("Uneven number of arguments");
-  }
-  for(var c = {}, d = 0;d < b;d += 2) {
-    c[arguments[d]] = arguments[d + 1]
-  }
-  return c
-};
-goog.object.createSet = function(a) {
-  var b = arguments.length;
-  if(1 == b && goog.isArray(arguments[0])) {
-    return goog.object.createSet.apply(null, arguments[0])
-  }
-  for(var c = {}, d = 0;d < b;d++) {
-    c[arguments[d]] = !0
-  }
-  return c
-};
-goog.string.StringBuffer = function(a, b) {
-  null != a && this.append.apply(this, arguments)
-};
-goog.string.StringBuffer.prototype.buffer_ = "";
-goog.string.StringBuffer.prototype.set = function(a) {
-  this.buffer_ = "" + a
-};
-goog.string.StringBuffer.prototype.append = function(a, b, c) {
-  this.buffer_ += a;
-  if(null != b) {
-    for(var d = 1;d < arguments.length;d++) {
-      this.buffer_ += arguments[d]
-    }
-  }
-  return this
-};
-goog.string.StringBuffer.prototype.clear = function() {
-  this.buffer_ = ""
-};
-goog.string.StringBuffer.prototype.getLength = function() {
-  return this.buffer_.length
-};
-goog.string.StringBuffer.prototype.toString = function() {
-  return this.buffer_
 };
 var cljs = {core:{}};
 cljs.core._STAR_unchecked_if_STAR_ = !1;
@@ -7126,7 +7126,7 @@ void 0;
 void 0;
 cljs.core.vector_seq = function vector_seq$$0(b, c) {
   var d = cljs.core._count.call(null, b);
-  return 0 < d ? (void 0 === cljs.core.t15395 && (cljs.core.t15395 = function(b, c, d, h, i) {
+  return 0 < d ? (void 0 === cljs.core.t16957 && (cljs.core.t16957 = function(b, c, d, h, i) {
     this.c = b;
     this.offset = c;
     this.v = d;
@@ -7134,24 +7134,24 @@ cljs.core.vector_seq = function vector_seq$$0(b, c) {
     this.__meta__2251__auto__ = i;
     this.cljs$lang$protocol_mask$partition1$ = 0;
     this.cljs$lang$protocol_mask$partition0$ = 282263648
-  }, cljs.core.t15395.cljs$lang$type = !0, cljs.core.t15395.cljs$lang$ctorPrSeq = function() {
-    return cljs.core.list.call(null, "cljs.core.t15395")
-  }, cljs.core.t15395.prototype.cljs$core$ISeqable$ = !0, cljs.core.t15395.prototype.cljs$core$ISeqable$_seq$arity$1 = function(b) {
+  }, cljs.core.t16957.cljs$lang$type = !0, cljs.core.t16957.cljs$lang$ctorPrSeq = function() {
+    return cljs.core.list.call(null, "cljs.core.t16957")
+  }, cljs.core.t16957.prototype.cljs$core$ISeqable$ = !0, cljs.core.t16957.prototype.cljs$core$ISeqable$_seq$arity$1 = function(b) {
     return b
-  }, cljs.core.t15395.prototype.cljs$core$ISeq$ = !0, cljs.core.t15395.prototype.cljs$core$ISeq$_first$arity$1 = function() {
+  }, cljs.core.t16957.prototype.cljs$core$ISeq$ = !0, cljs.core.t16957.prototype.cljs$core$ISeq$_first$arity$1 = function() {
     return cljs.core._nth.call(null, this.v, this.offset)
-  }, cljs.core.t15395.prototype.cljs$core$ISeq$_rest$arity$1 = function() {
+  }, cljs.core.t16957.prototype.cljs$core$ISeq$_rest$arity$1 = function() {
     var b = this.offset + 1;
     return b < this.c ? this.vector_seq.call(null, this.v, b) : cljs.core.List.EMPTY
-  }, cljs.core.t15395.prototype.cljs$core$ASeq$ = !0, cljs.core.t15395.prototype.cljs$core$IEquiv$ = !0, cljs.core.t15395.prototype.cljs$core$IEquiv$_equiv$arity$2 = function(b, c) {
+  }, cljs.core.t16957.prototype.cljs$core$ASeq$ = !0, cljs.core.t16957.prototype.cljs$core$IEquiv$ = !0, cljs.core.t16957.prototype.cljs$core$IEquiv$_equiv$arity$2 = function(b, c) {
     return cljs.core.equiv_sequential.call(null, b, c)
-  }, cljs.core.t15395.prototype.cljs$core$ISequential$ = !0, cljs.core.t15395.prototype.cljs$core$IPrintable$ = !0, cljs.core.t15395.prototype.cljs$core$IPrintable$_pr_seq$arity$2 = function(b, c) {
+  }, cljs.core.t16957.prototype.cljs$core$ISequential$ = !0, cljs.core.t16957.prototype.cljs$core$IPrintable$ = !0, cljs.core.t16957.prototype.cljs$core$IPrintable$_pr_seq$arity$2 = function(b, c) {
     return cljs.core.pr_sequential.call(null, cljs.core.pr_seq, "(", " ", ")", c, b)
-  }, cljs.core.t15395.prototype.cljs$core$IMeta$ = !0, cljs.core.t15395.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
+  }, cljs.core.t16957.prototype.cljs$core$IMeta$ = !0, cljs.core.t16957.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
     return this.__meta__2251__auto__
-  }, cljs.core.t15395.prototype.cljs$core$IWithMeta$ = !0, cljs.core.t15395.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(b, c) {
-    return new cljs.core.t15395(this.c, this.offset, this.v, this.vector_seq, c)
-  }, cljs.core.t15395), new cljs.core.t15395(d, c, b, vector_seq$$0, null)) : null
+  }, cljs.core.t16957.prototype.cljs$core$IWithMeta$ = !0, cljs.core.t16957.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(b, c) {
+    return new cljs.core.t16957(this.c, this.offset, this.v, this.vector_seq, c)
+  }, cljs.core.t16957), new cljs.core.t16957(d, c, b, vector_seq$$0, null)) : null
 };
 cljs.core.PersistentVector = function(a, b, c, d, e, f) {
   this.meta = a;
@@ -12176,754 +12176,440 @@ torrent_client.jayq.async.ajax_binary = function(a) {
   }
 };
 console.log("loaded async");
-goog.disposable = {};
-goog.disposable.IDisposable = function() {
-};
-goog.Disposable = function() {
-  this.disposed_ = !1;
-  goog.Disposable.ENABLE_MONITORING && (this.creationStack = Error().stack, goog.Disposable.instances_[goog.getUid(this)] = this)
-};
-goog.Disposable.ENABLE_MONITORING = !1;
-goog.Disposable.instances_ = {};
-goog.Disposable.getUndisposedObjects = function() {
-  var a = [], b;
-  for(b in goog.Disposable.instances_) {
-    goog.Disposable.instances_.hasOwnProperty(b) && a.push(goog.Disposable.instances_[Number(b)])
-  }
-  return a
-};
-goog.Disposable.clearUndisposedObjects = function() {
-  goog.Disposable.instances_ = {}
-};
-goog.Disposable.prototype.isDisposed = function() {
-  return!!this.disposed_
-};
-goog.Disposable.prototype.getDisposed = goog.Disposable.prototype.isDisposed;
-goog.Disposable.prototype.dispose = function() {
-  if(!this.disposed_) {
-    if(goog.Disposable.ENABLE_MONITORING) {
-      if(void 0 == this.disposed_) {
-        throw Error(this + " did not call the goog.Disposable base constructor");
-      }
-      var a = goog.getUid(this);
-      delete goog.Disposable.instances_[a]
-    }
-    this.disposed_ = !0;
-    this.disposeInternal()
-  }
-};
-goog.Disposable.prototype.registerDisposable = function(a) {
-  this.dependentDisposables_ || (this.dependentDisposables_ = []);
-  this.dependentDisposables_.push(a)
-};
-goog.Disposable.prototype.addOnDisposeCallback = function(a, b) {
-  this.onDisposeCallbacks_ || (this.onDisposeCallbacks_ = []);
-  this.onDisposeCallbacks_.push(goog.bind(a, b))
-};
-goog.Disposable.prototype.disposeInternal = function() {
-  this.dependentDisposables_ && goog.disposeAll.apply(null, this.dependentDisposables_);
-  if(this.onDisposeCallbacks_) {
-    for(;this.onDisposeCallbacks_.length;) {
-      this.onDisposeCallbacks_.shift()()
-    }
-  }
-};
-goog.dispose = function(a) {
-  a && "function" == typeof a.dispose && a.dispose()
-};
-goog.disposeAll = function(a) {
-  for(var b = 0, c = arguments.length;b < c;++b) {
-    var d = arguments[b];
-    goog.isArrayLike(d) ? goog.disposeAll.apply(null, d) : goog.dispose(d)
-  }
-};
-goog.debug.entryPointRegistry = {};
-goog.debug.EntryPointMonitor = function() {
-};
-goog.debug.entryPointRegistry.refList_ = [];
-goog.debug.entryPointRegistry.monitors_ = [];
-goog.debug.entryPointRegistry.monitorsMayExist_ = !1;
-goog.debug.entryPointRegistry.register = function(a) {
-  goog.debug.entryPointRegistry.refList_[goog.debug.entryPointRegistry.refList_.length] = a;
-  if(goog.debug.entryPointRegistry.monitorsMayExist_) {
-    for(var b = goog.debug.entryPointRegistry.monitors_, c = 0;c < b.length;c++) {
-      a(goog.bind(b[c].wrap, b[c]))
-    }
-  }
-};
-goog.debug.entryPointRegistry.monitorAll = function(a) {
-  goog.debug.entryPointRegistry.monitorsMayExist_ = !0;
-  for(var b = goog.bind(a.wrap, a), c = 0;c < goog.debug.entryPointRegistry.refList_.length;c++) {
-    goog.debug.entryPointRegistry.refList_[c](b)
-  }
-  goog.debug.entryPointRegistry.monitors_.push(a)
-};
-goog.debug.entryPointRegistry.unmonitorAllIfPossible = function(a) {
-  var b = goog.debug.entryPointRegistry.monitors_;
-  goog.asserts.assert(a == b[b.length - 1], "Only the most recent monitor can be unwrapped.");
-  for(var a = goog.bind(a.unwrap, a), c = 0;c < goog.debug.entryPointRegistry.refList_.length;c++) {
-    goog.debug.entryPointRegistry.refList_[c](a)
-  }
-  b.length--
-};
-goog.debug.errorHandlerWeakDep = {protectEntryPoint:function(a) {
-  return a
-}};
-goog.userAgent = {};
-goog.userAgent.ASSUME_IE = !1;
-goog.userAgent.ASSUME_GECKO = !1;
-goog.userAgent.ASSUME_WEBKIT = !1;
-goog.userAgent.ASSUME_MOBILE_WEBKIT = !1;
-goog.userAgent.ASSUME_OPERA = !1;
-goog.userAgent.ASSUME_ANY_VERSION = !1;
-goog.userAgent.BROWSER_KNOWN_ = goog.userAgent.ASSUME_IE || goog.userAgent.ASSUME_GECKO || goog.userAgent.ASSUME_MOBILE_WEBKIT || goog.userAgent.ASSUME_WEBKIT || goog.userAgent.ASSUME_OPERA;
-goog.userAgent.getUserAgentString = function() {
-  return goog.global.navigator ? goog.global.navigator.userAgent : null
-};
-goog.userAgent.getNavigator = function() {
-  return goog.global.navigator
-};
-goog.userAgent.init_ = function() {
-  goog.userAgent.detectedOpera_ = !1;
-  goog.userAgent.detectedIe_ = !1;
-  goog.userAgent.detectedWebkit_ = !1;
-  goog.userAgent.detectedMobile_ = !1;
-  goog.userAgent.detectedGecko_ = !1;
-  var a;
-  if(!goog.userAgent.BROWSER_KNOWN_ && (a = goog.userAgent.getUserAgentString())) {
-    var b = goog.userAgent.getNavigator();
-    goog.userAgent.detectedOpera_ = 0 == a.indexOf("Opera");
-    goog.userAgent.detectedIe_ = !goog.userAgent.detectedOpera_ && -1 != a.indexOf("MSIE");
-    goog.userAgent.detectedWebkit_ = !goog.userAgent.detectedOpera_ && -1 != a.indexOf("WebKit");
-    goog.userAgent.detectedMobile_ = goog.userAgent.detectedWebkit_ && -1 != a.indexOf("Mobile");
-    goog.userAgent.detectedGecko_ = !goog.userAgent.detectedOpera_ && !goog.userAgent.detectedWebkit_ && "Gecko" == b.product
-  }
-};
-goog.userAgent.BROWSER_KNOWN_ || goog.userAgent.init_();
-goog.userAgent.OPERA = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_OPERA : goog.userAgent.detectedOpera_;
-goog.userAgent.IE = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_IE : goog.userAgent.detectedIe_;
-goog.userAgent.GECKO = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_GECKO : goog.userAgent.detectedGecko_;
-goog.userAgent.WEBKIT = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_WEBKIT || goog.userAgent.ASSUME_MOBILE_WEBKIT : goog.userAgent.detectedWebkit_;
-goog.userAgent.MOBILE = goog.userAgent.ASSUME_MOBILE_WEBKIT || goog.userAgent.detectedMobile_;
-goog.userAgent.SAFARI = goog.userAgent.WEBKIT;
-goog.userAgent.determinePlatform_ = function() {
-  var a = goog.userAgent.getNavigator();
-  return a && a.platform || ""
-};
-goog.userAgent.PLATFORM = goog.userAgent.determinePlatform_();
-goog.userAgent.ASSUME_MAC = !1;
-goog.userAgent.ASSUME_WINDOWS = !1;
-goog.userAgent.ASSUME_LINUX = !1;
-goog.userAgent.ASSUME_X11 = !1;
-goog.userAgent.PLATFORM_KNOWN_ = goog.userAgent.ASSUME_MAC || goog.userAgent.ASSUME_WINDOWS || goog.userAgent.ASSUME_LINUX || goog.userAgent.ASSUME_X11;
-goog.userAgent.initPlatform_ = function() {
-  goog.userAgent.detectedMac_ = goog.string.contains(goog.userAgent.PLATFORM, "Mac");
-  goog.userAgent.detectedWindows_ = goog.string.contains(goog.userAgent.PLATFORM, "Win");
-  goog.userAgent.detectedLinux_ = goog.string.contains(goog.userAgent.PLATFORM, "Linux");
-  goog.userAgent.detectedX11_ = !!goog.userAgent.getNavigator() && goog.string.contains(goog.userAgent.getNavigator().appVersion || "", "X11")
-};
-goog.userAgent.PLATFORM_KNOWN_ || goog.userAgent.initPlatform_();
-goog.userAgent.MAC = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_MAC : goog.userAgent.detectedMac_;
-goog.userAgent.WINDOWS = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_WINDOWS : goog.userAgent.detectedWindows_;
-goog.userAgent.LINUX = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_LINUX : goog.userAgent.detectedLinux_;
-goog.userAgent.X11 = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_X11 : goog.userAgent.detectedX11_;
-goog.userAgent.determineVersion_ = function() {
-  var a = "", b;
-  goog.userAgent.OPERA && goog.global.opera ? (a = goog.global.opera.version, a = "function" == typeof a ? a() : a) : (goog.userAgent.GECKO ? b = /rv\:([^\);]+)(\)|;)/ : goog.userAgent.IE ? b = /MSIE\s+([^\);]+)(\)|;)/ : goog.userAgent.WEBKIT && (b = /WebKit\/(\S+)/), b && (a = (a = b.exec(goog.userAgent.getUserAgentString())) ? a[1] : ""));
-  return goog.userAgent.IE && (b = goog.userAgent.getDocumentMode_(), b > parseFloat(a)) ? "" + b : a
-};
-goog.userAgent.getDocumentMode_ = function() {
-  var a = goog.global.document;
-  return a ? a.documentMode : void 0
-};
-goog.userAgent.VERSION = goog.userAgent.determineVersion_();
-goog.userAgent.compare = function(a, b) {
-  return goog.string.compareVersions(a, b)
-};
-goog.userAgent.isVersionCache_ = {};
-goog.userAgent.isVersion = function(a) {
-  return goog.userAgent.ASSUME_ANY_VERSION || goog.userAgent.isVersionCache_[a] || (goog.userAgent.isVersionCache_[a] = 0 <= goog.string.compareVersions(goog.userAgent.VERSION, a))
-};
-goog.userAgent.isDocumentModeCache_ = {};
-goog.userAgent.isDocumentMode = function(a) {
-  return goog.userAgent.isDocumentModeCache_[a] || (goog.userAgent.isDocumentModeCache_[a] = goog.userAgent.IE && !!document.documentMode && document.documentMode >= a)
-};
 goog.events = {};
-goog.events.BrowserFeature = {HAS_W3C_BUTTON:!goog.userAgent.IE || goog.userAgent.isDocumentMode(9), HAS_W3C_EVENT_SUPPORT:!goog.userAgent.IE || goog.userAgent.isDocumentMode(9), SET_KEY_CODE_TO_PREVENT_DEFAULT:goog.userAgent.IE && !goog.userAgent.isVersion("8"), HAS_NAVIGATOR_ONLINE_PROPERTY:!goog.userAgent.WEBKIT || goog.userAgent.isVersion("528"), HAS_HTML5_NETWORK_EVENT_SUPPORT:goog.userAgent.GECKO && goog.userAgent.isVersion("1.9b") || goog.userAgent.IE && goog.userAgent.isVersion("8") || goog.userAgent.OPERA && 
-goog.userAgent.isVersion("9.5") || goog.userAgent.WEBKIT && goog.userAgent.isVersion("528"), HTML5_NETWORK_EVENTS_FIRE_ON_BODY:goog.userAgent.GECKO && !goog.userAgent.isVersion("8") || goog.userAgent.IE && !goog.userAgent.isVersion("9")};
-goog.events.Event = function(a, b) {
-  this.type = a;
-  this.currentTarget = this.target = b
-};
-goog.events.Event.prototype.disposeInternal = function() {
-};
-goog.events.Event.prototype.dispose = function() {
-};
-goog.events.Event.prototype.propagationStopped_ = !1;
-goog.events.Event.prototype.defaultPrevented = !1;
-goog.events.Event.prototype.returnValue_ = !0;
-goog.events.Event.prototype.stopPropagation = function() {
-  this.propagationStopped_ = !0
-};
-goog.events.Event.prototype.preventDefault = function() {
-  this.defaultPrevented = !0;
-  this.returnValue_ = !1
-};
-goog.events.Event.stopPropagation = function(a) {
-  a.stopPropagation()
-};
-goog.events.Event.preventDefault = function(a) {
-  a.preventDefault()
-};
-goog.events.EventType = {CLICK:"click", DBLCLICK:"dblclick", MOUSEDOWN:"mousedown", MOUSEUP:"mouseup", MOUSEOVER:"mouseover", MOUSEOUT:"mouseout", MOUSEMOVE:"mousemove", SELECTSTART:"selectstart", KEYPRESS:"keypress", KEYDOWN:"keydown", KEYUP:"keyup", BLUR:"blur", FOCUS:"focus", DEACTIVATE:"deactivate", FOCUSIN:goog.userAgent.IE ? "focusin" : "DOMFocusIn", FOCUSOUT:goog.userAgent.IE ? "focusout" : "DOMFocusOut", CHANGE:"change", SELECT:"select", SUBMIT:"submit", INPUT:"input", PROPERTYCHANGE:"propertychange", 
-DRAGSTART:"dragstart", DRAGENTER:"dragenter", DRAGOVER:"dragover", DRAGLEAVE:"dragleave", DROP:"drop", TOUCHSTART:"touchstart", TOUCHMOVE:"touchmove", TOUCHEND:"touchend", TOUCHCANCEL:"touchcancel", CONTEXTMENU:"contextmenu", ERROR:"error", HELP:"help", LOAD:"load", LOSECAPTURE:"losecapture", READYSTATECHANGE:"readystatechange", RESIZE:"resize", SCROLL:"scroll", UNLOAD:"unload", HASHCHANGE:"hashchange", PAGEHIDE:"pagehide", PAGESHOW:"pageshow", POPSTATE:"popstate", COPY:"copy", PASTE:"paste", CUT:"cut", 
-BEFORECOPY:"beforecopy", BEFORECUT:"beforecut", BEFOREPASTE:"beforepaste", ONLINE:"online", OFFLINE:"offline", MESSAGE:"message", CONNECT:"connect", TRANSITIONEND:goog.userAgent.WEBKIT ? "webkitTransitionEnd" : goog.userAgent.OPERA ? "oTransitionEnd" : "transitionend"};
-goog.reflect = {};
-goog.reflect.object = function(a, b) {
-  return b
-};
-goog.reflect.sinkValue = function(a) {
-  goog.reflect.sinkValue[" "](a);
-  return a
-};
-goog.reflect.sinkValue[" "] = goog.nullFunction;
-goog.reflect.canAccessProperty = function(a, b) {
-  try {
-    return goog.reflect.sinkValue(a[b]), !0
-  }catch(c) {
-  }
-  return!1
-};
-goog.events.BrowserEvent = function(a, b) {
-  a && this.init(a, b)
-};
-goog.inherits(goog.events.BrowserEvent, goog.events.Event);
-goog.events.BrowserEvent.MouseButton = {LEFT:0, MIDDLE:1, RIGHT:2};
-goog.events.BrowserEvent.IEButtonMap = [1, 4, 2];
-goog.events.BrowserEvent.prototype.target = null;
-goog.events.BrowserEvent.prototype.relatedTarget = null;
-goog.events.BrowserEvent.prototype.offsetX = 0;
-goog.events.BrowserEvent.prototype.offsetY = 0;
-goog.events.BrowserEvent.prototype.clientX = 0;
-goog.events.BrowserEvent.prototype.clientY = 0;
-goog.events.BrowserEvent.prototype.screenX = 0;
-goog.events.BrowserEvent.prototype.screenY = 0;
-goog.events.BrowserEvent.prototype.button = 0;
-goog.events.BrowserEvent.prototype.keyCode = 0;
-goog.events.BrowserEvent.prototype.charCode = 0;
-goog.events.BrowserEvent.prototype.ctrlKey = !1;
-goog.events.BrowserEvent.prototype.altKey = !1;
-goog.events.BrowserEvent.prototype.shiftKey = !1;
-goog.events.BrowserEvent.prototype.metaKey = !1;
-goog.events.BrowserEvent.prototype.platformModifierKey = !1;
-goog.events.BrowserEvent.prototype.event_ = null;
-goog.events.BrowserEvent.prototype.init = function(a, b) {
-  var c = this.type = a.type;
-  goog.events.Event.call(this, c);
-  this.target = a.target || a.srcElement;
-  this.currentTarget = b;
-  var d = a.relatedTarget;
-  d ? goog.userAgent.GECKO && (goog.reflect.canAccessProperty(d, "nodeName") || (d = null)) : c == goog.events.EventType.MOUSEOVER ? d = a.fromElement : c == goog.events.EventType.MOUSEOUT && (d = a.toElement);
-  this.relatedTarget = d;
-  this.offsetX = goog.userAgent.WEBKIT || void 0 !== a.offsetX ? a.offsetX : a.layerX;
-  this.offsetY = goog.userAgent.WEBKIT || void 0 !== a.offsetY ? a.offsetY : a.layerY;
-  this.clientX = void 0 !== a.clientX ? a.clientX : a.pageX;
-  this.clientY = void 0 !== a.clientY ? a.clientY : a.pageY;
-  this.screenX = a.screenX || 0;
-  this.screenY = a.screenY || 0;
-  this.button = a.button;
-  this.keyCode = a.keyCode || 0;
-  this.charCode = a.charCode || ("keypress" == c ? a.keyCode : 0);
-  this.ctrlKey = a.ctrlKey;
-  this.altKey = a.altKey;
-  this.shiftKey = a.shiftKey;
-  this.metaKey = a.metaKey;
-  this.platformModifierKey = goog.userAgent.MAC ? a.metaKey : a.ctrlKey;
-  this.state = a.state;
-  this.event_ = a;
-  a.defaultPrevented && this.preventDefault();
-  delete this.propagationStopped_
-};
-goog.events.BrowserEvent.prototype.isButton = function(a) {
-  return goog.events.BrowserFeature.HAS_W3C_BUTTON ? this.event_.button == a : "click" == this.type ? a == goog.events.BrowserEvent.MouseButton.LEFT : !!(this.event_.button & goog.events.BrowserEvent.IEButtonMap[a])
-};
-goog.events.BrowserEvent.prototype.isMouseActionButton = function() {
-  return this.isButton(goog.events.BrowserEvent.MouseButton.LEFT) && !(goog.userAgent.WEBKIT && goog.userAgent.MAC && this.ctrlKey)
-};
-goog.events.BrowserEvent.prototype.stopPropagation = function() {
-  goog.events.BrowserEvent.superClass_.stopPropagation.call(this);
-  this.event_.stopPropagation ? this.event_.stopPropagation() : this.event_.cancelBubble = !0
-};
-goog.events.BrowserEvent.prototype.preventDefault = function() {
-  goog.events.BrowserEvent.superClass_.preventDefault.call(this);
-  var a = this.event_;
-  if(a.preventDefault) {
-    a.preventDefault()
-  }else {
-    if(a.returnValue = !1, goog.events.BrowserFeature.SET_KEY_CODE_TO_PREVENT_DEFAULT) {
-      try {
-        if(a.ctrlKey || 112 <= a.keyCode && 123 >= a.keyCode) {
-          a.keyCode = -1
-        }
-      }catch(b) {
-      }
-    }
-  }
-};
-goog.events.BrowserEvent.prototype.getBrowserEvent = function() {
-  return this.event_
-};
-goog.events.BrowserEvent.prototype.disposeInternal = function() {
-};
 goog.events.EventWrapper = function() {
 };
 goog.events.EventWrapper.prototype.listen = function() {
 };
 goog.events.EventWrapper.prototype.unlisten = function() {
 };
-goog.events.Listener = function() {
-  goog.events.Listener.ENABLE_MONITORING && (this.creationStack = Error().stack)
-};
-goog.events.Listener.counter_ = 0;
-goog.events.Listener.ENABLE_MONITORING = !1;
-goog.events.Listener.prototype.key = 0;
-goog.events.Listener.prototype.removed = !1;
-goog.events.Listener.prototype.callOnce = !1;
-goog.events.Listener.prototype.init = function(a, b, c, d, e, f) {
-  if(goog.isFunction(a)) {
-    this.isFunctionListener_ = !0
+torrent_client.client = {};
+torrent_client.client.protocol = {};
+torrent_client.client.protocol.main = {};
+void 0;
+torrent_client.client.protocol.main.Protocol = {};
+torrent_client.client.protocol.main.watch_channel = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1(a)
   }else {
-    if(a && a.handleEvent && goog.isFunction(a.handleEvent)) {
-      this.isFunctionListener_ = !1
-    }else {
-      throw Error("Invalid listener argument");
+    var b;
+    b = torrent_client.client.protocol.main.watch_channel[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.watch_channel._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.watch-channel", a);
     }
+    a = b.call(null, a)
   }
-  this.listener = a;
-  this.proxy = b;
-  this.src = c;
-  this.type = d;
-  this.capture = !!e;
-  this.handler = f;
-  this.callOnce = !1;
-  this.key = ++goog.events.Listener.counter_;
-  this.removed = !1
-};
-goog.events.Listener.prototype.handleEvent = function(a) {
-  return this.isFunctionListener_ ? this.listener.call(this.handler || this.src, a) : this.listener.handleEvent.call(this.listener, a)
-};
-goog.events.listeners_ = {};
-goog.events.listenerTree_ = {};
-goog.events.sources_ = {};
-goog.events.onString_ = "on";
-goog.events.onStringMap_ = {};
-goog.events.keySeparator_ = "_";
-goog.events.listen = function(a, b, c, d, e) {
-  if(b) {
-    if(goog.isArray(b)) {
-      for(var f = 0;f < b.length;f++) {
-        goog.events.listen(a, b[f], c, d, e)
-      }
-      return null
-    }
-    var d = !!d, g = goog.events.listenerTree_;
-    b in g || (g[b] = {count_:0, remaining_:0});
-    g = g[b];
-    d in g || (g[d] = {count_:0, remaining_:0}, g.count_++);
-    var g = g[d], h = goog.getUid(a), i;
-    g.remaining_++;
-    if(g[h]) {
-      i = g[h];
-      for(f = 0;f < i.length;f++) {
-        if(g = i[f], g.listener == c && g.handler == e) {
-          if(g.removed) {
-            break
-          }
-          return i[f].key
-        }
-      }
-    }else {
-      i = g[h] = [], g.count_++
-    }
-    f = goog.events.getProxy();
-    f.src = a;
-    g = new goog.events.Listener;
-    g.init(c, f, a, b, d, e);
-    c = g.key;
-    f.key = c;
-    i.push(g);
-    goog.events.listeners_[c] = g;
-    goog.events.sources_[h] || (goog.events.sources_[h] = []);
-    goog.events.sources_[h].push(g);
-    a.addEventListener ? (a == goog.global || !a.customEvent_) && a.addEventListener(b, f, d) : a.attachEvent(goog.events.getOnString_(b), f);
-    return c
-  }
-  throw Error("Invalid event type");
-};
-goog.events.getProxy = function() {
-  var a = goog.events.handleBrowserEvent_, b = goog.events.BrowserFeature.HAS_W3C_EVENT_SUPPORT ? function(c) {
-    return a.call(b.src, b.key, c)
-  } : function(c) {
-    c = a.call(b.src, b.key, c);
-    if(!c) {
-      return c
-    }
-  };
-  return b
-};
-goog.events.listenOnce = function(a, b, c, d, e) {
-  if(goog.isArray(b)) {
-    for(var f = 0;f < b.length;f++) {
-      goog.events.listenOnce(a, b[f], c, d, e)
-    }
-    return null
-  }
-  a = goog.events.listen(a, b, c, d, e);
-  goog.events.listeners_[a].callOnce = !0;
   return a
 };
-goog.events.listenWithWrapper = function(a, b, c, d, e) {
-  b.listen(a, c, d, e)
-};
-goog.events.unlisten = function(a, b, c, d, e) {
-  if(goog.isArray(b)) {
-    for(var f = 0;f < b.length;f++) {
-      goog.events.unlisten(a, b[f], c, d, e)
-    }
-    return null
-  }
-  d = !!d;
-  a = goog.events.getListeners_(a, b, d);
-  if(!a) {
-    return!1
-  }
-  for(f = 0;f < a.length;f++) {
-    if(a[f].listener == c && a[f].capture == d && a[f].handler == e) {
-      return goog.events.unlistenByKey(a[f].key)
-    }
-  }
-  return!1
-};
-goog.events.unlistenByKey = function(a) {
-  if(!goog.events.listeners_[a]) {
-    return!1
-  }
-  var b = goog.events.listeners_[a];
-  if(b.removed) {
-    return!1
-  }
-  var c = b.src, d = b.type, e = b.proxy, f = b.capture;
-  c.removeEventListener ? (c == goog.global || !c.customEvent_) && c.removeEventListener(d, e, f) : c.detachEvent && c.detachEvent(goog.events.getOnString_(d), e);
-  c = goog.getUid(c);
-  goog.events.sources_[c] && (e = goog.events.sources_[c], goog.array.remove(e, b), 0 == e.length && delete goog.events.sources_[c]);
-  b.removed = !0;
-  if(b = goog.events.listenerTree_[d][f][c]) {
-    b.needsCleanup_ = !0, goog.events.cleanUp_(d, f, c, b)
-  }
-  delete goog.events.listeners_[a];
-  return!0
-};
-goog.events.unlistenWithWrapper = function(a, b, c, d, e) {
-  b.unlisten(a, c, d, e)
-};
-goog.events.cleanUp_ = function(a, b, c, d) {
-  if(!d.locked_ && d.needsCleanup_) {
-    for(var e = 0, f = 0;e < d.length;e++) {
-      d[e].removed ? d[e].proxy.src = null : (e != f && (d[f] = d[e]), f++)
-    }
-    d.length = f;
-    d.needsCleanup_ = !1;
-    0 == f && (delete goog.events.listenerTree_[a][b][c], goog.events.listenerTree_[a][b].count_--, 0 == goog.events.listenerTree_[a][b].count_ && (delete goog.events.listenerTree_[a][b], goog.events.listenerTree_[a].count_--), 0 == goog.events.listenerTree_[a].count_ && delete goog.events.listenerTree_[a])
-  }
-};
-goog.events.removeAll = function(a, b, c) {
-  var d = 0, e = null == b, f = null == c, c = !!c;
-  if(null == a) {
-    goog.object.forEach(goog.events.sources_, function(a) {
-      for(var g = a.length - 1;0 <= g;g--) {
-        var h = a[g];
-        if((e || b == h.type) && (f || c == h.capture)) {
-          goog.events.unlistenByKey(h.key), d++
-        }
-      }
-    })
-  }else {
-    if(a = goog.getUid(a), goog.events.sources_[a]) {
-      for(var a = goog.events.sources_[a], g = a.length - 1;0 <= g;g--) {
-        var h = a[g];
-        if((e || b == h.type) && (f || c == h.capture)) {
-          goog.events.unlistenByKey(h.key), d++
-        }
-      }
-    }
-  }
-  return d
-};
-goog.events.getListeners = function(a, b, c) {
-  return goog.events.getListeners_(a, b, c) || []
-};
-goog.events.getListeners_ = function(a, b, c) {
-  var d = goog.events.listenerTree_;
-  return b in d && (d = d[b], c in d && (d = d[c], a = goog.getUid(a), d[a])) ? d[a] : null
-};
-goog.events.getListener = function(a, b, c, d, e) {
-  d = !!d;
-  if(a = goog.events.getListeners_(a, b, d)) {
-    for(b = 0;b < a.length;b++) {
-      if(!a[b].removed && a[b].listener == c && a[b].capture == d && a[b].handler == e) {
-        return a[b]
-      }
-    }
-  }
-  return null
-};
-goog.events.hasListener = function(a, b, c) {
-  var a = goog.getUid(a), d = goog.events.sources_[a];
-  if(d) {
-    var e = goog.isDef(b), f = goog.isDef(c);
-    return e && f ? (d = goog.events.listenerTree_[b], !!d && !!d[c] && a in d[c]) : !e && !f ? !0 : goog.array.some(d, function(a) {
-      return e && a.type == b || f && a.capture == c
-    })
-  }
-  return!1
-};
-goog.events.expose = function(a) {
-  var b = [], c;
-  for(c in a) {
-    a[c] && a[c].id ? b.push(c + " = " + a[c] + " (" + a[c].id + ")") : b.push(c + " = " + a[c])
-  }
-  return b.join("\n")
-};
-goog.events.getOnString_ = function(a) {
-  return a in goog.events.onStringMap_ ? goog.events.onStringMap_[a] : goog.events.onStringMap_[a] = goog.events.onString_ + a
-};
-goog.events.fireListeners = function(a, b, c, d) {
-  var e = goog.events.listenerTree_;
-  return b in e && (e = e[b], c in e) ? goog.events.fireListeners_(e[c], a, b, c, d) : !0
-};
-goog.events.fireListeners_ = function(a, b, c, d, e) {
-  var f = 1, b = goog.getUid(b);
-  if(a[b]) {
-    a.remaining_--;
-    a = a[b];
-    a.locked_ ? a.locked_++ : a.locked_ = 1;
-    try {
-      for(var g = a.length, h = 0;h < g;h++) {
-        var i = a[h];
-        i && !i.removed && (f &= !1 !== goog.events.fireListener(i, e))
-      }
-    }finally {
-      a.locked_--, goog.events.cleanUp_(c, d, b, a)
-    }
-  }
-  return Boolean(f)
-};
-goog.events.fireListener = function(a, b) {
-  a.callOnce && goog.events.unlistenByKey(a.key);
-  return a.handleEvent(b)
-};
-goog.events.getTotalListenerCount = function() {
-  return goog.object.getCount(goog.events.listeners_)
-};
-goog.events.dispatchEvent = function(a, b) {
-  var c = b.type || b, d = goog.events.listenerTree_;
-  if(!(c in d)) {
-    return!0
-  }
-  if(goog.isString(b)) {
-    b = new goog.events.Event(b, a)
-  }else {
-    if(b instanceof goog.events.Event) {
-      b.target = b.target || a
+torrent_client.client.protocol.main.send_data = function() {
+  var a = null, b = function(a, b) {
+    var c;
+    if(a ? a.torrent_client$client$protocol$main$Protocol$send_data$arity$2 : a) {
+      c = a.torrent_client$client$protocol$main$Protocol$send_data$arity$2(a, b)
     }else {
-      var e = b, b = new goog.events.Event(c, a);
-      goog.object.extend(b, e)
-    }
-  }
-  var e = 1, f, d = d[c], c = !0 in d, g;
-  if(c) {
-    f = [];
-    for(g = a;g;g = g.getParentEventTarget()) {
-      f.push(g)
-    }
-    g = d[!0];
-    g.remaining_ = g.count_;
-    for(var h = f.length - 1;!b.propagationStopped_ && 0 <= h && g.remaining_;h--) {
-      b.currentTarget = f[h], e &= goog.events.fireListeners_(g, f[h], b.type, !0, b) && !1 != b.returnValue_
-    }
-  }
-  if(!1 in d) {
-    if(g = d[!1], g.remaining_ = g.count_, c) {
-      for(h = 0;!b.propagationStopped_ && h < f.length && g.remaining_;h++) {
-        b.currentTarget = f[h], e &= goog.events.fireListeners_(g, f[h], b.type, !1, b) && !1 != b.returnValue_
+      c = torrent_client.client.protocol.main.send_data[goog.typeOf.call(null, a)];
+      if(!c && (c = torrent_client.client.protocol.main.send_data._, !c)) {
+        throw cljs.core.missing_protocol.call(null, "Protocol.send-data", a);
       }
+      c = c.call(null, a, b)
+    }
+    return c
+  }, c = function(a, b, c) {
+    if(a ? a.torrent_client$client$protocol$main$Protocol$send_data$arity$3 : a) {
+      a = a.torrent_client$client$protocol$main$Protocol$send_data$arity$3(a, b, c)
     }else {
-      for(d = a;!b.propagationStopped_ && d && g.remaining_;d = d.getParentEventTarget()) {
-        b.currentTarget = d, e &= goog.events.fireListeners_(g, d, b.type, !1, b) && !1 != b.returnValue_
+      var g;
+      g = torrent_client.client.protocol.main.send_data[goog.typeOf.call(null, a)];
+      if(!g && (g = torrent_client.client.protocol.main.send_data._, !g)) {
+        throw cljs.core.missing_protocol.call(null, "Protocol.send-data", a);
       }
+      a = g.call(null, a, b, c)
     }
-  }
-  return Boolean(e)
-};
-goog.events.protectBrowserEventEntryPoint = function(a) {
-  goog.events.handleBrowserEvent_ = a.protectEntryPoint(goog.events.handleBrowserEvent_)
-};
-goog.events.handleBrowserEvent_ = function(a, b) {
-  if(!goog.events.listeners_[a]) {
-    return!0
-  }
-  var c = goog.events.listeners_[a], d = c.type, e = goog.events.listenerTree_;
-  if(!(d in e)) {
-    return!0
-  }
-  var e = e[d], f, g;
-  if(!goog.events.BrowserFeature.HAS_W3C_EVENT_SUPPORT) {
-    f = b || goog.getObjectByName("window.event");
-    var h = !0 in e, i = !1 in e;
-    if(h) {
-      if(goog.events.isMarkedIeEvent_(f)) {
-        return!0
-      }
-      goog.events.markIeEvent_(f)
+    return a
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
     }
-    var j = new goog.events.BrowserEvent;
-    j.init(f, this);
-    f = !0;
-    try {
-      if(h) {
-        for(var k = [], l = j.currentTarget;l;l = l.parentNode) {
-          k.push(l)
-        }
-        g = e[!0];
-        g.remaining_ = g.count_;
-        for(var m = k.length - 1;!j.propagationStopped_ && 0 <= m && g.remaining_;m--) {
-          j.currentTarget = k[m], f &= goog.events.fireListeners_(g, k[m], d, !0, j)
-        }
-        if(i) {
-          g = e[!1];
-          g.remaining_ = g.count_;
-          for(m = 0;!j.propagationStopped_ && m < k.length && g.remaining_;m++) {
-            j.currentTarget = k[m], f &= goog.events.fireListeners_(g, k[m], d, !1, j)
-          }
-        }
-      }else {
-        f = goog.events.fireListener(c, j)
-      }
-    }finally {
-      k && (k.length = 0)
-    }
-    return f
-  }
-  d = new goog.events.BrowserEvent(b, this);
-  return f = goog.events.fireListener(c, d)
-};
-goog.events.markIeEvent_ = function(a) {
-  var b = !1;
-  if(0 == a.keyCode) {
-    try {
-      a.keyCode = -1;
-      return
-    }catch(c) {
-      b = !0
-    }
-  }
-  if(b || void 0 == a.returnValue) {
-    a.returnValue = !0
-  }
-};
-goog.events.isMarkedIeEvent_ = function(a) {
-  return 0 > a.keyCode || void 0 != a.returnValue
-};
-goog.events.uniqueIdCounter_ = 0;
-goog.events.getUniqueId = function(a) {
-  return a + "_" + goog.events.uniqueIdCounter_++
-};
-goog.debug.entryPointRegistry.register(function(a) {
-  goog.events.handleBrowserEvent_ = a(goog.events.handleBrowserEvent_)
-});
-goog.events.EventTarget = function() {
-  goog.Disposable.call(this)
-};
-goog.inherits(goog.events.EventTarget, goog.Disposable);
-goog.events.EventTarget.prototype.customEvent_ = !0;
-goog.events.EventTarget.prototype.parentEventTarget_ = null;
-goog.events.EventTarget.prototype.getParentEventTarget = function() {
-  return this.parentEventTarget_
-};
-goog.events.EventTarget.prototype.setParentEventTarget = function(a) {
-  this.parentEventTarget_ = a
-};
-goog.events.EventTarget.prototype.addEventListener = function(a, b, c, d) {
-  goog.events.listen(this, a, b, c, d)
-};
-goog.events.EventTarget.prototype.removeEventListener = function(a, b, c, d) {
-  goog.events.unlisten(this, a, b, c, d)
-};
-goog.events.EventTarget.prototype.dispatchEvent = function(a) {
-  return goog.events.dispatchEvent(this, a)
-};
-goog.events.EventTarget.prototype.disposeInternal = function() {
-  goog.events.EventTarget.superClass_.disposeInternal.call(this);
-  goog.events.removeAll(this);
-  this.parentEventTarget_ = null
-};
-goog.Timer = function(a, b) {
-  goog.events.EventTarget.call(this);
-  this.interval_ = a || 1;
-  this.timerObject_ = b || goog.Timer.defaultTimerObject;
-  this.boundTick_ = goog.bind(this.tick_, this);
-  this.last_ = goog.now()
-};
-goog.inherits(goog.Timer, goog.events.EventTarget);
-goog.Timer.MAX_TIMEOUT_ = 2147483647;
-goog.Timer.prototype.enabled = !1;
-goog.Timer.defaultTimerObject = goog.global.window;
-goog.Timer.intervalScale = 0.8;
-goog.Timer.prototype.timer_ = null;
-goog.Timer.prototype.getInterval = function() {
-  return this.interval_
-};
-goog.Timer.prototype.setInterval = function(a) {
-  this.interval_ = a;
-  this.timer_ && this.enabled ? (this.stop(), this.start()) : this.timer_ && this.stop()
-};
-goog.Timer.prototype.tick_ = function() {
-  if(this.enabled) {
-    var a = goog.now() - this.last_;
-    0 < a && a < this.interval_ * goog.Timer.intervalScale ? this.timer_ = this.timerObject_.setTimeout(this.boundTick_, this.interval_ - a) : (this.dispatchTick(), this.enabled && (this.timer_ = this.timerObject_.setTimeout(this.boundTick_, this.interval_), this.last_ = goog.now()))
-  }
-};
-goog.Timer.prototype.dispatchTick = function() {
-  this.dispatchEvent(goog.Timer.TICK)
-};
-goog.Timer.prototype.start = function() {
-  this.enabled = !0;
-  this.timer_ || (this.timer_ = this.timerObject_.setTimeout(this.boundTick_, this.interval_), this.last_ = goog.now())
-};
-goog.Timer.prototype.stop = function() {
-  this.enabled = !1;
-  this.timer_ && (this.timerObject_.clearTimeout(this.timer_), this.timer_ = null)
-};
-goog.Timer.prototype.disposeInternal = function() {
-  goog.Timer.superClass_.disposeInternal.call(this);
-  this.stop();
-  delete this.timerObject_
-};
-goog.Timer.TICK = "tick";
-goog.Timer.callOnce = function(a, b, c) {
-  if(goog.isFunction(a)) {
-    c && (a = goog.bind(a, c))
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+torrent_client.client.protocol.main.send_handshake = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1(a)
   }else {
-    if(a && "function" == typeof a.handleEvent) {
-      a = goog.bind(a.handleEvent, a)
-    }else {
-      throw Error("Invalid listener argument");
+    var b;
+    b = torrent_client.client.protocol.main.send_handshake[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.send_handshake._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-handshake", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_choke = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_choke$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_choke$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.protocol.main.send_choke[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.send_choke._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-choke", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_unchoke = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.protocol.main.send_unchoke[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.send_unchoke._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-unchoke", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_interested = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_interested$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_interested$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.protocol.main.send_interested[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.send_interested._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-interested", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_not_interested = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.protocol.main.send_not_interested[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.send_not_interested._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-not-interested", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_have = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_have$arity$2 : a) {
+    c = a.torrent_client$client$protocol$main$Protocol$send_have$arity$2(a, b)
+  }else {
+    c = torrent_client.client.protocol.main.send_have[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.protocol.main.send_have._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-have", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+torrent_client.client.protocol.main.send_bitfield = function(a) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.protocol.main.send_bitfield[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.protocol.main.send_bitfield._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-bitfield", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_request = function(a, b, c, d) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_request$arity$4 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_request$arity$4(a, b, c, d)
+  }else {
+    var e;
+    e = torrent_client.client.protocol.main.send_request[goog.typeOf.call(null, a)];
+    if(!e && (e = torrent_client.client.protocol.main.send_request._, !e)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-request", a);
+    }
+    a = e.call(null, a, b, c, d)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_block = function(a, b, c, d) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_block$arity$4 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_block$arity$4(a, b, c, d)
+  }else {
+    var e;
+    e = torrent_client.client.protocol.main.send_block[goog.typeOf.call(null, a)];
+    if(!e && (e = torrent_client.client.protocol.main.send_block._, !e)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-block", a);
+    }
+    a = e.call(null, a, b, c, d)
+  }
+  return a
+};
+torrent_client.client.protocol.main.send_cancel = function(a, b, c, d) {
+  if(a ? a.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4 : a) {
+    a = a.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4(a, b, c, d)
+  }else {
+    var e;
+    e = torrent_client.client.protocol.main.send_cancel[goog.typeOf.call(null, a)];
+    if(!e && (e = torrent_client.client.protocol.main.send_cancel._, !e)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.send-cancel", a);
+    }
+    a = e.call(null, a, b, c, d)
+  }
+  return a
+};
+torrent_client.client.protocol.main.receive_handshake = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$protocol$main$Protocol$receive_handshake$arity$2 : a) {
+    c = a.torrent_client$client$protocol$main$Protocol$receive_handshake$arity$2(a, b)
+  }else {
+    c = torrent_client.client.protocol.main.receive_handshake[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.protocol.main.receive_handshake._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.receive-handshake", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+torrent_client.client.protocol.main.receive_bitfield = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$protocol$main$Protocol$receive_bitfield$arity$2 : a) {
+    c = a.torrent_client$client$protocol$main$Protocol$receive_bitfield$arity$2(a, b)
+  }else {
+    c = torrent_client.client.protocol.main.receive_bitfield[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.protocol.main.receive_bitfield._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "Protocol.receive-bitfield", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+void 0;
+/*
+ Portions of this code are from MochiKit, received by
+ The Closure Authors under the MIT license. All other code is Copyright
+ 2005-2009 The Closure Authors. All Rights Reserved.
+*/
+goog.async = {};
+goog.async.Deferred = function(a, b) {
+  this.chain_ = [];
+  this.canceller_ = a;
+  this.defaultScope_ = b || null
+};
+goog.async.Deferred.prototype.fired_ = !1;
+goog.async.Deferred.prototype.hadError_ = !1;
+goog.async.Deferred.prototype.paused_ = 0;
+goog.async.Deferred.prototype.silentlyCancelled_ = !1;
+goog.async.Deferred.prototype.chained_ = !1;
+goog.async.Deferred.prototype.branches_ = 0;
+goog.async.Deferred.prototype.cancel = function(a) {
+  if(this.hasFired()) {
+    this.result_ instanceof goog.async.Deferred && this.result_.cancel()
+  }else {
+    if(this.parent_) {
+      var b = this.parent_;
+      delete this.parent_;
+      a ? b.cancel(a) : b.branchCancel_()
+    }
+    this.canceller_ ? this.canceller_.call(this.defaultScope_, this) : this.silentlyCancelled_ = !0;
+    this.hasFired() || this.errback(new goog.async.Deferred.CancelledError(this))
+  }
+};
+goog.async.Deferred.prototype.branchCancel_ = function() {
+  this.branches_--;
+  0 >= this.branches_ && this.cancel()
+};
+goog.async.Deferred.prototype.pause_ = function() {
+  this.paused_++
+};
+goog.async.Deferred.prototype.unpause_ = function() {
+  this.paused_--;
+  0 == this.paused_ && this.hasFired() && this.fire_()
+};
+goog.async.Deferred.prototype.continue_ = function(a, b) {
+  this.resback_(a, b);
+  this.unpause_()
+};
+goog.async.Deferred.prototype.resback_ = function(a, b) {
+  this.fired_ = !0;
+  this.result_ = b;
+  this.hadError_ = !a;
+  this.fire_()
+};
+goog.async.Deferred.prototype.check_ = function() {
+  if(this.hasFired()) {
+    if(!this.silentlyCancelled_) {
+      throw new goog.async.Deferred.AlreadyCalledError(this);
+    }
+    this.silentlyCancelled_ = !1
+  }
+};
+goog.async.Deferred.prototype.callback = function(a) {
+  this.check_();
+  this.assertNotDeferred_(a);
+  this.resback_(!0, a)
+};
+goog.async.Deferred.prototype.errback = function(a) {
+  this.check_();
+  this.assertNotDeferred_(a);
+  this.resback_(!1, a)
+};
+goog.async.Deferred.prototype.assertNotDeferred_ = function(a) {
+  goog.asserts.assert(!(a instanceof goog.async.Deferred), "Deferred instances can only be chained if they are the result of a callback")
+};
+goog.async.Deferred.prototype.addCallback = function(a, b) {
+  return this.addCallbacks(a, null, b)
+};
+goog.async.Deferred.prototype.addErrback = function(a, b) {
+  return this.addCallbacks(null, a, b)
+};
+goog.async.Deferred.prototype.addCallbacks = function(a, b, c) {
+  goog.asserts.assert(!this.chained_, "Chained Deferreds can not be re-used");
+  this.chain_.push([a, b, c]);
+  this.hasFired() && this.fire_();
+  return this
+};
+goog.async.Deferred.prototype.chainDeferred = function(a) {
+  this.addCallbacks(a.callback, a.errback, a);
+  return this
+};
+goog.async.Deferred.prototype.awaitDeferred = function(a) {
+  return this.addCallback(goog.bind(a.branch, a))
+};
+goog.async.Deferred.prototype.branch = function(a) {
+  var b = new goog.async.Deferred;
+  this.chainDeferred(b);
+  a && (b.parent_ = this, this.branches_++);
+  return b
+};
+goog.async.Deferred.prototype.addBoth = function(a, b) {
+  return this.addCallbacks(a, a, b)
+};
+goog.async.Deferred.prototype.hasFired = function() {
+  return this.fired_
+};
+goog.async.Deferred.prototype.isError = function(a) {
+  return a instanceof Error
+};
+goog.async.Deferred.prototype.hasErrback_ = function() {
+  return goog.array.some(this.chain_, function(a) {
+    return goog.isFunction(a[1])
+  })
+};
+goog.async.Deferred.prototype.fire_ = function() {
+  this.unhandledExceptionTimeoutId_ && (this.hasFired() && this.hasErrback_()) && (goog.global.clearTimeout(this.unhandledExceptionTimeoutId_), delete this.unhandledExceptionTimeoutId_);
+  this.parent_ && (this.parent_.branches_--, delete this.parent_);
+  for(var a = this.result_, b = !1, c = !1;this.chain_.length && 0 == this.paused_;) {
+    var d = this.chain_.shift(), e = d[0], f = d[1], d = d[2];
+    if(e = this.hadError_ ? f : e) {
+      try {
+        var g = e.call(d || this.defaultScope_, a);
+        goog.isDef(g) && (this.hadError_ = this.hadError_ && (g == a || this.isError(g)), this.result_ = a = g);
+        a instanceof goog.async.Deferred && (c = !0, this.pause_())
+      }catch(h) {
+        a = h, this.hadError_ = !0, this.hasErrback_() || (b = !0)
+      }
     }
   }
-  return b > goog.Timer.MAX_TIMEOUT_ ? -1 : goog.Timer.defaultTimerObject.setTimeout(a, b || 0)
+  this.result_ = a;
+  c && this.paused_ && (a.addCallbacks(goog.bind(this.continue_, this, !0), goog.bind(this.continue_, this, !1)), a.chained_ = !0);
+  b && (this.unhandledExceptionTimeoutId_ = goog.global.setTimeout(function() {
+    throw new goog.async.Deferred.UnhandledError(a);
+  }, 0))
 };
-goog.Timer.clear = function(a) {
-  goog.Timer.defaultTimerObject.clearTimeout(a)
+goog.async.Deferred.succeed = function(a) {
+  var b = new goog.async.Deferred;
+  b.callback(a);
+  return b
+};
+goog.async.Deferred.fail = function(a) {
+  var b = new goog.async.Deferred;
+  b.errback(a);
+  return b
+};
+goog.async.Deferred.cancelled = function() {
+  var a = new goog.async.Deferred;
+  a.cancel();
+  return a
+};
+goog.async.Deferred.when = function(a, b, c) {
+  return a instanceof goog.async.Deferred ? a.branch(!0).addCallback(b, c) : goog.async.Deferred.succeed(a).addCallback(b, c)
+};
+goog.async.Deferred.AlreadyCalledError = function(a) {
+  goog.debug.Error.call(this);
+  this.deferred = a
+};
+goog.inherits(goog.async.Deferred.AlreadyCalledError, goog.debug.Error);
+goog.async.Deferred.AlreadyCalledError.prototype.message = "Already called";
+goog.async.Deferred.CancelledError = function(a) {
+  goog.debug.Error.call(this);
+  this.deferred = a
+};
+goog.inherits(goog.async.Deferred.CancelledError, goog.debug.Error);
+goog.async.Deferred.CancelledError.prototype.message = "Deferred was cancelled";
+goog.async.Deferred.UnhandledError = function(a) {
+  goog.debug.Error.call(this);
+  this.cause = a;
+  this.message = "Unhandled Error in Deferred: " + (a.message || "[No message]")
+};
+goog.inherits(goog.async.Deferred.UnhandledError, goog.debug.Error);
+goog.db = {};
+goog.db.Error = function(a, b, c) {
+  b = "Error " + b + ": " + goog.db.Error.getMessage(a);
+  c && (b += ", " + c);
+  goog.debug.Error.call(this, b);
+  this.code = a
+};
+goog.inherits(goog.db.Error, goog.debug.Error);
+goog.db.Error.VersionChangeBlockedError = function() {
+  goog.debug.Error.call(this, "Version change blocked")
+};
+goog.inherits(goog.db.Error.VersionChangeBlockedError, goog.debug.Error);
+goog.db.Error.DatabaseErrorCode_ = {UNKNOWN_ERR:1, NON_TRANSIENT_ERR:2, NOT_FOUND_ERR:3, CONSTRAINT_ERR:4, DATA_ERR:5, NOT_ALLOWED_ERR:6, TRANSACTION_INACTIVE_ERR:7, ABORT_ERR:8, READ_ONLY_ERR:9, TRANSIENT_ERR:11, TIMEOUT_ERR:10, QUOTA_ERR:11, INVALID_ACCESS_ERR:12};
+goog.db.Error.ErrorCode = {UNKNOWN_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).UNKNOWN_ERR, NON_TRANSIENT_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).NON_TRANSIENT_ERR, NOT_FOUND_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).NOT_FOUND_ERR, CONSTRAINT_ERR:(goog.global.IDBDatabaseException || 
+goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).CONSTRAINT_ERR, DATA_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).DATA_ERR, NOT_ALLOWED_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).NOT_ALLOWED_ERR, TRANSACTION_INACTIVE_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).TRANSACTION_INACTIVE_ERR, 
+ABORT_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).ABORT_ERR, READ_ONLY_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).READ_ONLY_ERR, TIMEOUT_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).TIMEOUT_ERR, QUOTA_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || 
+goog.db.Error.DatabaseErrorCode_).QUOTA_ERR, INVALID_ACCESS_ERR:(goog.global.DOMException || goog.db.Error.DatabaseErrorCode_).INVALID_ACCESS_ERR};
+goog.db.Error.getMessage = function(a) {
+  switch(a) {
+    case goog.db.Error.ErrorCode.UNKNOWN_ERR:
+      return"Unknown error";
+    case goog.db.Error.ErrorCode.NON_TRANSIENT_ERR:
+      return"Invalid operation";
+    case goog.db.Error.ErrorCode.NOT_FOUND_ERR:
+      return"Required database object not found";
+    case goog.db.Error.ErrorCode.CONSTRAINT_ERR:
+      return"Constraint unsatisfied";
+    case goog.db.Error.ErrorCode.DATA_ERR:
+      return"Invalid data";
+    case goog.db.Error.ErrorCode.NOT_ALLOWED_ERR:
+      return"Operation disallowed";
+    case goog.db.Error.ErrorCode.TRANSACTION_INACTIVE_ERR:
+      return"Transaction not active";
+    case goog.db.Error.ErrorCode.ABORT_ERR:
+      return"Request aborted";
+    case goog.db.Error.ErrorCode.READ_ONLY_ERR:
+      return"Modifying operation not allowed in a read-only transaction";
+    case goog.db.Error.ErrorCode.TIMEOUT_ERR:
+      return"Transaction timed out";
+    case goog.db.Error.ErrorCode.QUOTA_ERR:
+      return"Database storage space quota exceeded";
+    case goog.db.Error.ErrorCode.INVALID_ACCESS_ERR:
+      return"Invalid operation";
+    default:
+      return"Unrecognized exception with code " + a
+  }
 };
 goog.structs = {};
 goog.structs.getCount = function(a) {
@@ -13555,6 +13241,85 @@ goog.structs.Set.prototype.isSubsetOf = function(a) {
 goog.structs.Set.prototype.__iterator__ = function() {
   return this.map_.__iterator__(!1)
 };
+goog.userAgent = {};
+goog.userAgent.ASSUME_IE = !1;
+goog.userAgent.ASSUME_GECKO = !1;
+goog.userAgent.ASSUME_WEBKIT = !1;
+goog.userAgent.ASSUME_MOBILE_WEBKIT = !1;
+goog.userAgent.ASSUME_OPERA = !1;
+goog.userAgent.ASSUME_ANY_VERSION = !1;
+goog.userAgent.BROWSER_KNOWN_ = goog.userAgent.ASSUME_IE || goog.userAgent.ASSUME_GECKO || goog.userAgent.ASSUME_MOBILE_WEBKIT || goog.userAgent.ASSUME_WEBKIT || goog.userAgent.ASSUME_OPERA;
+goog.userAgent.getUserAgentString = function() {
+  return goog.global.navigator ? goog.global.navigator.userAgent : null
+};
+goog.userAgent.getNavigator = function() {
+  return goog.global.navigator
+};
+goog.userAgent.init_ = function() {
+  goog.userAgent.detectedOpera_ = !1;
+  goog.userAgent.detectedIe_ = !1;
+  goog.userAgent.detectedWebkit_ = !1;
+  goog.userAgent.detectedMobile_ = !1;
+  goog.userAgent.detectedGecko_ = !1;
+  var a;
+  if(!goog.userAgent.BROWSER_KNOWN_ && (a = goog.userAgent.getUserAgentString())) {
+    var b = goog.userAgent.getNavigator();
+    goog.userAgent.detectedOpera_ = 0 == a.indexOf("Opera");
+    goog.userAgent.detectedIe_ = !goog.userAgent.detectedOpera_ && -1 != a.indexOf("MSIE");
+    goog.userAgent.detectedWebkit_ = !goog.userAgent.detectedOpera_ && -1 != a.indexOf("WebKit");
+    goog.userAgent.detectedMobile_ = goog.userAgent.detectedWebkit_ && -1 != a.indexOf("Mobile");
+    goog.userAgent.detectedGecko_ = !goog.userAgent.detectedOpera_ && !goog.userAgent.detectedWebkit_ && "Gecko" == b.product
+  }
+};
+goog.userAgent.BROWSER_KNOWN_ || goog.userAgent.init_();
+goog.userAgent.OPERA = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_OPERA : goog.userAgent.detectedOpera_;
+goog.userAgent.IE = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_IE : goog.userAgent.detectedIe_;
+goog.userAgent.GECKO = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_GECKO : goog.userAgent.detectedGecko_;
+goog.userAgent.WEBKIT = goog.userAgent.BROWSER_KNOWN_ ? goog.userAgent.ASSUME_WEBKIT || goog.userAgent.ASSUME_MOBILE_WEBKIT : goog.userAgent.detectedWebkit_;
+goog.userAgent.MOBILE = goog.userAgent.ASSUME_MOBILE_WEBKIT || goog.userAgent.detectedMobile_;
+goog.userAgent.SAFARI = goog.userAgent.WEBKIT;
+goog.userAgent.determinePlatform_ = function() {
+  var a = goog.userAgent.getNavigator();
+  return a && a.platform || ""
+};
+goog.userAgent.PLATFORM = goog.userAgent.determinePlatform_();
+goog.userAgent.ASSUME_MAC = !1;
+goog.userAgent.ASSUME_WINDOWS = !1;
+goog.userAgent.ASSUME_LINUX = !1;
+goog.userAgent.ASSUME_X11 = !1;
+goog.userAgent.PLATFORM_KNOWN_ = goog.userAgent.ASSUME_MAC || goog.userAgent.ASSUME_WINDOWS || goog.userAgent.ASSUME_LINUX || goog.userAgent.ASSUME_X11;
+goog.userAgent.initPlatform_ = function() {
+  goog.userAgent.detectedMac_ = goog.string.contains(goog.userAgent.PLATFORM, "Mac");
+  goog.userAgent.detectedWindows_ = goog.string.contains(goog.userAgent.PLATFORM, "Win");
+  goog.userAgent.detectedLinux_ = goog.string.contains(goog.userAgent.PLATFORM, "Linux");
+  goog.userAgent.detectedX11_ = !!goog.userAgent.getNavigator() && goog.string.contains(goog.userAgent.getNavigator().appVersion || "", "X11")
+};
+goog.userAgent.PLATFORM_KNOWN_ || goog.userAgent.initPlatform_();
+goog.userAgent.MAC = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_MAC : goog.userAgent.detectedMac_;
+goog.userAgent.WINDOWS = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_WINDOWS : goog.userAgent.detectedWindows_;
+goog.userAgent.LINUX = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_LINUX : goog.userAgent.detectedLinux_;
+goog.userAgent.X11 = goog.userAgent.PLATFORM_KNOWN_ ? goog.userAgent.ASSUME_X11 : goog.userAgent.detectedX11_;
+goog.userAgent.determineVersion_ = function() {
+  var a = "", b;
+  goog.userAgent.OPERA && goog.global.opera ? (a = goog.global.opera.version, a = "function" == typeof a ? a() : a) : (goog.userAgent.GECKO ? b = /rv\:([^\);]+)(\)|;)/ : goog.userAgent.IE ? b = /MSIE\s+([^\);]+)(\)|;)/ : goog.userAgent.WEBKIT && (b = /WebKit\/(\S+)/), b && (a = (a = b.exec(goog.userAgent.getUserAgentString())) ? a[1] : ""));
+  return goog.userAgent.IE && (b = goog.userAgent.getDocumentMode_(), b > parseFloat(a)) ? "" + b : a
+};
+goog.userAgent.getDocumentMode_ = function() {
+  var a = goog.global.document;
+  return a ? a.documentMode : void 0
+};
+goog.userAgent.VERSION = goog.userAgent.determineVersion_();
+goog.userAgent.compare = function(a, b) {
+  return goog.string.compareVersions(a, b)
+};
+goog.userAgent.isVersionCache_ = {};
+goog.userAgent.isVersion = function(a) {
+  return goog.userAgent.ASSUME_ANY_VERSION || goog.userAgent.isVersionCache_[a] || (goog.userAgent.isVersionCache_[a] = 0 <= goog.string.compareVersions(goog.userAgent.VERSION, a))
+};
+goog.userAgent.isDocumentModeCache_ = {};
+goog.userAgent.isDocumentMode = function(a) {
+  return goog.userAgent.isDocumentModeCache_[a] || (goog.userAgent.isDocumentModeCache_[a] = goog.userAgent.IE && !!document.documentMode && document.documentMode >= a)
+};
 goog.debug.catchErrors = function(a, b, c) {
   var c = c || goog.global, d = c.onerror, e = !!b;
   goog.userAgent.WEBKIT && !goog.userAgent.isVersion("535.3") && (e = !e);
@@ -13760,1279 +13525,610 @@ goog.debug.makeWhitespaceVisible = function(a) {
   return a.replace(/ /g, "[_]").replace(/\f/g, "[f]").replace(/\n/g, "[n]\n").replace(/\r/g, "[r]").replace(/\t/g, "[t]")
 };
 goog.debug.fnNameCache_ = {};
-goog.debug.LogRecord = function(a, b, c, d, e) {
-  this.reset(a, b, c, d, e)
+goog.disposable = {};
+goog.disposable.IDisposable = function() {
 };
-goog.debug.LogRecord.prototype.sequenceNumber_ = 0;
-goog.debug.LogRecord.prototype.exception_ = null;
-goog.debug.LogRecord.prototype.exceptionText_ = null;
-goog.debug.LogRecord.ENABLE_SEQUENCE_NUMBERS = !0;
-goog.debug.LogRecord.nextSequenceNumber_ = 0;
-goog.debug.LogRecord.prototype.reset = function(a, b, c, d, e) {
-  goog.debug.LogRecord.ENABLE_SEQUENCE_NUMBERS && (this.sequenceNumber_ = "number" == typeof e ? e : goog.debug.LogRecord.nextSequenceNumber_++);
-  this.time_ = d || goog.now();
-  this.level_ = a;
-  this.msg_ = b;
-  this.loggerName_ = c;
-  delete this.exception_;
-  delete this.exceptionText_
+goog.Disposable = function() {
+  this.disposed_ = !1;
+  goog.Disposable.ENABLE_MONITORING && (this.creationStack = Error().stack, goog.Disposable.instances_[goog.getUid(this)] = this)
 };
-goog.debug.LogRecord.prototype.getLoggerName = function() {
-  return this.loggerName_
-};
-goog.debug.LogRecord.prototype.getException = function() {
-  return this.exception_
-};
-goog.debug.LogRecord.prototype.setException = function(a) {
-  this.exception_ = a
-};
-goog.debug.LogRecord.prototype.getExceptionText = function() {
-  return this.exceptionText_
-};
-goog.debug.LogRecord.prototype.setExceptionText = function(a) {
-  this.exceptionText_ = a
-};
-goog.debug.LogRecord.prototype.setLoggerName = function(a) {
-  this.loggerName_ = a
-};
-goog.debug.LogRecord.prototype.getLevel = function() {
-  return this.level_
-};
-goog.debug.LogRecord.prototype.setLevel = function(a) {
-  this.level_ = a
-};
-goog.debug.LogRecord.prototype.getMessage = function() {
-  return this.msg_
-};
-goog.debug.LogRecord.prototype.setMessage = function(a) {
-  this.msg_ = a
-};
-goog.debug.LogRecord.prototype.getMillis = function() {
-  return this.time_
-};
-goog.debug.LogRecord.prototype.setMillis = function(a) {
-  this.time_ = a
-};
-goog.debug.LogRecord.prototype.getSequenceNumber = function() {
-  return this.sequenceNumber_
-};
-goog.debug.LogBuffer = function() {
-  goog.asserts.assert(goog.debug.LogBuffer.isBufferingEnabled(), "Cannot use goog.debug.LogBuffer without defining goog.debug.LogBuffer.CAPACITY.");
-  this.clear()
-};
-goog.debug.LogBuffer.getInstance = function() {
-  goog.debug.LogBuffer.instance_ || (goog.debug.LogBuffer.instance_ = new goog.debug.LogBuffer);
-  return goog.debug.LogBuffer.instance_
-};
-goog.debug.LogBuffer.CAPACITY = 0;
-goog.debug.LogBuffer.prototype.addRecord = function(a, b, c) {
-  var d = (this.curIndex_ + 1) % goog.debug.LogBuffer.CAPACITY;
-  this.curIndex_ = d;
-  if(this.isFull_) {
-    return d = this.buffer_[d], d.reset(a, b, c), d
+goog.Disposable.ENABLE_MONITORING = !1;
+goog.Disposable.instances_ = {};
+goog.Disposable.getUndisposedObjects = function() {
+  var a = [], b;
+  for(b in goog.Disposable.instances_) {
+    goog.Disposable.instances_.hasOwnProperty(b) && a.push(goog.Disposable.instances_[Number(b)])
   }
-  this.isFull_ = d == goog.debug.LogBuffer.CAPACITY - 1;
-  return this.buffer_[d] = new goog.debug.LogRecord(a, b, c)
+  return a
 };
-goog.debug.LogBuffer.isBufferingEnabled = function() {
-  return 0 < goog.debug.LogBuffer.CAPACITY
+goog.Disposable.clearUndisposedObjects = function() {
+  goog.Disposable.instances_ = {}
 };
-goog.debug.LogBuffer.prototype.clear = function() {
-  this.buffer_ = Array(goog.debug.LogBuffer.CAPACITY);
-  this.curIndex_ = -1;
-  this.isFull_ = !1
+goog.Disposable.prototype.isDisposed = function() {
+  return!!this.disposed_
 };
-goog.debug.LogBuffer.prototype.forEachRecord = function(a) {
-  var b = this.buffer_;
-  if(b[0]) {
-    var c = this.curIndex_, d = this.isFull_ ? c : -1;
-    do {
-      d = (d + 1) % goog.debug.LogBuffer.CAPACITY, a(b[d])
-    }while(d != c)
+goog.Disposable.prototype.getDisposed = goog.Disposable.prototype.isDisposed;
+goog.Disposable.prototype.dispose = function() {
+  if(!this.disposed_) {
+    if(goog.Disposable.ENABLE_MONITORING) {
+      if(void 0 == this.disposed_) {
+        throw Error(this + " did not call the goog.Disposable base constructor");
+      }
+      var a = goog.getUid(this);
+      delete goog.Disposable.instances_[a]
+    }
+    this.disposed_ = !0;
+    this.disposeInternal()
   }
 };
-goog.debug.Logger = function(a) {
-  this.name_ = a
+goog.Disposable.prototype.registerDisposable = function(a) {
+  this.dependentDisposables_ || (this.dependentDisposables_ = []);
+  this.dependentDisposables_.push(a)
 };
-goog.debug.Logger.prototype.parent_ = null;
-goog.debug.Logger.prototype.level_ = null;
-goog.debug.Logger.prototype.children_ = null;
-goog.debug.Logger.prototype.handlers_ = null;
-goog.debug.Logger.ENABLE_HIERARCHY = !0;
-goog.debug.Logger.ENABLE_HIERARCHY || (goog.debug.Logger.rootHandlers_ = []);
-goog.debug.Logger.Level = function(a, b) {
-  this.name = a;
-  this.value = b
+goog.Disposable.prototype.addOnDisposeCallback = function(a, b) {
+  this.onDisposeCallbacks_ || (this.onDisposeCallbacks_ = []);
+  this.onDisposeCallbacks_.push(goog.bind(a, b))
 };
-goog.debug.Logger.Level.prototype.toString = function() {
-  return this.name
-};
-goog.debug.Logger.Level.OFF = new goog.debug.Logger.Level("OFF", Infinity);
-goog.debug.Logger.Level.SHOUT = new goog.debug.Logger.Level("SHOUT", 1200);
-goog.debug.Logger.Level.SEVERE = new goog.debug.Logger.Level("SEVERE", 1E3);
-goog.debug.Logger.Level.WARNING = new goog.debug.Logger.Level("WARNING", 900);
-goog.debug.Logger.Level.INFO = new goog.debug.Logger.Level("INFO", 800);
-goog.debug.Logger.Level.CONFIG = new goog.debug.Logger.Level("CONFIG", 700);
-goog.debug.Logger.Level.FINE = new goog.debug.Logger.Level("FINE", 500);
-goog.debug.Logger.Level.FINER = new goog.debug.Logger.Level("FINER", 400);
-goog.debug.Logger.Level.FINEST = new goog.debug.Logger.Level("FINEST", 300);
-goog.debug.Logger.Level.ALL = new goog.debug.Logger.Level("ALL", 0);
-goog.debug.Logger.Level.PREDEFINED_LEVELS = [goog.debug.Logger.Level.OFF, goog.debug.Logger.Level.SHOUT, goog.debug.Logger.Level.SEVERE, goog.debug.Logger.Level.WARNING, goog.debug.Logger.Level.INFO, goog.debug.Logger.Level.CONFIG, goog.debug.Logger.Level.FINE, goog.debug.Logger.Level.FINER, goog.debug.Logger.Level.FINEST, goog.debug.Logger.Level.ALL];
-goog.debug.Logger.Level.predefinedLevelsCache_ = null;
-goog.debug.Logger.Level.createPredefinedLevelsCache_ = function() {
-  goog.debug.Logger.Level.predefinedLevelsCache_ = {};
-  for(var a = 0, b;b = goog.debug.Logger.Level.PREDEFINED_LEVELS[a];a++) {
-    goog.debug.Logger.Level.predefinedLevelsCache_[b.value] = b;
-    goog.debug.Logger.Level.predefinedLevelsCache_[b.name] = b
+goog.Disposable.prototype.disposeInternal = function() {
+  this.dependentDisposables_ && goog.disposeAll.apply(null, this.dependentDisposables_);
+  if(this.onDisposeCallbacks_) {
+    for(;this.onDisposeCallbacks_.length;) {
+      this.onDisposeCallbacks_.shift()()
+    }
   }
 };
-goog.debug.Logger.Level.getPredefinedLevel = function(a) {
-  goog.debug.Logger.Level.predefinedLevelsCache_ || goog.debug.Logger.Level.createPredefinedLevelsCache_();
-  return goog.debug.Logger.Level.predefinedLevelsCache_[a] || null
+goog.dispose = function(a) {
+  a && "function" == typeof a.dispose && a.dispose()
 };
-goog.debug.Logger.Level.getPredefinedLevelByValue = function(a) {
-  goog.debug.Logger.Level.predefinedLevelsCache_ || goog.debug.Logger.Level.createPredefinedLevelsCache_();
-  if(a in goog.debug.Logger.Level.predefinedLevelsCache_) {
-    return goog.debug.Logger.Level.predefinedLevelsCache_[a]
+goog.disposeAll = function(a) {
+  for(var b = 0, c = arguments.length;b < c;++b) {
+    var d = arguments[b];
+    goog.isArrayLike(d) ? goog.disposeAll.apply(null, d) : goog.dispose(d)
   }
-  for(var b = 0;b < goog.debug.Logger.Level.PREDEFINED_LEVELS.length;++b) {
-    var c = goog.debug.Logger.Level.PREDEFINED_LEVELS[b];
-    if(c.value <= a) {
+};
+goog.debug.entryPointRegistry = {};
+goog.debug.EntryPointMonitor = function() {
+};
+goog.debug.entryPointRegistry.refList_ = [];
+goog.debug.entryPointRegistry.monitors_ = [];
+goog.debug.entryPointRegistry.monitorsMayExist_ = !1;
+goog.debug.entryPointRegistry.register = function(a) {
+  goog.debug.entryPointRegistry.refList_[goog.debug.entryPointRegistry.refList_.length] = a;
+  if(goog.debug.entryPointRegistry.monitorsMayExist_) {
+    for(var b = goog.debug.entryPointRegistry.monitors_, c = 0;c < b.length;c++) {
+      a(goog.bind(b[c].wrap, b[c]))
+    }
+  }
+};
+goog.debug.entryPointRegistry.monitorAll = function(a) {
+  goog.debug.entryPointRegistry.monitorsMayExist_ = !0;
+  for(var b = goog.bind(a.wrap, a), c = 0;c < goog.debug.entryPointRegistry.refList_.length;c++) {
+    goog.debug.entryPointRegistry.refList_[c](b)
+  }
+  goog.debug.entryPointRegistry.monitors_.push(a)
+};
+goog.debug.entryPointRegistry.unmonitorAllIfPossible = function(a) {
+  var b = goog.debug.entryPointRegistry.monitors_;
+  goog.asserts.assert(a == b[b.length - 1], "Only the most recent monitor can be unwrapped.");
+  for(var a = goog.bind(a.unwrap, a), c = 0;c < goog.debug.entryPointRegistry.refList_.length;c++) {
+    goog.debug.entryPointRegistry.refList_[c](a)
+  }
+  b.length--
+};
+goog.debug.errorHandlerWeakDep = {protectEntryPoint:function(a) {
+  return a
+}};
+goog.events.BrowserFeature = {HAS_W3C_BUTTON:!goog.userAgent.IE || goog.userAgent.isDocumentMode(9), HAS_W3C_EVENT_SUPPORT:!goog.userAgent.IE || goog.userAgent.isDocumentMode(9), SET_KEY_CODE_TO_PREVENT_DEFAULT:goog.userAgent.IE && !goog.userAgent.isVersion("8"), HAS_NAVIGATOR_ONLINE_PROPERTY:!goog.userAgent.WEBKIT || goog.userAgent.isVersion("528"), HAS_HTML5_NETWORK_EVENT_SUPPORT:goog.userAgent.GECKO && goog.userAgent.isVersion("1.9b") || goog.userAgent.IE && goog.userAgent.isVersion("8") || goog.userAgent.OPERA && 
+goog.userAgent.isVersion("9.5") || goog.userAgent.WEBKIT && goog.userAgent.isVersion("528"), HTML5_NETWORK_EVENTS_FIRE_ON_BODY:goog.userAgent.GECKO && !goog.userAgent.isVersion("8") || goog.userAgent.IE && !goog.userAgent.isVersion("9")};
+goog.events.Event = function(a, b) {
+  this.type = a;
+  this.currentTarget = this.target = b
+};
+goog.events.Event.prototype.disposeInternal = function() {
+};
+goog.events.Event.prototype.dispose = function() {
+};
+goog.events.Event.prototype.propagationStopped_ = !1;
+goog.events.Event.prototype.defaultPrevented = !1;
+goog.events.Event.prototype.returnValue_ = !0;
+goog.events.Event.prototype.stopPropagation = function() {
+  this.propagationStopped_ = !0
+};
+goog.events.Event.prototype.preventDefault = function() {
+  this.defaultPrevented = !0;
+  this.returnValue_ = !1
+};
+goog.events.Event.stopPropagation = function(a) {
+  a.stopPropagation()
+};
+goog.events.Event.preventDefault = function(a) {
+  a.preventDefault()
+};
+goog.events.EventType = {CLICK:"click", DBLCLICK:"dblclick", MOUSEDOWN:"mousedown", MOUSEUP:"mouseup", MOUSEOVER:"mouseover", MOUSEOUT:"mouseout", MOUSEMOVE:"mousemove", SELECTSTART:"selectstart", KEYPRESS:"keypress", KEYDOWN:"keydown", KEYUP:"keyup", BLUR:"blur", FOCUS:"focus", DEACTIVATE:"deactivate", FOCUSIN:goog.userAgent.IE ? "focusin" : "DOMFocusIn", FOCUSOUT:goog.userAgent.IE ? "focusout" : "DOMFocusOut", CHANGE:"change", SELECT:"select", SUBMIT:"submit", INPUT:"input", PROPERTYCHANGE:"propertychange", 
+DRAGSTART:"dragstart", DRAGENTER:"dragenter", DRAGOVER:"dragover", DRAGLEAVE:"dragleave", DROP:"drop", TOUCHSTART:"touchstart", TOUCHMOVE:"touchmove", TOUCHEND:"touchend", TOUCHCANCEL:"touchcancel", CONTEXTMENU:"contextmenu", ERROR:"error", HELP:"help", LOAD:"load", LOSECAPTURE:"losecapture", READYSTATECHANGE:"readystatechange", RESIZE:"resize", SCROLL:"scroll", UNLOAD:"unload", HASHCHANGE:"hashchange", PAGEHIDE:"pagehide", PAGESHOW:"pageshow", POPSTATE:"popstate", COPY:"copy", PASTE:"paste", CUT:"cut", 
+BEFORECOPY:"beforecopy", BEFORECUT:"beforecut", BEFOREPASTE:"beforepaste", ONLINE:"online", OFFLINE:"offline", MESSAGE:"message", CONNECT:"connect", TRANSITIONEND:goog.userAgent.WEBKIT ? "webkitTransitionEnd" : goog.userAgent.OPERA ? "oTransitionEnd" : "transitionend"};
+goog.reflect = {};
+goog.reflect.object = function(a, b) {
+  return b
+};
+goog.reflect.sinkValue = function(a) {
+  goog.reflect.sinkValue[" "](a);
+  return a
+};
+goog.reflect.sinkValue[" "] = goog.nullFunction;
+goog.reflect.canAccessProperty = function(a, b) {
+  try {
+    return goog.reflect.sinkValue(a[b]), !0
+  }catch(c) {
+  }
+  return!1
+};
+goog.events.BrowserEvent = function(a, b) {
+  a && this.init(a, b)
+};
+goog.inherits(goog.events.BrowserEvent, goog.events.Event);
+goog.events.BrowserEvent.MouseButton = {LEFT:0, MIDDLE:1, RIGHT:2};
+goog.events.BrowserEvent.IEButtonMap = [1, 4, 2];
+goog.events.BrowserEvent.prototype.target = null;
+goog.events.BrowserEvent.prototype.relatedTarget = null;
+goog.events.BrowserEvent.prototype.offsetX = 0;
+goog.events.BrowserEvent.prototype.offsetY = 0;
+goog.events.BrowserEvent.prototype.clientX = 0;
+goog.events.BrowserEvent.prototype.clientY = 0;
+goog.events.BrowserEvent.prototype.screenX = 0;
+goog.events.BrowserEvent.prototype.screenY = 0;
+goog.events.BrowserEvent.prototype.button = 0;
+goog.events.BrowserEvent.prototype.keyCode = 0;
+goog.events.BrowserEvent.prototype.charCode = 0;
+goog.events.BrowserEvent.prototype.ctrlKey = !1;
+goog.events.BrowserEvent.prototype.altKey = !1;
+goog.events.BrowserEvent.prototype.shiftKey = !1;
+goog.events.BrowserEvent.prototype.metaKey = !1;
+goog.events.BrowserEvent.prototype.platformModifierKey = !1;
+goog.events.BrowserEvent.prototype.event_ = null;
+goog.events.BrowserEvent.prototype.init = function(a, b) {
+  var c = this.type = a.type;
+  goog.events.Event.call(this, c);
+  this.target = a.target || a.srcElement;
+  this.currentTarget = b;
+  var d = a.relatedTarget;
+  d ? goog.userAgent.GECKO && (goog.reflect.canAccessProperty(d, "nodeName") || (d = null)) : c == goog.events.EventType.MOUSEOVER ? d = a.fromElement : c == goog.events.EventType.MOUSEOUT && (d = a.toElement);
+  this.relatedTarget = d;
+  this.offsetX = goog.userAgent.WEBKIT || void 0 !== a.offsetX ? a.offsetX : a.layerX;
+  this.offsetY = goog.userAgent.WEBKIT || void 0 !== a.offsetY ? a.offsetY : a.layerY;
+  this.clientX = void 0 !== a.clientX ? a.clientX : a.pageX;
+  this.clientY = void 0 !== a.clientY ? a.clientY : a.pageY;
+  this.screenX = a.screenX || 0;
+  this.screenY = a.screenY || 0;
+  this.button = a.button;
+  this.keyCode = a.keyCode || 0;
+  this.charCode = a.charCode || ("keypress" == c ? a.keyCode : 0);
+  this.ctrlKey = a.ctrlKey;
+  this.altKey = a.altKey;
+  this.shiftKey = a.shiftKey;
+  this.metaKey = a.metaKey;
+  this.platformModifierKey = goog.userAgent.MAC ? a.metaKey : a.ctrlKey;
+  this.state = a.state;
+  this.event_ = a;
+  a.defaultPrevented && this.preventDefault();
+  delete this.propagationStopped_
+};
+goog.events.BrowserEvent.prototype.isButton = function(a) {
+  return goog.events.BrowserFeature.HAS_W3C_BUTTON ? this.event_.button == a : "click" == this.type ? a == goog.events.BrowserEvent.MouseButton.LEFT : !!(this.event_.button & goog.events.BrowserEvent.IEButtonMap[a])
+};
+goog.events.BrowserEvent.prototype.isMouseActionButton = function() {
+  return this.isButton(goog.events.BrowserEvent.MouseButton.LEFT) && !(goog.userAgent.WEBKIT && goog.userAgent.MAC && this.ctrlKey)
+};
+goog.events.BrowserEvent.prototype.stopPropagation = function() {
+  goog.events.BrowserEvent.superClass_.stopPropagation.call(this);
+  this.event_.stopPropagation ? this.event_.stopPropagation() : this.event_.cancelBubble = !0
+};
+goog.events.BrowserEvent.prototype.preventDefault = function() {
+  goog.events.BrowserEvent.superClass_.preventDefault.call(this);
+  var a = this.event_;
+  if(a.preventDefault) {
+    a.preventDefault()
+  }else {
+    if(a.returnValue = !1, goog.events.BrowserFeature.SET_KEY_CODE_TO_PREVENT_DEFAULT) {
+      try {
+        if(a.ctrlKey || 112 <= a.keyCode && 123 >= a.keyCode) {
+          a.keyCode = -1
+        }
+      }catch(b) {
+      }
+    }
+  }
+};
+goog.events.BrowserEvent.prototype.getBrowserEvent = function() {
+  return this.event_
+};
+goog.events.BrowserEvent.prototype.disposeInternal = function() {
+};
+goog.events.Listener = function() {
+  goog.events.Listener.ENABLE_MONITORING && (this.creationStack = Error().stack)
+};
+goog.events.Listener.counter_ = 0;
+goog.events.Listener.ENABLE_MONITORING = !1;
+goog.events.Listener.prototype.key = 0;
+goog.events.Listener.prototype.removed = !1;
+goog.events.Listener.prototype.callOnce = !1;
+goog.events.Listener.prototype.init = function(a, b, c, d, e, f) {
+  if(goog.isFunction(a)) {
+    this.isFunctionListener_ = !0
+  }else {
+    if(a && a.handleEvent && goog.isFunction(a.handleEvent)) {
+      this.isFunctionListener_ = !1
+    }else {
+      throw Error("Invalid listener argument");
+    }
+  }
+  this.listener = a;
+  this.proxy = b;
+  this.src = c;
+  this.type = d;
+  this.capture = !!e;
+  this.handler = f;
+  this.callOnce = !1;
+  this.key = ++goog.events.Listener.counter_;
+  this.removed = !1
+};
+goog.events.Listener.prototype.handleEvent = function(a) {
+  return this.isFunctionListener_ ? this.listener.call(this.handler || this.src, a) : this.listener.handleEvent.call(this.listener, a)
+};
+goog.events.listeners_ = {};
+goog.events.listenerTree_ = {};
+goog.events.sources_ = {};
+goog.events.onString_ = "on";
+goog.events.onStringMap_ = {};
+goog.events.keySeparator_ = "_";
+goog.events.listen = function(a, b, c, d, e) {
+  if(b) {
+    if(goog.isArray(b)) {
+      for(var f = 0;f < b.length;f++) {
+        goog.events.listen(a, b[f], c, d, e)
+      }
+      return null
+    }
+    var d = !!d, g = goog.events.listenerTree_;
+    b in g || (g[b] = {count_:0, remaining_:0});
+    g = g[b];
+    d in g || (g[d] = {count_:0, remaining_:0}, g.count_++);
+    var g = g[d], h = goog.getUid(a), i;
+    g.remaining_++;
+    if(g[h]) {
+      i = g[h];
+      for(f = 0;f < i.length;f++) {
+        if(g = i[f], g.listener == c && g.handler == e) {
+          if(g.removed) {
+            break
+          }
+          return i[f].key
+        }
+      }
+    }else {
+      i = g[h] = [], g.count_++
+    }
+    f = goog.events.getProxy();
+    f.src = a;
+    g = new goog.events.Listener;
+    g.init(c, f, a, b, d, e);
+    c = g.key;
+    f.key = c;
+    i.push(g);
+    goog.events.listeners_[c] = g;
+    goog.events.sources_[h] || (goog.events.sources_[h] = []);
+    goog.events.sources_[h].push(g);
+    a.addEventListener ? (a == goog.global || !a.customEvent_) && a.addEventListener(b, f, d) : a.attachEvent(goog.events.getOnString_(b), f);
+    return c
+  }
+  throw Error("Invalid event type");
+};
+goog.events.getProxy = function() {
+  var a = goog.events.handleBrowserEvent_, b = goog.events.BrowserFeature.HAS_W3C_EVENT_SUPPORT ? function(c) {
+    return a.call(b.src, b.key, c)
+  } : function(c) {
+    c = a.call(b.src, b.key, c);
+    if(!c) {
       return c
     }
-  }
-  return null
+  };
+  return b
 };
-goog.debug.Logger.getLogger = function(a) {
-  return goog.debug.LogManager.getLogger(a)
-};
-goog.debug.Logger.logToProfilers = function(a) {
-  goog.global.console && (goog.global.console.timeStamp ? goog.global.console.timeStamp(a) : goog.global.console.markTimeline && goog.global.console.markTimeline(a));
-  goog.global.msWriteProfilerMark && goog.global.msWriteProfilerMark(a)
-};
-goog.debug.Logger.prototype.getName = function() {
-  return this.name_
-};
-goog.debug.Logger.prototype.addHandler = function(a) {
-  if(goog.debug.Logger.ENABLE_HIERARCHY) {
-    if(!this.handlers_) {
-      this.handlers_ = []
+goog.events.listenOnce = function(a, b, c, d, e) {
+  if(goog.isArray(b)) {
+    for(var f = 0;f < b.length;f++) {
+      goog.events.listenOnce(a, b[f], c, d, e)
     }
-    this.handlers_.push(a)
+    return null
+  }
+  a = goog.events.listen(a, b, c, d, e);
+  goog.events.listeners_[a].callOnce = !0;
+  return a
+};
+goog.events.listenWithWrapper = function(a, b, c, d, e) {
+  b.listen(a, c, d, e)
+};
+goog.events.unlisten = function(a, b, c, d, e) {
+  if(goog.isArray(b)) {
+    for(var f = 0;f < b.length;f++) {
+      goog.events.unlisten(a, b[f], c, d, e)
+    }
+    return null
+  }
+  d = !!d;
+  a = goog.events.getListeners_(a, b, d);
+  if(!a) {
+    return!1
+  }
+  for(f = 0;f < a.length;f++) {
+    if(a[f].listener == c && a[f].capture == d && a[f].handler == e) {
+      return goog.events.unlistenByKey(a[f].key)
+    }
+  }
+  return!1
+};
+goog.events.unlistenByKey = function(a) {
+  if(!goog.events.listeners_[a]) {
+    return!1
+  }
+  var b = goog.events.listeners_[a];
+  if(b.removed) {
+    return!1
+  }
+  var c = b.src, d = b.type, e = b.proxy, f = b.capture;
+  c.removeEventListener ? (c == goog.global || !c.customEvent_) && c.removeEventListener(d, e, f) : c.detachEvent && c.detachEvent(goog.events.getOnString_(d), e);
+  c = goog.getUid(c);
+  goog.events.sources_[c] && (e = goog.events.sources_[c], goog.array.remove(e, b), 0 == e.length && delete goog.events.sources_[c]);
+  b.removed = !0;
+  if(b = goog.events.listenerTree_[d][f][c]) {
+    b.needsCleanup_ = !0, goog.events.cleanUp_(d, f, c, b)
+  }
+  delete goog.events.listeners_[a];
+  return!0
+};
+goog.events.unlistenWithWrapper = function(a, b, c, d, e) {
+  b.unlisten(a, c, d, e)
+};
+goog.events.cleanUp_ = function(a, b, c, d) {
+  if(!d.locked_ && d.needsCleanup_) {
+    for(var e = 0, f = 0;e < d.length;e++) {
+      d[e].removed ? d[e].proxy.src = null : (e != f && (d[f] = d[e]), f++)
+    }
+    d.length = f;
+    d.needsCleanup_ = !1;
+    0 == f && (delete goog.events.listenerTree_[a][b][c], goog.events.listenerTree_[a][b].count_--, 0 == goog.events.listenerTree_[a][b].count_ && (delete goog.events.listenerTree_[a][b], goog.events.listenerTree_[a].count_--), 0 == goog.events.listenerTree_[a].count_ && delete goog.events.listenerTree_[a])
+  }
+};
+goog.events.removeAll = function(a, b, c) {
+  var d = 0, e = null == b, f = null == c, c = !!c;
+  if(null == a) {
+    goog.object.forEach(goog.events.sources_, function(a) {
+      for(var g = a.length - 1;0 <= g;g--) {
+        var h = a[g];
+        if((e || b == h.type) && (f || c == h.capture)) {
+          goog.events.unlistenByKey(h.key), d++
+        }
+      }
+    })
   }else {
-    goog.asserts.assert(!this.name_, "Cannot call addHandler on a non-root logger when goog.debug.Logger.ENABLE_HIERARCHY is false.");
-    goog.debug.Logger.rootHandlers_.push(a)
-  }
-};
-goog.debug.Logger.prototype.removeHandler = function(a) {
-  var b = goog.debug.Logger.ENABLE_HIERARCHY ? this.handlers_ : goog.debug.Logger.rootHandlers_;
-  return!!b && goog.array.remove(b, a)
-};
-goog.debug.Logger.prototype.getParent = function() {
-  return this.parent_
-};
-goog.debug.Logger.prototype.getChildren = function() {
-  if(!this.children_) {
-    this.children_ = {}
-  }
-  return this.children_
-};
-goog.debug.Logger.prototype.setLevel = function(a) {
-  if(goog.debug.Logger.ENABLE_HIERARCHY) {
-    this.level_ = a
-  }else {
-    goog.asserts.assert(!this.name_, "Cannot call setLevel() on a non-root logger when goog.debug.Logger.ENABLE_HIERARCHY is false.");
-    goog.debug.Logger.rootLevel_ = a
-  }
-};
-goog.debug.Logger.prototype.getLevel = function() {
-  return this.level_
-};
-goog.debug.Logger.prototype.getEffectiveLevel = function() {
-  if(!goog.debug.Logger.ENABLE_HIERARCHY) {
-    return goog.debug.Logger.rootLevel_
-  }
-  if(this.level_) {
-    return this.level_
-  }
-  if(this.parent_) {
-    return this.parent_.getEffectiveLevel()
-  }
-  goog.asserts.fail("Root logger has no level set.");
-  return null
-};
-goog.debug.Logger.prototype.isLoggable = function(a) {
-  return a.value >= this.getEffectiveLevel().value
-};
-goog.debug.Logger.prototype.log = function(a, b, c) {
-  this.isLoggable(a) && this.doLogRecord_(this.getLogRecord(a, b, c))
-};
-goog.debug.Logger.prototype.getLogRecord = function(a, b, c) {
-  var d = goog.debug.LogBuffer.isBufferingEnabled() ? goog.debug.LogBuffer.getInstance().addRecord(a, b, this.name_) : new goog.debug.LogRecord(a, "" + b, this.name_);
-  if(c) {
-    d.setException(c);
-    d.setExceptionText(goog.debug.exposeException(c, arguments.callee.caller))
+    if(a = goog.getUid(a), goog.events.sources_[a]) {
+      for(var a = goog.events.sources_[a], g = a.length - 1;0 <= g;g--) {
+        var h = a[g];
+        if((e || b == h.type) && (f || c == h.capture)) {
+          goog.events.unlistenByKey(h.key), d++
+        }
+      }
+    }
   }
   return d
 };
-goog.debug.Logger.prototype.shout = function(a, b) {
-  this.log(goog.debug.Logger.Level.SHOUT, a, b)
+goog.events.getListeners = function(a, b, c) {
+  return goog.events.getListeners_(a, b, c) || []
 };
-goog.debug.Logger.prototype.severe = function(a, b) {
-  this.log(goog.debug.Logger.Level.SEVERE, a, b)
+goog.events.getListeners_ = function(a, b, c) {
+  var d = goog.events.listenerTree_;
+  return b in d && (d = d[b], c in d && (d = d[c], a = goog.getUid(a), d[a])) ? d[a] : null
 };
-goog.debug.Logger.prototype.warning = function(a, b) {
-  this.log(goog.debug.Logger.Level.WARNING, a, b)
-};
-goog.debug.Logger.prototype.info = function(a, b) {
-  this.log(goog.debug.Logger.Level.INFO, a, b)
-};
-goog.debug.Logger.prototype.config = function(a, b) {
-  this.log(goog.debug.Logger.Level.CONFIG, a, b)
-};
-goog.debug.Logger.prototype.fine = function(a, b) {
-  this.log(goog.debug.Logger.Level.FINE, a, b)
-};
-goog.debug.Logger.prototype.finer = function(a, b) {
-  this.log(goog.debug.Logger.Level.FINER, a, b)
-};
-goog.debug.Logger.prototype.finest = function(a, b) {
-  this.log(goog.debug.Logger.Level.FINEST, a, b)
-};
-goog.debug.Logger.prototype.logRecord = function(a) {
-  this.isLoggable(a.getLevel()) && this.doLogRecord_(a)
-};
-goog.debug.Logger.prototype.doLogRecord_ = function(a) {
-  goog.debug.Logger.logToProfilers("log:" + a.getMessage());
-  if(goog.debug.Logger.ENABLE_HIERARCHY) {
-    for(var b = this;b;) {
-      b.callPublish_(a);
-      b = b.getParent()
-    }
-  }else {
-    for(var b = 0, c;c = goog.debug.Logger.rootHandlers_[b++];) {
-      c(a)
+goog.events.getListener = function(a, b, c, d, e) {
+  d = !!d;
+  if(a = goog.events.getListeners_(a, b, d)) {
+    for(b = 0;b < a.length;b++) {
+      if(!a[b].removed && a[b].listener == c && a[b].capture == d && a[b].handler == e) {
+        return a[b]
+      }
     }
   }
+  return null
 };
-goog.debug.Logger.prototype.callPublish_ = function(a) {
-  if(this.handlers_) {
-    for(var b = 0, c;c = this.handlers_[b];b++) {
-      c(a)
-    }
+goog.events.hasListener = function(a, b, c) {
+  var a = goog.getUid(a), d = goog.events.sources_[a];
+  if(d) {
+    var e = goog.isDef(b), f = goog.isDef(c);
+    return e && f ? (d = goog.events.listenerTree_[b], !!d && !!d[c] && a in d[c]) : !e && !f ? !0 : goog.array.some(d, function(a) {
+      return e && a.type == b || f && a.capture == c
+    })
   }
+  return!1
 };
-goog.debug.Logger.prototype.setParent_ = function(a) {
-  this.parent_ = a
-};
-goog.debug.Logger.prototype.addChild_ = function(a, b) {
-  this.getChildren()[a] = b
-};
-goog.debug.LogManager = {};
-goog.debug.LogManager.loggers_ = {};
-goog.debug.LogManager.rootLogger_ = null;
-goog.debug.LogManager.initialize = function() {
-  if(!goog.debug.LogManager.rootLogger_) {
-    goog.debug.LogManager.rootLogger_ = new goog.debug.Logger("");
-    goog.debug.LogManager.loggers_[""] = goog.debug.LogManager.rootLogger_;
-    goog.debug.LogManager.rootLogger_.setLevel(goog.debug.Logger.Level.CONFIG)
+goog.events.expose = function(a) {
+  var b = [], c;
+  for(c in a) {
+    a[c] && a[c].id ? b.push(c + " = " + a[c] + " (" + a[c].id + ")") : b.push(c + " = " + a[c])
   }
+  return b.join("\n")
 };
-goog.debug.LogManager.getLoggers = function() {
-  return goog.debug.LogManager.loggers_
+goog.events.getOnString_ = function(a) {
+  return a in goog.events.onStringMap_ ? goog.events.onStringMap_[a] : goog.events.onStringMap_[a] = goog.events.onString_ + a
 };
-goog.debug.LogManager.getRoot = function() {
-  goog.debug.LogManager.initialize();
-  return goog.debug.LogManager.rootLogger_
+goog.events.fireListeners = function(a, b, c, d) {
+  var e = goog.events.listenerTree_;
+  return b in e && (e = e[b], c in e) ? goog.events.fireListeners_(e[c], a, b, c, d) : !0
 };
-goog.debug.LogManager.getLogger = function(a) {
-  goog.debug.LogManager.initialize();
-  return goog.debug.LogManager.loggers_[a] || goog.debug.LogManager.createLogger_(a)
-};
-goog.debug.LogManager.createFunctionForCatchErrors = function(a) {
-  return function(b) {
-    (a || goog.debug.LogManager.getRoot()).severe("Error: " + b.message + " (" + b.fileName + " @ Line: " + b.line + ")")
-  }
-};
-goog.debug.LogManager.createLogger_ = function(a) {
-  var b = new goog.debug.Logger(a);
-  if(goog.debug.Logger.ENABLE_HIERARCHY) {
-    var c = a.lastIndexOf("."), d = a.substr(0, c), c = a.substr(c + 1), d = goog.debug.LogManager.getLogger(d);
-    d.addChild_(c, b);
-    b.setParent_(d)
-  }
-  return goog.debug.LogManager.loggers_[a] = b
-};
-goog.json = {};
-goog.json.isValid_ = function(a) {
-  return/^\s*$/.test(a) ? !1 : /^[\],:{}\s\u2028\u2029]*$/.test(a.replace(/\\["\\\/bfnrtu]/g, "@").replace(/"[^"\\\n\r\u2028\u2029\x00-\x08\x10-\x1f\x80-\x9f]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]").replace(/(?:^|:|,)(?:[\s\u2028\u2029]*\[)+/g, ""))
-};
-goog.json.parse = function(a) {
-  a = "" + a;
-  if(goog.json.isValid_(a)) {
+goog.events.fireListeners_ = function(a, b, c, d, e) {
+  var f = 1, b = goog.getUid(b);
+  if(a[b]) {
+    a.remaining_--;
+    a = a[b];
+    a.locked_ ? a.locked_++ : a.locked_ = 1;
     try {
-      return eval("(" + a + ")")
-    }catch(b) {
-    }
-  }
-  throw Error("Invalid JSON string: " + a);
-};
-goog.json.unsafeParse = function(a) {
-  return eval("(" + a + ")")
-};
-goog.json.serialize = function(a, b) {
-  return(new goog.json.Serializer(b)).serialize(a)
-};
-goog.json.Serializer = function(a) {
-  this.replacer_ = a
-};
-goog.json.Serializer.prototype.serialize = function(a) {
-  var b = [];
-  this.serialize_(a, b);
-  return b.join("")
-};
-goog.json.Serializer.prototype.serialize_ = function(a, b) {
-  switch(typeof a) {
-    case "string":
-      this.serializeString_(a, b);
-      break;
-    case "number":
-      this.serializeNumber_(a, b);
-      break;
-    case "boolean":
-      b.push(a);
-      break;
-    case "undefined":
-      b.push("null");
-      break;
-    case "object":
-      if(null == a) {
-        b.push("null");
-        break
+      for(var g = a.length, h = 0;h < g;h++) {
+        var i = a[h];
+        i && !i.removed && (f &= !1 !== goog.events.fireListener(i, e))
       }
-      if(goog.isArray(a)) {
-        this.serializeArray(a, b);
-        break
-      }
-      this.serializeObject_(a, b);
-      break;
-    case "function":
-      break;
-    default:
-      throw Error("Unknown type: " + typeof a);
-  }
-};
-goog.json.Serializer.charToJsonCharCache_ = {'"':'\\"', "\\":"\\\\", "/":"\\/", "\u0008":"\\b", "\u000c":"\\f", "\n":"\\n", "\r":"\\r", "\t":"\\t", "\x0B":"\\u000b"};
-goog.json.Serializer.charsToReplace_ = /\uffff/.test("\uffff") ? /[\\\"\x00-\x1f\x7f-\uffff]/g : /[\\\"\x00-\x1f\x7f-\xff]/g;
-goog.json.Serializer.prototype.serializeString_ = function(a, b) {
-  b.push('"', a.replace(goog.json.Serializer.charsToReplace_, function(a) {
-    if(a in goog.json.Serializer.charToJsonCharCache_) {
-      return goog.json.Serializer.charToJsonCharCache_[a]
-    }
-    var b = a.charCodeAt(0), e = "\\u";
-    16 > b ? e += "000" : 256 > b ? e += "00" : 4096 > b && (e += "0");
-    return goog.json.Serializer.charToJsonCharCache_[a] = e + b.toString(16)
-  }), '"')
-};
-goog.json.Serializer.prototype.serializeNumber_ = function(a, b) {
-  b.push(isFinite(a) && !isNaN(a) ? a : "null")
-};
-goog.json.Serializer.prototype.serializeArray = function(a, b) {
-  var c = a.length;
-  b.push("[");
-  for(var d = "", e = 0;e < c;e++) {
-    b.push(d), d = a[e], this.serialize_(this.replacer_ ? this.replacer_.call(a, "" + e, d) : d, b), d = ","
-  }
-  b.push("]")
-};
-goog.json.Serializer.prototype.serializeObject_ = function(a, b) {
-  b.push("{");
-  var c = "", d;
-  for(d in a) {
-    if(Object.prototype.hasOwnProperty.call(a, d)) {
-      var e = a[d];
-      "function" != typeof e && (b.push(c), this.serializeString_(d, b), b.push(":"), this.serialize_(this.replacer_ ? this.replacer_.call(a, d, e) : e, b), c = ",")
+    }finally {
+      a.locked_--, goog.events.cleanUp_(c, d, b, a)
     }
   }
-  b.push("}")
+  return Boolean(f)
 };
-goog.net = {};
-goog.net.ErrorCode = {NO_ERROR:0, ACCESS_DENIED:1, FILE_NOT_FOUND:2, FF_SILENT_ERROR:3, CUSTOM_ERROR:4, EXCEPTION:5, HTTP_ERROR:6, ABORT:7, TIMEOUT:8, OFFLINE:9};
-goog.net.ErrorCode.getDebugMessage = function(a) {
-  switch(a) {
-    case goog.net.ErrorCode.NO_ERROR:
-      return"No Error";
-    case goog.net.ErrorCode.ACCESS_DENIED:
-      return"Access denied to content document";
-    case goog.net.ErrorCode.FILE_NOT_FOUND:
-      return"File not found";
-    case goog.net.ErrorCode.FF_SILENT_ERROR:
-      return"Firefox silently errored";
-    case goog.net.ErrorCode.CUSTOM_ERROR:
-      return"Application custom error";
-    case goog.net.ErrorCode.EXCEPTION:
-      return"An exception occurred";
-    case goog.net.ErrorCode.HTTP_ERROR:
-      return"Http response at 400 or 500 level";
-    case goog.net.ErrorCode.ABORT:
-      return"Request was aborted";
-    case goog.net.ErrorCode.TIMEOUT:
-      return"Request timed out";
-    case goog.net.ErrorCode.OFFLINE:
-      return"The resource is not available offline";
-    default:
-      return"Unrecognized error code"
+goog.events.fireListener = function(a, b) {
+  a.callOnce && goog.events.unlistenByKey(a.key);
+  return a.handleEvent(b)
+};
+goog.events.getTotalListenerCount = function() {
+  return goog.object.getCount(goog.events.listeners_)
+};
+goog.events.dispatchEvent = function(a, b) {
+  var c = b.type || b, d = goog.events.listenerTree_;
+  if(!(c in d)) {
+    return!0
   }
-};
-goog.net.EventType = {COMPLETE:"complete", SUCCESS:"success", ERROR:"error", ABORT:"abort", READY:"ready", READY_STATE_CHANGE:"readystatechange", TIMEOUT:"timeout", INCREMENTAL_DATA:"incrementaldata", PROGRESS:"progress"};
-goog.net.HttpStatus = {CONTINUE:100, SWITCHING_PROTOCOLS:101, OK:200, CREATED:201, ACCEPTED:202, NON_AUTHORITATIVE_INFORMATION:203, NO_CONTENT:204, RESET_CONTENT:205, PARTIAL_CONTENT:206, MULTIPLE_CHOICES:300, MOVED_PERMANENTLY:301, FOUND:302, SEE_OTHER:303, NOT_MODIFIED:304, USE_PROXY:305, TEMPORARY_REDIRECT:307, BAD_REQUEST:400, UNAUTHORIZED:401, PAYMENT_REQUIRED:402, FORBIDDEN:403, NOT_FOUND:404, METHOD_NOT_ALLOWED:405, NOT_ACCEPTABLE:406, PROXY_AUTHENTICATION_REQUIRED:407, REQUEST_TIMEOUT:408, 
-CONFLICT:409, GONE:410, LENGTH_REQUIRED:411, PRECONDITION_FAILED:412, REQUEST_ENTITY_TOO_LARGE:413, REQUEST_URI_TOO_LONG:414, UNSUPPORTED_MEDIA_TYPE:415, REQUEST_RANGE_NOT_SATISFIABLE:416, EXPECTATION_FAILED:417, INTERNAL_SERVER_ERROR:500, NOT_IMPLEMENTED:501, BAD_GATEWAY:502, SERVICE_UNAVAILABLE:503, GATEWAY_TIMEOUT:504, HTTP_VERSION_NOT_SUPPORTED:505, QUIRK_IE_NO_CONTENT:1223};
-goog.net.HttpStatus.isSuccess = function(a) {
-  switch(a) {
-    case goog.net.HttpStatus.OK:
-    ;
-    case goog.net.HttpStatus.CREATED:
-    ;
-    case goog.net.HttpStatus.ACCEPTED:
-    ;
-    case goog.net.HttpStatus.NO_CONTENT:
-    ;
-    case goog.net.HttpStatus.NOT_MODIFIED:
-    ;
-    case goog.net.HttpStatus.QUIRK_IE_NO_CONTENT:
-      return!0;
-    default:
-      return!1
-  }
-};
-goog.net.XmlHttpFactory = function() {
-};
-goog.net.XmlHttpFactory.prototype.cachedOptions_ = null;
-goog.net.XmlHttpFactory.prototype.getOptions = function() {
-  return this.cachedOptions_ || (this.cachedOptions_ = this.internalGetOptions())
-};
-goog.net.WrapperXmlHttpFactory = function(a, b) {
-  goog.net.XmlHttpFactory.call(this);
-  this.xhrFactory_ = a;
-  this.optionsFactory_ = b
-};
-goog.inherits(goog.net.WrapperXmlHttpFactory, goog.net.XmlHttpFactory);
-goog.net.WrapperXmlHttpFactory.prototype.createInstance = function() {
-  return this.xhrFactory_()
-};
-goog.net.WrapperXmlHttpFactory.prototype.getOptions = function() {
-  return this.optionsFactory_()
-};
-goog.net.XmlHttp = function() {
-  return goog.net.XmlHttp.factory_.createInstance()
-};
-goog.net.XmlHttp.ASSUME_NATIVE_XHR = !1;
-goog.net.XmlHttp.getOptions = function() {
-  return goog.net.XmlHttp.factory_.getOptions()
-};
-goog.net.XmlHttp.OptionType = {USE_NULL_FUNCTION:0, LOCAL_REQUEST_ERROR:1};
-goog.net.XmlHttp.ReadyState = {UNINITIALIZED:0, LOADING:1, LOADED:2, INTERACTIVE:3, COMPLETE:4};
-goog.net.XmlHttp.setFactory = function(a, b) {
-  goog.net.XmlHttp.setGlobalFactory(new goog.net.WrapperXmlHttpFactory(a, b))
-};
-goog.net.XmlHttp.setGlobalFactory = function(a) {
-  goog.net.XmlHttp.factory_ = a
-};
-goog.net.DefaultXmlHttpFactory = function() {
-  goog.net.XmlHttpFactory.call(this)
-};
-goog.inherits(goog.net.DefaultXmlHttpFactory, goog.net.XmlHttpFactory);
-goog.net.DefaultXmlHttpFactory.prototype.createInstance = function() {
-  var a = this.getProgId_();
-  return a ? new ActiveXObject(a) : new XMLHttpRequest
-};
-goog.net.DefaultXmlHttpFactory.prototype.internalGetOptions = function() {
-  var a = {};
-  this.getProgId_() && (a[goog.net.XmlHttp.OptionType.USE_NULL_FUNCTION] = !0, a[goog.net.XmlHttp.OptionType.LOCAL_REQUEST_ERROR] = !0);
-  return a
-};
-goog.net.DefaultXmlHttpFactory.prototype.getProgId_ = function() {
-  if(goog.net.XmlHttp.ASSUME_NATIVE_XHR) {
-    return""
-  }
-  if(!this.ieProgId_ && "undefined" == typeof XMLHttpRequest && "undefined" != typeof ActiveXObject) {
-    for(var a = ["MSXML2.XMLHTTP.6.0", "MSXML2.XMLHTTP.3.0", "MSXML2.XMLHTTP", "Microsoft.XMLHTTP"], b = 0;b < a.length;b++) {
-      var c = a[b];
-      try {
-        return new ActiveXObject(c), this.ieProgId_ = c
-      }catch(d) {
-      }
-    }
-    throw Error("Could not create ActiveXObject. ActiveX might be disabled, or MSXML might not be installed");
-  }
-  return this.ieProgId_
-};
-goog.net.XmlHttp.setGlobalFactory(new goog.net.DefaultXmlHttpFactory);
-goog.uri = {};
-goog.uri.utils = {};
-goog.uri.utils.CharCode_ = {AMPERSAND:38, EQUAL:61, HASH:35, QUESTION:63};
-goog.uri.utils.buildFromEncodedParts = function(a, b, c, d, e, f, g) {
-  var h = [];
-  a && h.push(a, ":");
-  c && (h.push("//"), b && h.push(b, "@"), h.push(c), d && h.push(":", d));
-  e && h.push(e);
-  f && h.push("?", f);
-  g && h.push("#", g);
-  return h.join("")
-};
-goog.uri.utils.splitRe_ = RegExp("^(?:([^:/?#.]+):)?(?://(?:([^/?#]*)@)?([\\w\\d\\-\\u0100-\\uffff.%]*)(?::([0-9]+))?)?([^?#]+)?(?:\\?([^#]*))?(?:#(.*))?$");
-goog.uri.utils.ComponentIndex = {SCHEME:1, USER_INFO:2, DOMAIN:3, PORT:4, PATH:5, QUERY_DATA:6, FRAGMENT:7};
-goog.uri.utils.split = function(a) {
-  return a.match(goog.uri.utils.splitRe_)
-};
-goog.uri.utils.decodeIfPossible_ = function(a) {
-  return a && decodeURIComponent(a)
-};
-goog.uri.utils.getComponentByIndex_ = function(a, b) {
-  return goog.uri.utils.split(b)[a] || null
-};
-goog.uri.utils.getScheme = function(a) {
-  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.SCHEME, a)
-};
-goog.uri.utils.getEffectiveScheme = function(a) {
-  a = goog.uri.utils.getScheme(a);
-  !a && self.location && (a = self.location.protocol, a = a.substr(0, a.length - 1));
-  return a ? a.toLowerCase() : ""
-};
-goog.uri.utils.getUserInfoEncoded = function(a) {
-  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.USER_INFO, a)
-};
-goog.uri.utils.getUserInfo = function(a) {
-  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getUserInfoEncoded(a))
-};
-goog.uri.utils.getDomainEncoded = function(a) {
-  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.DOMAIN, a)
-};
-goog.uri.utils.getDomain = function(a) {
-  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getDomainEncoded(a))
-};
-goog.uri.utils.getPort = function(a) {
-  return Number(goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.PORT, a)) || null
-};
-goog.uri.utils.getPathEncoded = function(a) {
-  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.PATH, a)
-};
-goog.uri.utils.getPath = function(a) {
-  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getPathEncoded(a))
-};
-goog.uri.utils.getQueryData = function(a) {
-  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.QUERY_DATA, a)
-};
-goog.uri.utils.getFragmentEncoded = function(a) {
-  var b = a.indexOf("#");
-  return 0 > b ? null : a.substr(b + 1)
-};
-goog.uri.utils.setFragmentEncoded = function(a, b) {
-  return goog.uri.utils.removeFragment(a) + (b ? "#" + b : "")
-};
-goog.uri.utils.getFragment = function(a) {
-  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getFragmentEncoded(a))
-};
-goog.uri.utils.getHost = function(a) {
-  a = goog.uri.utils.split(a);
-  return goog.uri.utils.buildFromEncodedParts(a[goog.uri.utils.ComponentIndex.SCHEME], a[goog.uri.utils.ComponentIndex.USER_INFO], a[goog.uri.utils.ComponentIndex.DOMAIN], a[goog.uri.utils.ComponentIndex.PORT])
-};
-goog.uri.utils.getPathAndAfter = function(a) {
-  a = goog.uri.utils.split(a);
-  return goog.uri.utils.buildFromEncodedParts(null, null, null, null, a[goog.uri.utils.ComponentIndex.PATH], a[goog.uri.utils.ComponentIndex.QUERY_DATA], a[goog.uri.utils.ComponentIndex.FRAGMENT])
-};
-goog.uri.utils.removeFragment = function(a) {
-  var b = a.indexOf("#");
-  return 0 > b ? a : a.substr(0, b)
-};
-goog.uri.utils.haveSameDomain = function(a, b) {
-  var c = goog.uri.utils.split(a), d = goog.uri.utils.split(b);
-  return c[goog.uri.utils.ComponentIndex.DOMAIN] == d[goog.uri.utils.ComponentIndex.DOMAIN] && c[goog.uri.utils.ComponentIndex.SCHEME] == d[goog.uri.utils.ComponentIndex.SCHEME] && c[goog.uri.utils.ComponentIndex.PORT] == d[goog.uri.utils.ComponentIndex.PORT]
-};
-goog.uri.utils.assertNoFragmentsOrQueries_ = function(a) {
-  if(goog.DEBUG && (0 <= a.indexOf("#") || 0 <= a.indexOf("?"))) {
-    throw Error("goog.uri.utils: Fragment or query identifiers are not supported: [" + a + "]");
-  }
-};
-goog.uri.utils.appendQueryData_ = function(a) {
-  if(a[1]) {
-    var b = a[0], c = b.indexOf("#");
-    0 <= c && (a.push(b.substr(c)), a[0] = b = b.substr(0, c));
-    c = b.indexOf("?");
-    0 > c ? a[1] = "?" : c == b.length - 1 && (a[1] = void 0)
-  }
-  return a.join("")
-};
-goog.uri.utils.appendKeyValuePairs_ = function(a, b, c) {
-  if(goog.isArray(b)) {
-    goog.asserts.assertArray(b);
-    for(var d = 0;d < b.length;d++) {
-      goog.uri.utils.appendKeyValuePairs_(a, "" + b[d], c)
-    }
+  if(goog.isString(b)) {
+    b = new goog.events.Event(b, a)
   }else {
-    null != b && c.push("&", a, "" === b ? "" : "=", goog.string.urlEncode(b))
-  }
-};
-goog.uri.utils.buildQueryDataBuffer_ = function(a, b, c) {
-  goog.asserts.assert(0 == Math.max(b.length - (c || 0), 0) % 2, "goog.uri.utils: Key/value lists must be even in length.");
-  for(c = c || 0;c < b.length;c += 2) {
-    goog.uri.utils.appendKeyValuePairs_(b[c], b[c + 1], a)
-  }
-  return a
-};
-goog.uri.utils.buildQueryData = function(a, b) {
-  var c = goog.uri.utils.buildQueryDataBuffer_([], a, b);
-  c[0] = "";
-  return c.join("")
-};
-goog.uri.utils.buildQueryDataBufferFromMap_ = function(a, b) {
-  for(var c in b) {
-    goog.uri.utils.appendKeyValuePairs_(c, b[c], a)
-  }
-  return a
-};
-goog.uri.utils.buildQueryDataFromMap = function(a) {
-  a = goog.uri.utils.buildQueryDataBufferFromMap_([], a);
-  a[0] = "";
-  return a.join("")
-};
-goog.uri.utils.appendParams = function(a, b) {
-  return goog.uri.utils.appendQueryData_(2 == arguments.length ? goog.uri.utils.buildQueryDataBuffer_([a], arguments[1], 0) : goog.uri.utils.buildQueryDataBuffer_([a], arguments, 1))
-};
-goog.uri.utils.appendParamsFromMap = function(a, b) {
-  return goog.uri.utils.appendQueryData_(goog.uri.utils.buildQueryDataBufferFromMap_([a], b))
-};
-goog.uri.utils.appendParam = function(a, b, c) {
-  return goog.uri.utils.appendQueryData_([a, "&", b, "=", goog.string.urlEncode(c)])
-};
-goog.uri.utils.findParam_ = function(a, b, c, d) {
-  for(var e = c.length;0 <= (b = a.indexOf(c, b)) && b < d;) {
-    var f = a.charCodeAt(b - 1);
-    if(f == goog.uri.utils.CharCode_.AMPERSAND || f == goog.uri.utils.CharCode_.QUESTION) {
-      if(f = a.charCodeAt(b + e), !f || f == goog.uri.utils.CharCode_.EQUAL || f == goog.uri.utils.CharCode_.AMPERSAND || f == goog.uri.utils.CharCode_.HASH) {
-        return b
-      }
-    }
-    b += e + 1
-  }
-  return-1
-};
-goog.uri.utils.hashOrEndRe_ = /#|$/;
-goog.uri.utils.hasParam = function(a, b) {
-  return 0 <= goog.uri.utils.findParam_(a, 0, b, a.search(goog.uri.utils.hashOrEndRe_))
-};
-goog.uri.utils.getParamValue = function(a, b) {
-  var c = a.search(goog.uri.utils.hashOrEndRe_), d = goog.uri.utils.findParam_(a, 0, b, c);
-  if(0 > d) {
-    return null
-  }
-  var e = a.indexOf("&", d);
-  if(0 > e || e > c) {
-    e = c
-  }
-  d += b.length + 1;
-  return goog.string.urlDecode(a.substr(d, e - d))
-};
-goog.uri.utils.getParamValues = function(a, b) {
-  for(var c = a.search(goog.uri.utils.hashOrEndRe_), d = 0, e, f = [];0 <= (e = goog.uri.utils.findParam_(a, d, b, c));) {
-    d = a.indexOf("&", e);
-    if(0 > d || d > c) {
-      d = c
-    }
-    e += b.length + 1;
-    f.push(goog.string.urlDecode(a.substr(e, d - e)))
-  }
-  return f
-};
-goog.uri.utils.trailingQueryPunctuationRe_ = /[?&]($|#)/;
-goog.uri.utils.removeParam = function(a, b) {
-  for(var c = a.search(goog.uri.utils.hashOrEndRe_), d = 0, e, f = [];0 <= (e = goog.uri.utils.findParam_(a, d, b, c));) {
-    f.push(a.substring(d, e)), d = Math.min(a.indexOf("&", e) + 1 || c, c)
-  }
-  f.push(a.substr(d));
-  return f.join("").replace(goog.uri.utils.trailingQueryPunctuationRe_, "$1")
-};
-goog.uri.utils.setParam = function(a, b, c) {
-  return goog.uri.utils.appendParam(goog.uri.utils.removeParam(a, b), b, c)
-};
-goog.uri.utils.appendPath = function(a, b) {
-  goog.uri.utils.assertNoFragmentsOrQueries_(a);
-  goog.string.endsWith(a, "/") && (a = a.substr(0, a.length - 1));
-  goog.string.startsWith(b, "/") && (b = b.substr(1));
-  return goog.string.buildString(a, "/", b)
-};
-goog.uri.utils.StandardQueryParam = {RANDOM:"zx"};
-goog.uri.utils.makeUnique = function(a) {
-  return goog.uri.utils.setParam(a, goog.uri.utils.StandardQueryParam.RANDOM, goog.string.getRandomString())
-};
-goog.net.XhrIo = function(a) {
-  goog.events.EventTarget.call(this);
-  this.headers = new goog.structs.Map;
-  this.xmlHttpFactory_ = a || null
-};
-goog.inherits(goog.net.XhrIo, goog.events.EventTarget);
-goog.net.XhrIo.ResponseType = {DEFAULT:"", TEXT:"text", DOCUMENT:"document", BLOB:"blob", ARRAY_BUFFER:"arraybuffer"};
-goog.net.XhrIo.prototype.logger_ = goog.debug.Logger.getLogger("goog.net.XhrIo");
-goog.net.XhrIo.CONTENT_TYPE_HEADER = "Content-Type";
-goog.net.XhrIo.HTTP_SCHEME_PATTERN = /^https?$/i;
-goog.net.XhrIo.FORM_CONTENT_TYPE = "application/x-www-form-urlencoded;charset=utf-8";
-goog.net.XhrIo.sendInstances_ = [];
-goog.net.XhrIo.send = function(a, b, c, d, e, f) {
-  var g = new goog.net.XhrIo;
-  goog.net.XhrIo.sendInstances_.push(g);
-  b && goog.events.listen(g, goog.net.EventType.COMPLETE, b);
-  goog.events.listen(g, goog.net.EventType.READY, goog.partial(goog.net.XhrIo.cleanupSend_, g));
-  f && g.setTimeoutInterval(f);
-  g.send(a, c, d, e)
-};
-goog.net.XhrIo.cleanup = function() {
-  for(var a = goog.net.XhrIo.sendInstances_;a.length;) {
-    a.pop().dispose()
-  }
-};
-goog.net.XhrIo.protectEntryPoints = function(a) {
-  goog.net.XhrIo.prototype.onReadyStateChangeEntryPoint_ = a.protectEntryPoint(goog.net.XhrIo.prototype.onReadyStateChangeEntryPoint_)
-};
-goog.net.XhrIo.cleanupSend_ = function(a) {
-  a.dispose();
-  goog.array.remove(goog.net.XhrIo.sendInstances_, a)
-};
-goog.net.XhrIo.prototype.active_ = !1;
-goog.net.XhrIo.prototype.xhr_ = null;
-goog.net.XhrIo.prototype.xhrOptions_ = null;
-goog.net.XhrIo.prototype.lastUri_ = "";
-goog.net.XhrIo.prototype.lastMethod_ = "";
-goog.net.XhrIo.prototype.lastErrorCode_ = goog.net.ErrorCode.NO_ERROR;
-goog.net.XhrIo.prototype.lastError_ = "";
-goog.net.XhrIo.prototype.errorDispatched_ = !1;
-goog.net.XhrIo.prototype.inSend_ = !1;
-goog.net.XhrIo.prototype.inOpen_ = !1;
-goog.net.XhrIo.prototype.inAbort_ = !1;
-goog.net.XhrIo.prototype.timeoutInterval_ = 0;
-goog.net.XhrIo.prototype.timeoutId_ = null;
-goog.net.XhrIo.prototype.responseType_ = goog.net.XhrIo.ResponseType.DEFAULT;
-goog.net.XhrIo.prototype.withCredentials_ = !1;
-goog.net.XhrIo.prototype.getTimeoutInterval = function() {
-  return this.timeoutInterval_
-};
-goog.net.XhrIo.prototype.setTimeoutInterval = function(a) {
-  this.timeoutInterval_ = Math.max(0, a)
-};
-goog.net.XhrIo.prototype.setResponseType = function(a) {
-  this.responseType_ = a
-};
-goog.net.XhrIo.prototype.getResponseType = function() {
-  return this.responseType_
-};
-goog.net.XhrIo.prototype.setWithCredentials = function(a) {
-  this.withCredentials_ = a
-};
-goog.net.XhrIo.prototype.getWithCredentials = function() {
-  return this.withCredentials_
-};
-goog.net.XhrIo.prototype.send = function(a, b, c, d) {
-  if(this.xhr_) {
-    throw Error("[goog.net.XhrIo] Object is active with another request");
-  }
-  b = b ? b.toUpperCase() : "GET";
-  this.lastUri_ = a;
-  this.lastError_ = "";
-  this.lastErrorCode_ = goog.net.ErrorCode.NO_ERROR;
-  this.lastMethod_ = b;
-  this.errorDispatched_ = !1;
-  this.active_ = !0;
-  this.xhr_ = this.createXhr();
-  this.xhrOptions_ = this.xmlHttpFactory_ ? this.xmlHttpFactory_.getOptions() : goog.net.XmlHttp.getOptions();
-  this.xhr_.onreadystatechange = goog.bind(this.onReadyStateChange_, this);
-  try {
-    this.logger_.fine(this.formatMsg_("Opening Xhr")), this.inOpen_ = !0, this.xhr_.open(b, a, !0), this.inOpen_ = !1
-  }catch(e) {
-    this.logger_.fine(this.formatMsg_("Error opening Xhr: " + e.message));
-    this.error_(goog.net.ErrorCode.EXCEPTION, e);
-    return
-  }
-  var a = c || "", f = this.headers.clone();
-  d && goog.structs.forEach(d, function(a, b) {
-    f.set(b, a)
-  });
-  "POST" == b && !f.containsKey(goog.net.XhrIo.CONTENT_TYPE_HEADER) && f.set(goog.net.XhrIo.CONTENT_TYPE_HEADER, goog.net.XhrIo.FORM_CONTENT_TYPE);
-  goog.structs.forEach(f, function(a, b) {
-    this.xhr_.setRequestHeader(b, a)
-  }, this);
-  this.responseType_ && (this.xhr_.responseType = this.responseType_);
-  goog.object.containsKey(this.xhr_, "withCredentials") && (this.xhr_.withCredentials = this.withCredentials_);
-  try {
-    this.timeoutId_ && (goog.Timer.defaultTimerObject.clearTimeout(this.timeoutId_), this.timeoutId_ = null), 0 < this.timeoutInterval_ && (this.logger_.fine(this.formatMsg_("Will abort after " + this.timeoutInterval_ + "ms if incomplete")), this.timeoutId_ = goog.Timer.defaultTimerObject.setTimeout(goog.bind(this.timeout_, this), this.timeoutInterval_)), this.logger_.fine(this.formatMsg_("Sending request")), this.inSend_ = !0, this.xhr_.send(a), this.inSend_ = !1
-  }catch(g) {
-    this.logger_.fine(this.formatMsg_("Send error: " + g.message)), this.error_(goog.net.ErrorCode.EXCEPTION, g)
-  }
-};
-goog.net.XhrIo.prototype.createXhr = function() {
-  return this.xmlHttpFactory_ ? this.xmlHttpFactory_.createInstance() : goog.net.XmlHttp()
-};
-goog.net.XhrIo.prototype.timeout_ = function() {
-  "undefined" != typeof goog && this.xhr_ && (this.lastError_ = "Timed out after " + this.timeoutInterval_ + "ms, aborting", this.lastErrorCode_ = goog.net.ErrorCode.TIMEOUT, this.logger_.fine(this.formatMsg_(this.lastError_)), this.dispatchEvent(goog.net.EventType.TIMEOUT), this.abort(goog.net.ErrorCode.TIMEOUT))
-};
-goog.net.XhrIo.prototype.error_ = function(a, b) {
-  this.active_ = !1;
-  this.xhr_ && (this.inAbort_ = !0, this.xhr_.abort(), this.inAbort_ = !1);
-  this.lastError_ = b;
-  this.lastErrorCode_ = a;
-  this.dispatchErrors_();
-  this.cleanUpXhr_()
-};
-goog.net.XhrIo.prototype.dispatchErrors_ = function() {
-  this.errorDispatched_ || (this.errorDispatched_ = !0, this.dispatchEvent(goog.net.EventType.COMPLETE), this.dispatchEvent(goog.net.EventType.ERROR))
-};
-goog.net.XhrIo.prototype.abort = function(a) {
-  this.xhr_ && this.active_ && (this.logger_.fine(this.formatMsg_("Aborting")), this.active_ = !1, this.inAbort_ = !0, this.xhr_.abort(), this.inAbort_ = !1, this.lastErrorCode_ = a || goog.net.ErrorCode.ABORT, this.dispatchEvent(goog.net.EventType.COMPLETE), this.dispatchEvent(goog.net.EventType.ABORT), this.cleanUpXhr_())
-};
-goog.net.XhrIo.prototype.disposeInternal = function() {
-  this.xhr_ && (this.active_ && (this.active_ = !1, this.inAbort_ = !0, this.xhr_.abort(), this.inAbort_ = !1), this.cleanUpXhr_(!0));
-  goog.net.XhrIo.superClass_.disposeInternal.call(this)
-};
-goog.net.XhrIo.prototype.onReadyStateChange_ = function() {
-  if(!this.inOpen_ && !this.inSend_ && !this.inAbort_) {
-    this.onReadyStateChangeEntryPoint_()
-  }else {
-    this.onReadyStateChangeHelper_()
-  }
-};
-goog.net.XhrIo.prototype.onReadyStateChangeEntryPoint_ = function() {
-  this.onReadyStateChangeHelper_()
-};
-goog.net.XhrIo.prototype.onReadyStateChangeHelper_ = function() {
-  if(this.active_ && "undefined" != typeof goog) {
-    if(this.xhrOptions_[goog.net.XmlHttp.OptionType.LOCAL_REQUEST_ERROR] && this.getReadyState() == goog.net.XmlHttp.ReadyState.COMPLETE && 2 == this.getStatus()) {
-      this.logger_.fine(this.formatMsg_("Local request error detected and ignored"))
+    if(b instanceof goog.events.Event) {
+      b.target = b.target || a
     }else {
-      if(this.inSend_ && this.getReadyState() == goog.net.XmlHttp.ReadyState.COMPLETE) {
-        goog.Timer.defaultTimerObject.setTimeout(goog.bind(this.onReadyStateChange_, this), 0)
-      }else {
-        if(this.dispatchEvent(goog.net.EventType.READY_STATE_CHANGE), this.isComplete()) {
-          this.logger_.fine(this.formatMsg_("Request complete"));
-          this.active_ = !1;
-          try {
-            this.isSuccess() ? (this.dispatchEvent(goog.net.EventType.COMPLETE), this.dispatchEvent(goog.net.EventType.SUCCESS)) : (this.lastErrorCode_ = goog.net.ErrorCode.HTTP_ERROR, this.lastError_ = this.getStatusText() + " [" + this.getStatus() + "]", this.dispatchErrors_())
-          }finally {
-            this.cleanUpXhr_()
+      var e = b, b = new goog.events.Event(c, a);
+      goog.object.extend(b, e)
+    }
+  }
+  var e = 1, f, d = d[c], c = !0 in d, g;
+  if(c) {
+    f = [];
+    for(g = a;g;g = g.getParentEventTarget()) {
+      f.push(g)
+    }
+    g = d[!0];
+    g.remaining_ = g.count_;
+    for(var h = f.length - 1;!b.propagationStopped_ && 0 <= h && g.remaining_;h--) {
+      b.currentTarget = f[h], e &= goog.events.fireListeners_(g, f[h], b.type, !0, b) && !1 != b.returnValue_
+    }
+  }
+  if(!1 in d) {
+    if(g = d[!1], g.remaining_ = g.count_, c) {
+      for(h = 0;!b.propagationStopped_ && h < f.length && g.remaining_;h++) {
+        b.currentTarget = f[h], e &= goog.events.fireListeners_(g, f[h], b.type, !1, b) && !1 != b.returnValue_
+      }
+    }else {
+      for(d = a;!b.propagationStopped_ && d && g.remaining_;d = d.getParentEventTarget()) {
+        b.currentTarget = d, e &= goog.events.fireListeners_(g, d, b.type, !1, b) && !1 != b.returnValue_
+      }
+    }
+  }
+  return Boolean(e)
+};
+goog.events.protectBrowserEventEntryPoint = function(a) {
+  goog.events.handleBrowserEvent_ = a.protectEntryPoint(goog.events.handleBrowserEvent_)
+};
+goog.events.handleBrowserEvent_ = function(a, b) {
+  if(!goog.events.listeners_[a]) {
+    return!0
+  }
+  var c = goog.events.listeners_[a], d = c.type, e = goog.events.listenerTree_;
+  if(!(d in e)) {
+    return!0
+  }
+  var e = e[d], f, g;
+  if(!goog.events.BrowserFeature.HAS_W3C_EVENT_SUPPORT) {
+    f = b || goog.getObjectByName("window.event");
+    var h = !0 in e, i = !1 in e;
+    if(h) {
+      if(goog.events.isMarkedIeEvent_(f)) {
+        return!0
+      }
+      goog.events.markIeEvent_(f)
+    }
+    var j = new goog.events.BrowserEvent;
+    j.init(f, this);
+    f = !0;
+    try {
+      if(h) {
+        for(var k = [], l = j.currentTarget;l;l = l.parentNode) {
+          k.push(l)
+        }
+        g = e[!0];
+        g.remaining_ = g.count_;
+        for(var m = k.length - 1;!j.propagationStopped_ && 0 <= m && g.remaining_;m--) {
+          j.currentTarget = k[m], f &= goog.events.fireListeners_(g, k[m], d, !0, j)
+        }
+        if(i) {
+          g = e[!1];
+          g.remaining_ = g.count_;
+          for(m = 0;!j.propagationStopped_ && m < k.length && g.remaining_;m++) {
+            j.currentTarget = k[m], f &= goog.events.fireListeners_(g, k[m], d, !1, j)
           }
         }
+      }else {
+        f = goog.events.fireListener(c, j)
       }
+    }finally {
+      k && (k.length = 0)
     }
+    return f
   }
+  d = new goog.events.BrowserEvent(b, this);
+  return f = goog.events.fireListener(c, d)
 };
-goog.net.XhrIo.prototype.cleanUpXhr_ = function(a) {
-  if(this.xhr_) {
-    var b = this.xhr_, c = this.xhrOptions_[goog.net.XmlHttp.OptionType.USE_NULL_FUNCTION] ? goog.nullFunction : null;
-    this.xhrOptions_ = this.xhr_ = null;
-    this.timeoutId_ && (goog.Timer.defaultTimerObject.clearTimeout(this.timeoutId_), this.timeoutId_ = null);
-    a || this.dispatchEvent(goog.net.EventType.READY);
+goog.events.markIeEvent_ = function(a) {
+  var b = !1;
+  if(0 == a.keyCode) {
     try {
-      b.onreadystatechange = c
-    }catch(d) {
-      this.logger_.severe("Problem encountered resetting onreadystatechange: " + d.message)
+      a.keyCode = -1;
+      return
+    }catch(c) {
+      b = !0
     }
   }
-};
-goog.net.XhrIo.prototype.isActive = function() {
-  return!!this.xhr_
-};
-goog.net.XhrIo.prototype.isComplete = function() {
-  return this.getReadyState() == goog.net.XmlHttp.ReadyState.COMPLETE
-};
-goog.net.XhrIo.prototype.isSuccess = function() {
-  var a = this.getStatus();
-  return goog.net.HttpStatus.isSuccess(a) || 0 === a && !this.isLastUriEffectiveSchemeHttp_()
-};
-goog.net.XhrIo.prototype.isLastUriEffectiveSchemeHttp_ = function() {
-  var a = goog.uri.utils.getEffectiveScheme("" + this.lastUri_);
-  return goog.net.XhrIo.HTTP_SCHEME_PATTERN.test(a)
-};
-goog.net.XhrIo.prototype.getReadyState = function() {
-  return this.xhr_ ? this.xhr_.readyState : goog.net.XmlHttp.ReadyState.UNINITIALIZED
-};
-goog.net.XhrIo.prototype.getStatus = function() {
-  try {
-    return this.getReadyState() > goog.net.XmlHttp.ReadyState.LOADED ? this.xhr_.status : -1
-  }catch(a) {
-    return this.logger_.warning("Can not get status: " + a.message), -1
+  if(b || void 0 == a.returnValue) {
+    a.returnValue = !0
   }
 };
-goog.net.XhrIo.prototype.getStatusText = function() {
-  try {
-    return this.getReadyState() > goog.net.XmlHttp.ReadyState.LOADED ? this.xhr_.statusText : ""
-  }catch(a) {
-    return this.logger_.fine("Can not get status: " + a.message), ""
-  }
+goog.events.isMarkedIeEvent_ = function(a) {
+  return 0 > a.keyCode || void 0 != a.returnValue
 };
-goog.net.XhrIo.prototype.getLastUri = function() {
-  return"" + this.lastUri_
-};
-goog.net.XhrIo.prototype.getResponseText = function() {
-  try {
-    return this.xhr_ ? this.xhr_.responseText : ""
-  }catch(a) {
-    return this.logger_.fine("Can not get responseText: " + a.message), ""
-  }
-};
-goog.net.XhrIo.prototype.getResponseXml = function() {
-  try {
-    return this.xhr_ ? this.xhr_.responseXML : null
-  }catch(a) {
-    return this.logger_.fine("Can not get responseXML: " + a.message), null
-  }
-};
-goog.net.XhrIo.prototype.getResponseJson = function(a) {
-  if(this.xhr_) {
-    var b = this.xhr_.responseText;
-    a && 0 == b.indexOf(a) && (b = b.substring(a.length));
-    return goog.json.parse(b)
-  }
-};
-goog.net.XhrIo.prototype.getResponse = function() {
-  try {
-    if(!this.xhr_) {
-      return null
-    }
-    if("response" in this.xhr_) {
-      return this.xhr_.response
-    }
-    switch(this.responseType_) {
-      case goog.net.XhrIo.ResponseType.DEFAULT:
-      ;
-      case goog.net.XhrIo.ResponseType.TEXT:
-        return this.xhr_.responseText;
-      case goog.net.XhrIo.ResponseType.ARRAY_BUFFER:
-        if("mozResponseArrayBuffer" in this.xhr_) {
-          return this.xhr_.mozResponseArrayBuffer
-        }
-    }
-    this.logger_.severe("Response type " + this.responseType_ + " is not supported on this browser");
-    return null
-  }catch(a) {
-    return this.logger_.fine("Can not get response: " + a.message), null
-  }
-};
-goog.net.XhrIo.prototype.getResponseHeader = function(a) {
-  return this.xhr_ && this.isComplete() ? this.xhr_.getResponseHeader(a) : void 0
-};
-goog.net.XhrIo.prototype.getAllResponseHeaders = function() {
-  return this.xhr_ && this.isComplete() ? this.xhr_.getAllResponseHeaders() : ""
-};
-goog.net.XhrIo.prototype.getLastErrorCode = function() {
-  return this.lastErrorCode_
-};
-goog.net.XhrIo.prototype.getLastError = function() {
-  return goog.isString(this.lastError_) ? this.lastError_ : "" + this.lastError_
-};
-goog.net.XhrIo.prototype.formatMsg_ = function(a) {
-  return a + " [" + this.lastMethod_ + " " + this.lastUri_ + " " + this.getStatus() + "]"
+goog.events.uniqueIdCounter_ = 0;
+goog.events.getUniqueId = function(a) {
+  return a + "_" + goog.events.uniqueIdCounter_++
 };
 goog.debug.entryPointRegistry.register(function(a) {
-  goog.net.XhrIo.prototype.onReadyStateChangeEntryPoint_ = a(goog.net.XhrIo.prototype.onReadyStateChangeEntryPoint_)
+  goog.events.handleBrowserEvent_ = a(goog.events.handleBrowserEvent_)
 });
-torrent_client.client = {};
-torrent_client.client.core = {};
-torrent_client.client.core.dispatch = {};
-torrent_client.client.core.dispatch.reactions = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.core.dispatch.react_to = function() {
-  var a = null, b = function(b, c) {
-    return a.call(null, null, b, c)
-  }, c = function(a, b, c) {
-    a = cljs.core.ObjMap.fromObject(["\ufdd0'max-count", "\ufdd0'event-pred", "\ufdd0'reactor"], {"\ufdd0'max-count":a, "\ufdd0'event-pred":b, "\ufdd0'reactor":c});
-    cljs.core.swap_BANG_.call(null, torrent_client.client.core.dispatch.reactions, cljs.core.assoc, a, 0);
-    return a
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-torrent_client.client.core.dispatch.delete_reaction = function(a) {
-  return cljs.core.swap_BANG_.call(null, torrent_client.client.core.dispatch.reactions, cljs.core.dissoc, a)
+goog.events.EventTarget = function() {
+  goog.Disposable.call(this)
 };
-torrent_client.client.core.dispatch.fire = function() {
-  var a = null, b = function(b) {
-    return a.call(null, b, null)
-  }, c = function(a, b) {
-    var c = cljs.core.filter.call(null, function(b) {
-      var c = cljs.core.nth.call(null, b, 0, null), c = cljs.core.seq_QMARK_.call(null, c) ? cljs.core.apply.call(null, cljs.core.hash_map, c) : c, c = cljs.core.get.call(null, c, "\ufdd0'event-pred");
-      cljs.core.nth.call(null, b, 1, null);
-      return c.call(null, a)
-    }, cljs.core.deref.call(null, torrent_client.client.core.dispatch.reactions)), g = cljs.core.seq.call(null, c);
-    if(cljs.core.truth_(g)) {
-      c = cljs.core.first.call(null, g);
-      cljs.core.nth.call(null, c, 0, null);
-      cljs.core.nth.call(null, c, 1, null);
-      for(var h = g;;) {
-        var g = c, c = cljs.core.nth.call(null, g, 0, null), g = cljs.core.nth.call(null, g, 1, null), i = c, i = cljs.core.seq_QMARK_.call(null, i) ? cljs.core.apply.call(null, cljs.core.hash_map, i) : i, j = cljs.core.get.call(null, i, "\ufdd0'reactor"), k = cljs.core.get.call(null, i, "\ufdd0'max-count"), l = g + 1;
-        j.call(null, a, b);
-        cljs.core.truth_(function() {
-          var a = k;
-          return cljs.core.truth_(a) ? k <= l : a
-        }()) ? torrent_client.client.core.dispatch.delete_reaction.call(null, c) : cljs.core.swap_BANG_.call(null, torrent_client.client.core.dispatch.reactions, cljs.core.assoc, c, l);
-        c = cljs.core.next.call(null, h);
-        if(cljs.core.truth_(c)) {
-          g = c, c = cljs.core.first.call(null, g), h = g
-        }else {
-          return null
-        }
-      }
-    }else {
-      return null
-    }
-  }, a = function(a, e) {
-    switch(arguments.length) {
-      case 1:
-        return b.call(this, a);
-      case 2:
-        return c.call(this, a, e)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$2 = c;
-  return a
-}();
-torrent_client.client.torrents = {};
-torrent_client.client.torrents.torrents = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'processed-torrent"]), function(a, b) {
-  console.log("Adding to torrents atom", b);
-  cljs.core.swap_BANG_.call(null, torrent_client.client.torrents.torrents, cljs.core.assoc, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"), b);
-  return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'started-torrent", b)
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null);
-  cljs.core.nth.call(null, b, 1, null);
-  var d;
-  d = cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-written");
-  d = cljs.core.truth_(d) ? d : 0;
-  d += 1;
-  cljs.core.swap_BANG_.call(null, c, cljs.core.assoc, "\ufdd0'pieces-written", d);
-  return cljs.core._EQ_.call(null, d, torrent_client.client.torrents.pieces_length) ? torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", c) : null
-});
-/*
- Portions of this code are from MochiKit, received by
- The Closure Authors under the MIT license. All other code is Copyright
- 2005-2009 The Closure Authors. All Rights Reserved.
-*/
-goog.async = {};
-goog.async.Deferred = function(a, b) {
-  this.chain_ = [];
-  this.canceller_ = a;
-  this.defaultScope_ = b || null
+goog.inherits(goog.events.EventTarget, goog.Disposable);
+goog.events.EventTarget.prototype.customEvent_ = !0;
+goog.events.EventTarget.prototype.parentEventTarget_ = null;
+goog.events.EventTarget.prototype.getParentEventTarget = function() {
+  return this.parentEventTarget_
 };
-goog.async.Deferred.prototype.fired_ = !1;
-goog.async.Deferred.prototype.hadError_ = !1;
-goog.async.Deferred.prototype.paused_ = 0;
-goog.async.Deferred.prototype.silentlyCancelled_ = !1;
-goog.async.Deferred.prototype.chained_ = !1;
-goog.async.Deferred.prototype.branches_ = 0;
-goog.async.Deferred.prototype.cancel = function(a) {
-  if(this.hasFired()) {
-    this.result_ instanceof goog.async.Deferred && this.result_.cancel()
-  }else {
-    if(this.parent_) {
-      var b = this.parent_;
-      delete this.parent_;
-      a ? b.cancel(a) : b.branchCancel_()
-    }
-    this.canceller_ ? this.canceller_.call(this.defaultScope_, this) : this.silentlyCancelled_ = !0;
-    this.hasFired() || this.errback(new goog.async.Deferred.CancelledError(this))
-  }
+goog.events.EventTarget.prototype.setParentEventTarget = function(a) {
+  this.parentEventTarget_ = a
 };
-goog.async.Deferred.prototype.branchCancel_ = function() {
-  this.branches_--;
-  0 >= this.branches_ && this.cancel()
+goog.events.EventTarget.prototype.addEventListener = function(a, b, c, d) {
+  goog.events.listen(this, a, b, c, d)
 };
-goog.async.Deferred.prototype.pause_ = function() {
-  this.paused_++
+goog.events.EventTarget.prototype.removeEventListener = function(a, b, c, d) {
+  goog.events.unlisten(this, a, b, c, d)
 };
-goog.async.Deferred.prototype.unpause_ = function() {
-  this.paused_--;
-  0 == this.paused_ && this.hasFired() && this.fire_()
+goog.events.EventTarget.prototype.dispatchEvent = function(a) {
+  return goog.events.dispatchEvent(this, a)
 };
-goog.async.Deferred.prototype.continue_ = function(a, b) {
-  this.resback_(a, b);
-  this.unpause_()
-};
-goog.async.Deferred.prototype.resback_ = function(a, b) {
-  this.fired_ = !0;
-  this.result_ = b;
-  this.hadError_ = !a;
-  this.fire_()
-};
-goog.async.Deferred.prototype.check_ = function() {
-  if(this.hasFired()) {
-    if(!this.silentlyCancelled_) {
-      throw new goog.async.Deferred.AlreadyCalledError(this);
-    }
-    this.silentlyCancelled_ = !1
-  }
-};
-goog.async.Deferred.prototype.callback = function(a) {
-  this.check_();
-  this.assertNotDeferred_(a);
-  this.resback_(!0, a)
-};
-goog.async.Deferred.prototype.errback = function(a) {
-  this.check_();
-  this.assertNotDeferred_(a);
-  this.resback_(!1, a)
-};
-goog.async.Deferred.prototype.assertNotDeferred_ = function(a) {
-  goog.asserts.assert(!(a instanceof goog.async.Deferred), "Deferred instances can only be chained if they are the result of a callback")
-};
-goog.async.Deferred.prototype.addCallback = function(a, b) {
-  return this.addCallbacks(a, null, b)
-};
-goog.async.Deferred.prototype.addErrback = function(a, b) {
-  return this.addCallbacks(null, a, b)
-};
-goog.async.Deferred.prototype.addCallbacks = function(a, b, c) {
-  goog.asserts.assert(!this.chained_, "Chained Deferreds can not be re-used");
-  this.chain_.push([a, b, c]);
-  this.hasFired() && this.fire_();
-  return this
-};
-goog.async.Deferred.prototype.chainDeferred = function(a) {
-  this.addCallbacks(a.callback, a.errback, a);
-  return this
-};
-goog.async.Deferred.prototype.awaitDeferred = function(a) {
-  return this.addCallback(goog.bind(a.branch, a))
-};
-goog.async.Deferred.prototype.branch = function(a) {
-  var b = new goog.async.Deferred;
-  this.chainDeferred(b);
-  a && (b.parent_ = this, this.branches_++);
-  return b
-};
-goog.async.Deferred.prototype.addBoth = function(a, b) {
-  return this.addCallbacks(a, a, b)
-};
-goog.async.Deferred.prototype.hasFired = function() {
-  return this.fired_
-};
-goog.async.Deferred.prototype.isError = function(a) {
-  return a instanceof Error
-};
-goog.async.Deferred.prototype.hasErrback_ = function() {
-  return goog.array.some(this.chain_, function(a) {
-    return goog.isFunction(a[1])
-  })
-};
-goog.async.Deferred.prototype.fire_ = function() {
-  this.unhandledExceptionTimeoutId_ && (this.hasFired() && this.hasErrback_()) && (goog.global.clearTimeout(this.unhandledExceptionTimeoutId_), delete this.unhandledExceptionTimeoutId_);
-  this.parent_ && (this.parent_.branches_--, delete this.parent_);
-  for(var a = this.result_, b = !1, c = !1;this.chain_.length && 0 == this.paused_;) {
-    var d = this.chain_.shift(), e = d[0], f = d[1], d = d[2];
-    if(e = this.hadError_ ? f : e) {
-      try {
-        var g = e.call(d || this.defaultScope_, a);
-        goog.isDef(g) && (this.hadError_ = this.hadError_ && (g == a || this.isError(g)), this.result_ = a = g);
-        a instanceof goog.async.Deferred && (c = !0, this.pause_())
-      }catch(h) {
-        a = h, this.hadError_ = !0, this.hasErrback_() || (b = !0)
-      }
-    }
-  }
-  this.result_ = a;
-  c && this.paused_ && (a.addCallbacks(goog.bind(this.continue_, this, !0), goog.bind(this.continue_, this, !1)), a.chained_ = !0);
-  b && (this.unhandledExceptionTimeoutId_ = goog.global.setTimeout(function() {
-    throw new goog.async.Deferred.UnhandledError(a);
-  }, 0))
-};
-goog.async.Deferred.succeed = function(a) {
-  var b = new goog.async.Deferred;
-  b.callback(a);
-  return b
-};
-goog.async.Deferred.fail = function(a) {
-  var b = new goog.async.Deferred;
-  b.errback(a);
-  return b
-};
-goog.async.Deferred.cancelled = function() {
-  var a = new goog.async.Deferred;
-  a.cancel();
-  return a
-};
-goog.async.Deferred.when = function(a, b, c) {
-  return a instanceof goog.async.Deferred ? a.branch(!0).addCallback(b, c) : goog.async.Deferred.succeed(a).addCallback(b, c)
-};
-goog.async.Deferred.AlreadyCalledError = function(a) {
-  goog.debug.Error.call(this);
-  this.deferred = a
-};
-goog.inherits(goog.async.Deferred.AlreadyCalledError, goog.debug.Error);
-goog.async.Deferred.AlreadyCalledError.prototype.message = "Already called";
-goog.async.Deferred.CancelledError = function(a) {
-  goog.debug.Error.call(this);
-  this.deferred = a
-};
-goog.inherits(goog.async.Deferred.CancelledError, goog.debug.Error);
-goog.async.Deferred.CancelledError.prototype.message = "Deferred was cancelled";
-goog.async.Deferred.UnhandledError = function(a) {
-  goog.debug.Error.call(this);
-  this.cause = a;
-  this.message = "Unhandled Error in Deferred: " + (a.message || "[No message]")
-};
-goog.inherits(goog.async.Deferred.UnhandledError, goog.debug.Error);
-goog.db = {};
-goog.db.Error = function(a, b, c) {
-  b = "Error " + b + ": " + goog.db.Error.getMessage(a);
-  c && (b += ", " + c);
-  goog.debug.Error.call(this, b);
-  this.code = a
-};
-goog.inherits(goog.db.Error, goog.debug.Error);
-goog.db.Error.VersionChangeBlockedError = function() {
-  goog.debug.Error.call(this, "Version change blocked")
-};
-goog.inherits(goog.db.Error.VersionChangeBlockedError, goog.debug.Error);
-goog.db.Error.DatabaseErrorCode_ = {UNKNOWN_ERR:1, NON_TRANSIENT_ERR:2, NOT_FOUND_ERR:3, CONSTRAINT_ERR:4, DATA_ERR:5, NOT_ALLOWED_ERR:6, TRANSACTION_INACTIVE_ERR:7, ABORT_ERR:8, READ_ONLY_ERR:9, TRANSIENT_ERR:11, TIMEOUT_ERR:10, QUOTA_ERR:11, INVALID_ACCESS_ERR:12};
-goog.db.Error.ErrorCode = {UNKNOWN_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).UNKNOWN_ERR, NON_TRANSIENT_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).NON_TRANSIENT_ERR, NOT_FOUND_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).NOT_FOUND_ERR, CONSTRAINT_ERR:(goog.global.IDBDatabaseException || 
-goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).CONSTRAINT_ERR, DATA_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).DATA_ERR, NOT_ALLOWED_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).NOT_ALLOWED_ERR, TRANSACTION_INACTIVE_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).TRANSACTION_INACTIVE_ERR, 
-ABORT_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).ABORT_ERR, READ_ONLY_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).READ_ONLY_ERR, TIMEOUT_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || goog.db.Error.DatabaseErrorCode_).TIMEOUT_ERR, QUOTA_ERR:(goog.global.IDBDatabaseException || goog.global.webkitIDBDatabaseException || 
-goog.db.Error.DatabaseErrorCode_).QUOTA_ERR, INVALID_ACCESS_ERR:(goog.global.DOMException || goog.db.Error.DatabaseErrorCode_).INVALID_ACCESS_ERR};
-goog.db.Error.getMessage = function(a) {
-  switch(a) {
-    case goog.db.Error.ErrorCode.UNKNOWN_ERR:
-      return"Unknown error";
-    case goog.db.Error.ErrorCode.NON_TRANSIENT_ERR:
-      return"Invalid operation";
-    case goog.db.Error.ErrorCode.NOT_FOUND_ERR:
-      return"Required database object not found";
-    case goog.db.Error.ErrorCode.CONSTRAINT_ERR:
-      return"Constraint unsatisfied";
-    case goog.db.Error.ErrorCode.DATA_ERR:
-      return"Invalid data";
-    case goog.db.Error.ErrorCode.NOT_ALLOWED_ERR:
-      return"Operation disallowed";
-    case goog.db.Error.ErrorCode.TRANSACTION_INACTIVE_ERR:
-      return"Transaction not active";
-    case goog.db.Error.ErrorCode.ABORT_ERR:
-      return"Request aborted";
-    case goog.db.Error.ErrorCode.READ_ONLY_ERR:
-      return"Modifying operation not allowed in a read-only transaction";
-    case goog.db.Error.ErrorCode.TIMEOUT_ERR:
-      return"Transaction timed out";
-    case goog.db.Error.ErrorCode.QUOTA_ERR:
-      return"Database storage space quota exceeded";
-    case goog.db.Error.ErrorCode.INVALID_ACCESS_ERR:
-      return"Invalid operation";
-    default:
-      return"Unrecognized exception with code " + a
-  }
+goog.events.EventTarget.prototype.disposeInternal = function() {
+  goog.events.EventTarget.superClass_.disposeInternal.call(this);
+  goog.events.removeAll(this);
+  this.parentEventTarget_ = null
 };
 goog.db.Cursor = function() {
   goog.events.EventTarget.call(this)
@@ -15317,8 +14413,1945 @@ goog.crypt.utf8ByteArrayToString = function(a) {
   }
   return b.join("")
 };
-torrent_client.client.protocols = {};
-torrent_client.client.protocols.dht = {};
+var clojure = {string:{}};
+clojure.string.seq_reverse = function(a) {
+  return cljs.core.reduce.call(null, cljs.core.conj, cljs.core.List.EMPTY, a)
+};
+clojure.string.reverse = function(a) {
+  return a.split("").reverse().join("")
+};
+clojure.string.replace = function(a, b, c) {
+  if(cljs.core.string_QMARK_.call(null, b)) {
+    return a.replace(RegExp(goog.string.regExpEscape.call(null, b), "g"), c)
+  }
+  if(cljs.core.truth_(b.hasOwnProperty("source"))) {
+    return a.replace(RegExp(b.source, "g"), c)
+  }
+  throw[cljs.core.str("Invalid match arg: "), cljs.core.str(b)].join("");
+};
+clojure.string.replace_first = function(a, b, c) {
+  return a.replace(b, c)
+};
+clojure.string.join = function() {
+  var a = null, b = function(a) {
+    return cljs.core.apply.call(null, cljs.core.str, a)
+  }, c = function(a, b) {
+    return cljs.core.apply.call(null, cljs.core.str, cljs.core.interpose.call(null, a, b))
+  }, a = function(a, e) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 2:
+        return c.call(this, a, e)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$2 = c;
+  return a
+}();
+clojure.string.upper_case = function(a) {
+  return a.toUpperCase()
+};
+clojure.string.lower_case = function(a) {
+  return a.toLowerCase()
+};
+clojure.string.capitalize = function(a) {
+  return 2 > cljs.core.count.call(null, a) ? clojure.string.upper_case.call(null, a) : [cljs.core.str(clojure.string.upper_case.call(null, cljs.core.subs.call(null, a, 0, 1))), cljs.core.str(clojure.string.lower_case.call(null, cljs.core.subs.call(null, a, 1)))].join("")
+};
+clojure.string.split = function() {
+  var a = null, b = function(a, b) {
+    return cljs.core.vec.call(null, ("" + cljs.core.str(a)).split(b))
+  }, c = function(a, b, c) {
+    if(1 > c) {
+      return cljs.core.vec.call(null, ("" + cljs.core.str(a)).split(b))
+    }
+    for(var g = cljs.core.PersistentVector.fromArray([]);;) {
+      if(cljs.core._EQ_.call(null, c, 1)) {
+        return cljs.core.conj.call(null, g, a)
+      }
+      var h = cljs.core.re_find.call(null, b, a);
+      if(cljs.core.truth_(h)) {
+        var i = h, h = a.indexOf(i), i = a.substring(h + cljs.core.count.call(null, i)), c = c - 1, g = cljs.core.conj.call(null, g, a.substring(0, h)), a = i
+      }else {
+        return cljs.core.conj.call(null, g, a)
+      }
+    }
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+clojure.string.split_lines = function(a) {
+  return clojure.string.split.call(null, a, /\n|\r\n/)
+};
+clojure.string.trim = function(a) {
+  return goog.string.trim.call(null, a)
+};
+clojure.string.triml = function(a) {
+  return goog.string.trimLeft.call(null, a)
+};
+clojure.string.trimr = function(a) {
+  return goog.string.trimRight.call(null, a)
+};
+clojure.string.trim_newline = function(a) {
+  for(var b = a.length;;) {
+    if(0 === b) {
+      return""
+    }
+    var c = cljs.core.get.call(null, a, b - 1);
+    var d = cljs.core._EQ_.call(null, c, "\n"), c = d ? d : cljs.core._EQ_.call(null, c, "\r");
+    if(c) {
+      b -= 1
+    }else {
+      return a.substring(0, b)
+    }
+  }
+};
+clojure.string.blank_QMARK_ = function(a) {
+  var b = "" + cljs.core.str(a);
+  return cljs.core.truth_(function() {
+    var a = cljs.core.not.call(null, b);
+    return a ? a : (a = cljs.core._EQ_.call(null, "", b)) ? a : cljs.core.re_matches.call(null, /\s+/, b)
+  }()) ? !0 : !1
+};
+clojure.string.escape = function(a, b) {
+  for(var c = new goog.string.StringBuffer, d = a.length, e = 0;;) {
+    if(cljs.core._EQ_.call(null, d, e)) {
+      return c.toString()
+    }
+    var f = a.charAt(e), g = cljs.core.get.call(null, b, f);
+    cljs.core.truth_(g) ? c.append("" + cljs.core.str(g)) : c.append(f);
+    e += 1
+  }
+};
+jayq.core = {};
+jayq.core.crate_meta = function(a) {
+  return a.prototype._crateGroup
+};
+jayq.core.__GT_selector = function(a) {
+  if(cljs.core.string_QMARK_.call(null, a)) {
+    return a
+  }
+  if(cljs.core.fn_QMARK_.call(null, a)) {
+    var b = jayq.core.crate_meta.call(null, a);
+    return cljs.core.truth_(b) ? [cljs.core.str("[crateGroup="), cljs.core.str(b), cljs.core.str("]")].join("") : a
+  }
+  return cljs.core.keyword_QMARK_.call(null, a) ? cljs.core.name.call(null, a) : a
+};
+jayq.core.$ = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null);
+    return cljs.core.not.call(null, e) ? jQuery(jayq.core.__GT_selector.call(null, a)) : jQuery(jayq.core.__GT_selector.call(null, a), e)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jQuery.prototype.cljs$core$IReduce$ = !0;
+jQuery.prototype.cljs$core$IReduce$_reduce$arity$2 = function(a, b) {
+  return cljs.core.ci_reduce.call(null, a, b)
+};
+jQuery.prototype.cljs$core$IReduce$_reduce$arity$3 = function(a, b, c) {
+  return cljs.core.ci_reduce.call(null, a, b, c)
+};
+jQuery.prototype.cljs$core$ILookup$ = !0;
+jQuery.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
+  var c = a.slice(b, b + 1);
+  return cljs.core.truth_(c) ? c : null
+};
+jQuery.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b, c) {
+  return cljs.core._nth.call(null, a, b, c)
+};
+jQuery.prototype.cljs$core$ISequential$ = !0;
+jQuery.prototype.cljs$core$IIndexed$ = !0;
+jQuery.prototype.cljs$core$IIndexed$_nth$arity$2 = function(a, b) {
+  return b < cljs.core.count.call(null, a) ? a.slice(b, b + 1) : null
+};
+jQuery.prototype.cljs$core$IIndexed$_nth$arity$3 = function(a, b, c) {
+  return b < cljs.core.count.call(null, a) ? a.slice(b, b + 1) : void 0 === c ? null : c
+};
+jQuery.prototype.cljs$core$ICounted$ = !0;
+jQuery.prototype.cljs$core$ICounted$_count$arity$1 = function(a) {
+  return a.size()
+};
+jQuery.prototype.cljs$core$ISeq$ = !0;
+jQuery.prototype.cljs$core$ISeq$_first$arity$1 = function(a) {
+  return a.get(0)
+};
+jQuery.prototype.cljs$core$ISeq$_rest$arity$1 = function(a) {
+  return 1 < cljs.core.count.call(null, a) ? a.slice(1) : cljs.core.list.call(null)
+};
+jQuery.prototype.cljs$core$ISeqable$ = !0;
+jQuery.prototype.cljs$core$ISeqable$_seq$arity$1 = function(a) {
+  return cljs.core.truth_(a.get(0)) ? a : null
+};
+jQuery.prototype.call = function() {
+  var a = null;
+  return a = function(a, c, d) {
+    switch(arguments.length) {
+      case 2:
+        return cljs.core._lookup.call(null, this, c);
+      case 3:
+        return cljs.core._lookup.call(null, this, c, d)
+    }
+    throw"Invalid arity: " + arguments.length;
+  }
+}();
+jayq.core.anim = function(a, b, c) {
+  return a.animate(jayq.util.clj__GT_js.call(null, b), c)
+};
+jayq.core.text = function(a, b) {
+  return a.text(b)
+};
+jayq.core.css = function(a, b) {
+  return cljs.core.keyword_QMARK_.call(null, b) ? a.css(cljs.core.name.call(null, b)) : a.css(jayq.util.clj__GT_js.call(null, b))
+};
+jayq.core.attr = function() {
+  var a = function(a, b, e) {
+    e = cljs.core.nth.call(null, e, 0, null);
+    b = cljs.core.name.call(null, b);
+    return cljs.core.not.call(null, e) ? a.attr(b) : a.attr(b, e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.remove_attr = function(a, b) {
+  return a.removeAttr(cljs.core.name.call(null, b))
+};
+jayq.core.data = function() {
+  var a = function(a, b, e) {
+    e = cljs.core.nth.call(null, e, 0, null);
+    b = cljs.core.name.call(null, b);
+    return cljs.core.not.call(null, e) ? a.data(b) : a.data(b, e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.position = function(a) {
+  return cljs.core.js__GT_clj.call(null, a.position(), "\ufdd0'keywordize-keys", !0)
+};
+jayq.core.add_class = function(a, b) {
+  var c = cljs.core.name.call(null, b);
+  return a.addClass(c)
+};
+jayq.core.remove_class = function(a, b) {
+  var c = cljs.core.name.call(null, b);
+  return a.removeClass(c)
+};
+jayq.core.toggle_class = function(a, b) {
+  var c = cljs.core.name.call(null, b);
+  return a.toggleClass(c)
+};
+jayq.core.has_class = function(a, b) {
+  var c = cljs.core.name.call(null, b);
+  return a.hasClass(c)
+};
+jayq.core.after = function(a, b) {
+  return a.after(b)
+};
+jayq.core.before = function(a, b) {
+  return a.before(b)
+};
+jayq.core.append = function(a, b) {
+  return a.append(b)
+};
+jayq.core.prepend = function(a, b) {
+  return a.prepend(b)
+};
+jayq.core.remove = function(a) {
+  return a.remove()
+};
+jayq.core.hide = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.hide(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.show = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.show(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.toggle = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.toggle(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.fade_out = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.fadeOut(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.fade_in = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.fadeIn(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.slide_up = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.slideUp(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.slide_down = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
+    return a.slideDown(e, f)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.parent = function(a) {
+  return a.parent()
+};
+jayq.core.find = function(a, b) {
+  return a.find(cljs.core.name.call(null, b))
+};
+jayq.core.closest = function() {
+  var a = function(a, b, e) {
+    e = cljs.core.nth.call(null, e, 0, null);
+    return a.closest(b, e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.clone = function(a) {
+  return a.clone()
+};
+jayq.core.inner = function(a, b) {
+  return a.html(b)
+};
+jayq.core.empty = function(a) {
+  return a.empty()
+};
+jayq.core.val = function() {
+  var a = function(a, b) {
+    var e = cljs.core.nth.call(null, b, 0, null);
+    return cljs.core.truth_(e) ? a.val(e) : a.val()
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.serialize = function(a) {
+  return a.serialize()
+};
+jayq.core.queue = function(a, b) {
+  return a.queue(b)
+};
+jayq.core.dequeue = function(a) {
+  return jayq.core.$.call(null, a).dequeue()
+};
+jayq.core.document_ready = function(a) {
+  return jayq.core.$.call(null, document).ready(a)
+};
+jayq.core.xhr = function(a, b, c) {
+  var d = cljs.core.nth.call(null, a, 0, null), a = cljs.core.nth.call(null, a, 1, null), b = jayq.util.clj__GT_js.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'type", "\ufdd0'data", "\ufdd0'success"], {"\ufdd0'type":clojure.string.upper_case.call(null, cljs.core.name.call(null, d)), "\ufdd0'data":jayq.util.clj__GT_js.call(null, b), "\ufdd0'success":c}));
+  return jQuery.ajax(a, b)
+};
+jayq.core.ajax = function() {
+  var a = null, b = function(a) {
+    return jQuery.ajax(jayq.util.clj__GT_js.call(null, a))
+  }, c = function(a, b) {
+    return jQuery.ajax(a, jayq.util.clj__GT_js.call(null, b))
+  }, a = function(a, e) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 2:
+        return c.call(this, a, e)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$2 = c;
+  return a
+}();
+jayq.core.bind = function(a, b, c) {
+  return a.bind(cljs.core.name.call(null, b), c)
+};
+jayq.core.unbind = function() {
+  var a = function(a, b, e) {
+    e = cljs.core.nth.call(null, e, 0, null);
+    return a.unbind(cljs.core.name.call(null, b), e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.trigger = function(a, b) {
+  return a.trigger(cljs.core.name.call(null, b))
+};
+jayq.core.delegate = function(a, b, c, d) {
+  return a.delegate(jayq.core.__GT_selector.call(null, b), cljs.core.name.call(null, c), d)
+};
+jayq.core.__GT_event = function(a) {
+  if(cljs.core.keyword_QMARK_.call(null, a)) {
+    return cljs.core.name.call(null, a)
+  }
+  if(cljs.core.map_QMARK_.call(null, a)) {
+    return jayq.util.clj__GT_js.call(null, a)
+  }
+  if(cljs.core.coll_QMARK_.call(null, a)) {
+    return clojure.string.join.call(null, " ", cljs.core.map.call(null, cljs.core.name, a))
+  }
+  throw Error([cljs.core.str("Unknown event type: "), cljs.core.str(a)].join(""));
+};
+jayq.core.on = function() {
+  var a = function(a, b, e) {
+    var f = cljs.core.nth.call(null, e, 0, null), g = cljs.core.nth.call(null, e, 1, null), e = cljs.core.nth.call(null, e, 2, null);
+    return a.on(jayq.core.__GT_event.call(null, b), jayq.core.__GT_selector.call(null, f), g, e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.one = function() {
+  var a = function(a, b, e) {
+    var f = cljs.core.nth.call(null, e, 0, null), g = cljs.core.nth.call(null, e, 1, null), e = cljs.core.nth.call(null, e, 2, null);
+    return a.one(jayq.core.__GT_event.call(null, b), jayq.core.__GT_selector.call(null, f), g, e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.off = function() {
+  var a = function(a, b, e) {
+    var f = cljs.core.nth.call(null, e, 0, null), e = cljs.core.nth.call(null, e, 1, null);
+    return a.off(jayq.core.__GT_event.call(null, b), jayq.core.__GT_selector.call(null, f), e)
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+jayq.core.prevent = function(a) {
+  return a.preventDefault()
+};
+torrent_client.client.polyfills = {};
+torrent_client.client.polyfills.prefix = {};
+torrent_client.client.polyfills.prefix.prefix = function() {
+  var a = function(a, b) {
+    var e = cljs.core.PersistentVector.fromArray(["webkit", "moz", "ms"]), f = [cljs.core.str(clojure.string.upper_case.call(null, cljs.core.subs.call(null, a, 0, 1))), cljs.core.str(cljs.core.subs.call(null, a, 1))].join(""), e = cljs.core.into.call(null, cljs.core.ObjMap.fromObject([], {}), cljs.core.map.call(null, cljs.core.juxt.call(null, cljs.core.identity, function(a) {
+      return[cljs.core.str(a), cljs.core.str(f)].join("")
+    }), e)), e = cljs.core.assoc.call(null, e, "", a), e = cljs.core.vals.call(null, cljs.core.merge.call(null, e, b)), e = cljs.core.map.call(null, function(a) {
+      return window[a]
+    }, e);
+    return cljs.core.some.call(null, function(a) {
+      return cljs.core.not.call(null, null == a) ? a : null
+    }, e)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+torrent_client.client.polyfills.prefix.indexedDB = torrent_client.client.polyfills.prefix.prefix.call(null, "indexedDB");
+torrent_client.client.polyfills.prefix.RTCPeerConnection = torrent_client.client.polyfills.prefix.prefix.call(null, "RTCPeerConnection");
+torrent_client.client.core = {};
+torrent_client.client.core.dispatch = {};
+torrent_client.client.core.dispatch.reactions = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.core.dispatch.react_to = function() {
+  var a = null, b = function(b, c) {
+    return a.call(null, null, b, c)
+  }, c = function(a, b, c) {
+    a = cljs.core.ObjMap.fromObject(["\ufdd0'max-count", "\ufdd0'event-pred", "\ufdd0'reactor"], {"\ufdd0'max-count":a, "\ufdd0'event-pred":b, "\ufdd0'reactor":c});
+    cljs.core.swap_BANG_.call(null, torrent_client.client.core.dispatch.reactions, cljs.core.assoc, a, 0);
+    return a
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+torrent_client.client.core.dispatch.delete_reaction = function(a) {
+  return cljs.core.swap_BANG_.call(null, torrent_client.client.core.dispatch.reactions, cljs.core.dissoc, a)
+};
+torrent_client.client.core.dispatch.fire = function() {
+  var a = null, b = function(b) {
+    return a.call(null, b, null)
+  }, c = function(a, b) {
+    var c = cljs.core.filter.call(null, function(b) {
+      var c = cljs.core.nth.call(null, b, 0, null), c = cljs.core.seq_QMARK_.call(null, c) ? cljs.core.apply.call(null, cljs.core.hash_map, c) : c, c = cljs.core.get.call(null, c, "\ufdd0'event-pred");
+      cljs.core.nth.call(null, b, 1, null);
+      return c.call(null, a)
+    }, cljs.core.deref.call(null, torrent_client.client.core.dispatch.reactions)), g = cljs.core.seq.call(null, c);
+    if(cljs.core.truth_(g)) {
+      c = cljs.core.first.call(null, g);
+      cljs.core.nth.call(null, c, 0, null);
+      cljs.core.nth.call(null, c, 1, null);
+      for(var h = g;;) {
+        var g = c, c = cljs.core.nth.call(null, g, 0, null), g = cljs.core.nth.call(null, g, 1, null), i = c, i = cljs.core.seq_QMARK_.call(null, i) ? cljs.core.apply.call(null, cljs.core.hash_map, i) : i, j = cljs.core.get.call(null, i, "\ufdd0'reactor"), k = cljs.core.get.call(null, i, "\ufdd0'max-count"), l = g + 1;
+        j.call(null, a, b);
+        cljs.core.truth_(function() {
+          var a = k;
+          return cljs.core.truth_(a) ? k <= l : a
+        }()) ? torrent_client.client.core.dispatch.delete_reaction.call(null, c) : cljs.core.swap_BANG_.call(null, torrent_client.client.core.dispatch.reactions, cljs.core.assoc, c, l);
+        c = cljs.core.next.call(null, h);
+        if(cljs.core.truth_(c)) {
+          g = c, c = cljs.core.first.call(null, g), h = g
+        }else {
+          return null
+        }
+      }
+    }else {
+      return null
+    }
+  }, a = function(a, e) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 2:
+        return c.call(this, a, e)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$2 = c;
+  return a
+}();
+torrent_client.client.core.byte_array = {};
+void 0;
+torrent_client.client.core.byte_array.SubArray = {};
+torrent_client.client.core.byte_array.subarray = function() {
+  var a = null, b = function(a, b) {
+    var c;
+    if(a ? a.torrent_client$client$core$byte_array$SubArray$subarray$arity$2 : a) {
+      c = a.torrent_client$client$core$byte_array$SubArray$subarray$arity$2(a, b)
+    }else {
+      c = torrent_client.client.core.byte_array.subarray[goog.typeOf.call(null, a)];
+      if(!c && (c = torrent_client.client.core.byte_array.subarray._, !c)) {
+        throw cljs.core.missing_protocol.call(null, "SubArray.subarray", a);
+      }
+      c = c.call(null, a, b)
+    }
+    return c
+  }, c = function(a, b, c) {
+    if(a ? a.torrent_client$client$core$byte_array$SubArray$subarray$arity$3 : a) {
+      a = a.torrent_client$client$core$byte_array$SubArray$subarray$arity$3(a, b, c)
+    }else {
+      var g;
+      g = torrent_client.client.core.byte_array.subarray[goog.typeOf.call(null, a)];
+      if(!g && (g = torrent_client.client.core.byte_array.subarray._, !g)) {
+        throw cljs.core.missing_protocol.call(null, "SubArray.subarray", a);
+      }
+      a = g.call(null, a, b, c)
+    }
+    return a
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+void 0;
+Uint8Array.prototype.torrent_client$client$core$byte_array$SubArray$ = !0;
+Uint8Array.prototype.torrent_client$client$core$byte_array$SubArray$subarray$arity$2 = function(a, b) {
+  return a.subarray(b)
+};
+Uint8Array.prototype.torrent_client$client$core$byte_array$SubArray$subarray$arity$3 = function(a, b, c) {
+  return a.subarray(b, c)
+};
+Uint8Array.prototype.cljs$core$IReduce$ = !0;
+Uint8Array.prototype.cljs$core$IReduce$_reduce$arity$2 = function(a, b) {
+  return cljs.core.ci_reduce.call(null, a, b)
+};
+Uint8Array.prototype.cljs$core$IReduce$_reduce$arity$3 = function(a, b, c) {
+  return cljs.core.ci_reduce.call(null, a, b, c)
+};
+Uint8Array.prototype.cljs$core$ILookup$ = !0;
+Uint8Array.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
+  return a[b]
+};
+Uint8Array.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b, c) {
+  return cljs.core._nth.call(null, a, b, c)
+};
+Uint8Array.prototype.cljs$core$IIndexed$ = !0;
+Uint8Array.prototype.cljs$core$IIndexed$_nth$arity$2 = function(a, b) {
+  return b < a.length ? a[b] : null
+};
+Uint8Array.prototype.cljs$core$IIndexed$_nth$arity$3 = function(a, b, c) {
+  return b < a.length ? a[b] : c
+};
+Uint8Array.prototype.cljs$core$ICounted$ = !0;
+Uint8Array.prototype.cljs$core$ICounted$_count$arity$1 = function(a) {
+  return a.length
+};
+Uint8Array.prototype.cljs$core$ISeqable$ = !0;
+Uint8Array.prototype.cljs$core$ISeqable$_seq$arity$1 = function(a) {
+  return cljs.core.array_seq.call(null, a, 0)
+};
+Uint8Array.prototype.toString = function() {
+  return goog.crypt.byteArrayToString.call(null, this)
+};
+torrent_client.client.core.byte_array.uint8_array = function() {
+  var a = null, b = function(a) {
+    return new Uint8Array(a)
+  }, c = function(a, b) {
+    return new Uint8Array(a, b)
+  }, d = function(a, b, c) {
+    return new Uint8Array(a, b, c)
+  }, a = function(a, f, g) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 2:
+        return c.call(this, a, f);
+      case 3:
+        return d.call(this, a, f, g)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$2 = c;
+  a.cljs$lang$arity$3 = d;
+  return a
+}();
+torrent_client.client.core.byte_array.subarray = function() {
+  var a = null, a = function(a, c, d) {
+    switch(arguments.length) {
+      case 2:
+        return a.subarray(c);
+      case 3:
+        return a.subarray(c, d)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = function(a, c) {
+    return a.subarray(c)
+  };
+  a.cljs$lang$arity$3 = function(a, c, d) {
+    return a.subarray(c, d)
+  };
+  return a
+}();
+torrent_client.client.core.byte_array.uint8_array_QMARK_ = function(a) {
+  return cljs.core.instance_QMARK_.call(null, Uint8Array, a)
+};
+torrent_client.client.core.reader = {};
+void 0;
+torrent_client.client.core.reader.PushbackReader = {};
+torrent_client.client.core.reader.read = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$core$reader$PushbackReader$read$arity$2 : a) {
+    c = a.torrent_client$client$core$reader$PushbackReader$read$arity$2(a, b)
+  }else {
+    c = torrent_client.client.core.reader.read[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.core.reader.read._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "PushbackReader.read", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+void 0;
+torrent_client.client.core.reader.ArrayPushbackReader = function(a, b) {
+  this.array = a;
+  this.index_atom = b
+};
+torrent_client.client.core.reader.ArrayPushbackReader.cljs$lang$type = !0;
+torrent_client.client.core.reader.ArrayPushbackReader.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.core.reader.ArrayPushbackReader")
+};
+torrent_client.client.core.reader.ArrayPushbackReader.prototype.torrent_client$client$core$reader$PushbackReader$ = !0;
+torrent_client.client.core.reader.ArrayPushbackReader.prototype.torrent_client$client$core$reader$PushbackReader$read$arity$2 = function(a, b) {
+  var c = cljs.core.deref.call(null, this.index_atom), d;
+  d = cljs.core.truth_(b) ? b : 1;
+  c = torrent_client.client.core.byte_array.subarray.call(null, this.array, c, c + d);
+  cljs.core.swap_BANG_.call(null, this.index_atom, cljs.core._PLUS_, d);
+  return cljs.core._EQ_.call(null, d, 1) ? c[0] : c
+};
+torrent_client.client.core.reader.ArrayPushbackReader;
+torrent_client.client.core.reader.push_back_reader = function(a) {
+  return new torrent_client.client.core.reader.ArrayPushbackReader(a, cljs.core.atom.call(null, 0))
+};
+torrent_client.client.core.bencode = {};
+torrent_client.client.core.bencode.uint8_array = function() {
+  var a = null, b = function(a) {
+    return new Uint8Array(a)
+  }, c = function(a, b) {
+    return new Uint8Array(a, b)
+  }, d = function(a, b, c) {
+    return new Uint8Array(a, b, c)
+  }, a = function(a, f, g) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 2:
+        return c.call(this, a, f);
+      case 3:
+        return d.call(this, a, f, g)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$2 = c;
+  a.cljs$lang$arity$3 = d;
+  return a
+}();
+torrent_client.client.core.bencode.char$ = function(a) {
+  return cljs.core.truth_(goog.isNumber.call(null, a)) ? String.fromCharCode(a) : cljs.core.vector_QMARK_.call(null, a) ? String.fromCharCode.apply(null, jayq.util.clj__GT_js.call(null, a)) : String.fromCharCode.apply(null, a)
+};
+torrent_client.client.core.bencode.int$ = function(a) {
+  return parseInt(a)
+};
+torrent_client.client.core.bencode.decode = function() {
+  var a = function(a, b) {
+    var e = null == b ? torrent_client.client.core.reader.read.call(null, a) : cljs.core.first.call(null, b);
+    var f = 48 <= e;
+    return(f ? 57 >= e : f) ? torrent_client.client.core.bencode.decode_string.call(null, a, e) : cljs.core._EQ_.call(null, e, 105) ? torrent_client.client.core.bencode.decode_number.call(null, a, "e") : cljs.core._EQ_.call(null, e, 108) ? torrent_client.client.core.bencode.decode_list.call(null, a) : cljs.core._EQ_.call(null, e, 100) ? torrent_client.client.core.bencode.decode_map.call(null, a) : null
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+torrent_client.client.core.bencode.decode_number = function() {
+  var a = function(a, b, e) {
+    for(var f = null == e ? torrent_client.client.core.reader.read.call(null, a) : cljs.core.first.call(null, e), e = "";;) {
+      var g = torrent_client.client.core.bencode.char$.call(null, f);
+      if(cljs.core._EQ_.call(null, g, b)) {
+        return torrent_client.client.core.bencode.int$.call(null, e)
+      }
+      f = torrent_client.client.core.reader.read.call(null, a);
+      e = [cljs.core.str(e), cljs.core.str(g)].join("")
+    }
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+torrent_client.client.core.bencode.decode_string = function(a, b) {
+  var c = torrent_client.client.core.bencode.decode_number.call(null, a, ":", b);
+  return torrent_client.client.core.bencode.char$.call(null, torrent_client.client.core.reader.read.call(null, a, c))
+};
+torrent_client.client.core.bencode.decode_list = function(a) {
+  for(var b = cljs.core.PersistentVector.fromArray([]);;) {
+    var c = torrent_client.client.core.reader.read.call(null, a);
+    if(cljs.core._EQ_.call(null, c, 101)) {
+      return b
+    }
+    b = cljs.core.conj.call(null, b, torrent_client.client.core.bencode.decode.call(null, a, c))
+  }
+};
+torrent_client.client.core.bencode.decode_map = function(a) {
+  a = torrent_client.client.core.bencode.decode_list.call(null, a);
+  return cljs.core.with_meta.call(null, cljs.core.apply.call(null, cljs.core.hash_map, a), cljs.core.ObjMap.fromObject(["\ufdd0'order"], {"\ufdd0'order":cljs.core.map.call(null, cljs.core.first, cljs.core.partition.call(null, 2, a))}))
+};
+void 0;
+torrent_client.client.core.bencode.ArrayOutputStream = {};
+torrent_client.client.core.bencode.write = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$core$bencode$ArrayOutputStream$write$arity$2 : a) {
+    c = a.torrent_client$client$core$bencode$ArrayOutputStream$write$arity$2(a, b)
+  }else {
+    c = torrent_client.client.core.bencode.write[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.core.bencode.write._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "ArrayOutputStream.write", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+void 0;
+torrent_client.client.core.bencode.ByteArrayOutputStream = function(a) {
+  this.array = a
+};
+torrent_client.client.core.bencode.ByteArrayOutputStream.cljs$lang$type = !0;
+torrent_client.client.core.bencode.ByteArrayOutputStream.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.core.bencode.ByteArrayOutputStream")
+};
+torrent_client.client.core.bencode.ByteArrayOutputStream.prototype.torrent_client$client$core$bencode$ArrayOutputStream$ = !0;
+torrent_client.client.core.bencode.ByteArrayOutputStream.prototype.torrent_client$client$core$bencode$ArrayOutputStream$write$arity$2 = function(a, b) {
+  return cljs.core.number_QMARK_.call(null, b) ? this.array.push(b) : this.array.push.apply(this.array, b)
+};
+torrent_client.client.core.bencode.ByteArrayOutputStream;
+torrent_client.client.core.bencode.byte_array_output_stream = function() {
+  return new torrent_client.client.core.bencode.ByteArrayOutputStream([])
+};
+torrent_client.client.core.bencode.encode = function(a) {
+  var b = torrent_client.client.core.bencode.byte_array_output_stream.call(null);
+  torrent_client.client.core.bencode.encode_object.call(null, a, b);
+  return b.array
+};
+torrent_client.client.core.bencode.encode_object = function(a, b) {
+  return cljs.core.string_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_string.call(null, a, b) : cljs.core.number_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_number.call(null, a, b) : cljs.core.vector_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_list.call(null, a, b) : cljs.core.map_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_dictionary.call(null, a, b) : null
+};
+torrent_client.client.core.bencode.encode_string = function(a, b) {
+  var c = goog.crypt.stringToByteArray.call(null, a), d = goog.crypt.stringToByteArray.call(null, [cljs.core.str(cljs.core.count.call(null, c)), cljs.core.str(":")].join(""));
+  torrent_client.client.core.bencode.write.call(null, b, d, 0, cljs.core.count.call(null, d));
+  return torrent_client.client.core.bencode.write.call(null, b, c, 0, cljs.core.count.call(null, c))
+};
+torrent_client.client.core.bencode.encode_number = function(a, b) {
+  var c = [cljs.core.str("i"), cljs.core.str(a), cljs.core.str("e")].join(""), c = goog.crypt.stringToByteArray.call(null, c);
+  return torrent_client.client.core.bencode.write.call(null, b, c, 0, cljs.core.count.call(null, c))
+};
+torrent_client.client.core.bencode.encode_list = function(a, b) {
+  torrent_client.client.core.bencode.write.call(null, b, 108);
+  var c = cljs.core.seq.call(null, a);
+  if(cljs.core.truth_(c)) {
+    for(var d = cljs.core.first.call(null, c);;) {
+      if(torrent_client.client.core.bencode.encode_object.call(null, d, b), d = cljs.core.next.call(null, c), cljs.core.truth_(d)) {
+        c = d, d = cljs.core.first.call(null, c)
+      }else {
+        break
+      }
+    }
+  }
+  return torrent_client.client.core.bencode.write.call(null, b, 101)
+};
+torrent_client.client.core.bencode.encode_dictionary = function(a, b) {
+  torrent_client.client.core.bencode.write.call(null, b, 100);
+  var c = cljs.core.seq.call(null, null == cljs.core.meta.call(null, a) ? cljs.core.keys.call(null, a) : "\ufdd0'order".call(null, cljs.core.meta.call(null, a)));
+  if(cljs.core.truth_(c)) {
+    for(var d = cljs.core.first.call(null, c);;) {
+      if(torrent_client.client.core.bencode.encode_object.call(null, d, b), torrent_client.client.core.bencode.encode_object.call(null, a.call(null, d), b), d = cljs.core.next.call(null, c), cljs.core.truth_(d)) {
+        c = d, d = cljs.core.first.call(null, c)
+      }else {
+        break
+      }
+    }
+  }
+  return torrent_client.client.core.bencode.write.call(null, b, 101)
+};
+goog.crypt.Hash = function() {
+};
+goog.crypt.Sha1 = function() {
+  goog.crypt.Hash.call(this);
+  this.chain_ = [];
+  this.buf_ = [];
+  this.W_ = [];
+  this.pad_ = [];
+  this.pad_[0] = 128;
+  for(var a = 1;64 > a;++a) {
+    this.pad_[a] = 0
+  }
+  this.reset()
+};
+goog.inherits(goog.crypt.Sha1, goog.crypt.Hash);
+goog.crypt.Sha1.prototype.reset = function() {
+  this.chain_[0] = 1732584193;
+  this.chain_[1] = 4023233417;
+  this.chain_[2] = 2562383102;
+  this.chain_[3] = 271733878;
+  this.chain_[4] = 3285377520;
+  this.total_ = this.inbuf_ = 0
+};
+goog.crypt.Sha1.prototype.compress_ = function(a, b) {
+  b || (b = 0);
+  for(var c = this.W_, d = b;d < b + 64;d += 4) {
+    c[d / 4] = a[d] << 24 | a[d + 1] << 16 | a[d + 2] << 8 | a[d + 3]
+  }
+  for(d = 16;80 > d;d++) {
+    var e = c[d - 3] ^ c[d - 8] ^ c[d - 14] ^ c[d - 16];
+    c[d] = (e << 1 | e >>> 31) & 4294967295
+  }
+  for(var f = this.chain_[0], g = this.chain_[1], h = this.chain_[2], i = this.chain_[3], j = this.chain_[4], k, d = 0;80 > d;d++) {
+    40 > d ? 20 > d ? (e = i ^ g & (h ^ i), k = 1518500249) : (e = g ^ h ^ i, k = 1859775393) : 60 > d ? (e = g & h | i & (g | h), k = 2400959708) : (e = g ^ h ^ i, k = 3395469782), e = (f << 5 | f >>> 27) + e + j + k + c[d] & 4294967295, j = i, i = h, h = (g << 30 | g >>> 2) & 4294967295, g = f, f = e
+  }
+  this.chain_[0] = this.chain_[0] + f & 4294967295;
+  this.chain_[1] = this.chain_[1] + g & 4294967295;
+  this.chain_[2] = this.chain_[2] + h & 4294967295;
+  this.chain_[3] = this.chain_[3] + i & 4294967295;
+  this.chain_[4] = this.chain_[4] + j & 4294967295
+};
+goog.crypt.Sha1.prototype.update = function(a, b) {
+  goog.isDef(b) || (b = a.length);
+  var c = this.buf_, d = this.inbuf_, e = 0;
+  if(goog.isString(a)) {
+    for(;e < b;) {
+      c[d++] = a.charCodeAt(e++), 64 == d && (this.compress_(c), d = 0)
+    }
+  }else {
+    for(;e < b;) {
+      c[d++] = a[e++], 64 == d && (this.compress_(c), d = 0)
+    }
+  }
+  this.inbuf_ = d;
+  this.total_ += b
+};
+goog.crypt.Sha1.prototype.digest = function() {
+  var a = [], b = 8 * this.total_;
+  56 > this.inbuf_ ? this.update(this.pad_, 56 - this.inbuf_) : this.update(this.pad_, 64 - (this.inbuf_ - 56));
+  for(var c = 63;56 <= c;c--) {
+    this.buf_[c] = b & 255, b /= 256
+  }
+  this.compress_(this.buf_);
+  for(c = b = 0;5 > c;c++) {
+    for(var d = 24;0 <= d;d -= 8) {
+      a[b++] = this.chain_[c] >> d & 255
+    }
+  }
+  return a
+};
+torrent_client.client.core.crypt = {};
+torrent_client.client.core.crypt.sha1 = function(a) {
+  var b = new goog.crypt.Sha1;
+  b.update(a);
+  return b.digest()
+};
+torrent_client.client.core.crypt.sizes = cljs.core.ObjMap.fromObject("\ufdd0'byte \ufdd0'char \ufdd0'short \ufdd0'int \ufdd0'long \ufdd0'float \ufdd0'double".split(" "), {"\ufdd0'byte":1, "\ufdd0'char":2, "\ufdd0'short":2, "\ufdd0'int":4, "\ufdd0'long":8, "\ufdd0'float":4, "\ufdd0'double":8});
+torrent_client.client.core.crypt.pack = function() {
+  var a = function(a) {
+    a = cljs.core.partition.call(null, 2, a);
+    return cljs.core.apply.call(null, cljs.core.str, cljs.core.map.call(null, torrent_client.client.core.crypt.pack_data, a))
+  }, b = function(b) {
+    var d = null;
+    goog.isDef(b) && (d = cljs.core.array_seq(Array.prototype.slice.call(arguments, 0), 0));
+    return a.call(this, d)
+  };
+  b.cljs$lang$maxFixedArity = 0;
+  b.cljs$lang$applyTo = function(b) {
+    b = cljs.core.seq(b);
+    return a(b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+torrent_client.client.core.crypt.pack_data = function() {
+  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
+  return new cljs.core.MultiFn("pack-data", function(a) {
+    var b = cljs.core.nth.call(null, a, 0, null);
+    cljs.core.nth.call(null, a, 1, null);
+    return b
+  }, "\ufdd0'default", e, a, b, c, d)
+}();
+cljs.core._add_method.call(null, torrent_client.client.core.crypt.pack_data, "\ufdd0'int", function(a) {
+  cljs.core.nth.call(null, a, 0, null);
+  a = cljs.core.nth.call(null, a, 1, null);
+  return torrent_client.client.core.bencode.char$.call(null, cljs.core.PersistentVector.fromArray([255 & a >> 24, 255 & a >> 16, 255 & a >> 8, 255 & a]))
+});
+torrent_client.client.core.crypt.unpack = function(a, b) {
+  for(var c = torrent_client.client.core.reader.push_back_reader.call(null, b), d = a, e = cljs.core.PersistentVector.fromArray([]);;) {
+    var f = cljs.core.first.call(null, d);
+    if(cljs.core.truth_(f)) {
+      var g = torrent_client.client.core.reader.read.call(null, c, torrent_client.client.core.crypt.sizes.call(null, f)), d = cljs.core.rest.call(null, d), e = cljs.core.conj.call(null, e, torrent_client.client.core.crypt.unpack_data.call(null, f, g))
+    }else {
+      return e
+    }
+  }
+};
+torrent_client.client.core.crypt.unpack_data = function() {
+  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
+  return new cljs.core.MultiFn("unpack-data", function(a) {
+    return a
+  }, "\ufdd0'default", e, a, b, c, d)
+}();
+cljs.core._add_method.call(null, torrent_client.client.core.crypt.unpack_data, "\ufdd0'int", function(a, b) {
+  return(cljs.core.nth.call(null, b, 0) << 24) + (cljs.core.nth.call(null, b, 1) << 16) + (cljs.core.nth.call(null, b, 2) << 8) + cljs.core.nth.call(null, b, 3)
+});
+torrent_client.client.core.crypt.b64_encode = function(a) {
+  return window.btoa(a)
+};
+torrent_client.client.core.crypt.b64_decode = function(a) {
+  return window.atob(a)
+};
+torrent_client.client.core.crypt.str__GT_byte_array = function(a) {
+  var b = new ArrayBuffer(cljs.core.count.call(null, a)), b = new Uint8Array(b), c = cljs.core.seq.call(null, cljs.core.range.call(null, cljs.core.count.call(null, a)));
+  if(cljs.core.truth_(c)) {
+    for(var d = cljs.core.first.call(null, c);;) {
+      var e = a.charCodeAt(d);
+      b[d] = e;
+      d = cljs.core.next.call(null, c);
+      if(cljs.core.truth_(d)) {
+        c = d, d = cljs.core.first.call(null, c)
+      }else {
+        break
+      }
+    }
+  }
+  return b
+};
+torrent_client.client.core.crypt.byte_array__GT_str = function(a) {
+  return goog.crypt.byteArrayToString.call(null, jayq.util.clj__GT_js.call(null, a))
+};
+torrent_client.client.polyfills.datachannel = {};
+console.log("start shim");
+DCPF_install("wss://datachannel-polyfill.nodejitsu.com");
+void 0;
+torrent_client.client.polyfills.datachannel.RTCPeerConnection = {};
+torrent_client.client.polyfills.datachannel.local_id = function(a) {
+  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$local_id$arity$1 : a) {
+    a = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$local_id$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.polyfills.datachannel.local_id[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.polyfills.datachannel.local_id._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.local-id", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.polyfills.datachannel.remote_id = function(a) {
+  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$remote_id$arity$1 : a) {
+    a = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$remote_id$arity$1(a)
+  }else {
+    var b;
+    b = torrent_client.client.polyfills.datachannel.remote_id[goog.typeOf.call(null, a)];
+    if(!b && (b = torrent_client.client.polyfills.datachannel.remote_id._, !b)) {
+      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.remote-id", a);
+    }
+    a = b.call(null, a)
+  }
+  return a
+};
+torrent_client.client.polyfills.datachannel.set_local_description = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_local_description$arity$2 : a) {
+    c = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_local_description$arity$2(a, b)
+  }else {
+    c = torrent_client.client.polyfills.datachannel.set_local_description[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.polyfills.datachannel.set_local_description._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.set-local-description", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+torrent_client.client.polyfills.datachannel.set_remote_description = function(a, b) {
+  var c;
+  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_remote_description$arity$2 : a) {
+    c = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_remote_description$arity$2(a, b)
+  }else {
+    c = torrent_client.client.polyfills.datachannel.set_remote_description[goog.typeOf.call(null, a)];
+    if(!c && (c = torrent_client.client.polyfills.datachannel.set_remote_description._, !c)) {
+      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.set-remote-description", a);
+    }
+    c = c.call(null, a, b)
+  }
+  return c
+};
+void 0;
+torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$ = !0;
+torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$local_id$arity$1 = function(a) {
+  return cljs.core.re_matches.call(null, /\/^o=.+\/gm/, a.localDescription)
+};
+torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$remote_id$arity$1 = function(a) {
+  return cljs.core.re_matches.call(null, /\/^o=.+\/gm/, a.remoteDescription)
+};
+torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_local_description$arity$2 = function(a, b) {
+  return a.setLocalDescription(b)
+};
+torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_remote_description$arity$2 = function(a, b) {
+  return a.setRemoteDescription(b)
+};
+console.log("suvived the fucking shim");
+torrent_client.client.core.string = {};
+torrent_client.client.core.string.partition_string = function(a, b) {
+  var c = cljs.core.count.call(null, b);
+  return cljs.core.map.call(null, function(a) {
+    return cljs.core.subs.call(null, b, a, a + 20 < c ? a + 20 : c)
+  }, cljs.core.range.call(null, 0, c, 20))
+};
+torrent_client.client.core.string.pad_string = function(a, b, c) {
+  return cljs.core.count.call(null, a) > c ? (a = c - cljs.core.count.call(null, a), c = a / cljs.core.count.call(null, b), b = "" + cljs.core.str(cljs.core.take.call(null, c, cljs.core.repeat.call(null, b))), cljs.core.subs.call(null, b, 0, a)) : null
+};
+torrent_client.client.core.string.pad_string_left = function(a, b, c) {
+  return[cljs.core.str(a), cljs.core.str(torrent_client.client.core.string.pad_string.call(null, a, b, c))].join("")
+};
+torrent_client.client.core.string.pad_string_right = function(a, b, c) {
+  return[cljs.core.str(torrent_client.client.core.string.pad_string.call(null, a, b, c)), cljs.core.str(a)].join("")
+};
+torrent_client.client.core.string.a2b_part = function(a) {
+  var a = clojure.string.join.call(null, a), b = parseInt(a, 16);
+  return cljs.core.truth_(function() {
+    var a = function() {
+      var a = 65 <= b;
+      return a ? 90 >= b : a
+    }();
+    if(cljs.core.truth_(a)) {
+      return a
+    }
+    a = function() {
+      var a = 97 <= b;
+      return a ? 122 >= b : a
+    }();
+    if(cljs.core.truth_(a)) {
+      return a
+    }
+    a = function() {
+      var a = 48 <= b;
+      return a ? 57 >= b : a
+    }();
+    return cljs.core.truth_(a) || (a = cljs.core._EQ_.call(null, b, 45)) || (a = cljs.core._EQ_.call(null, b, 95)) ? a : (a = cljs.core._EQ_.call(null, b, 46)) ? a : cljs.core._EQ_.call(null, b, 126)
+  }()) ? String.fromCharCode(b) : [cljs.core.str("%"), cljs.core.str(a)].join("")
+};
+torrent_client.client.core.string.a2b_hex = function(a) {
+  console.log("a2b-hex", a, clojure.string.join.call(null, cljs.core.map.call(null, torrent_client.client.core.string.a2b_part, cljs.core.partition.call(null, 2, a))));
+  return clojure.string.join.call(null, cljs.core.map.call(null, torrent_client.client.core.string.a2b_part, cljs.core.partition.call(null, 2, a)))
+};
+goog.events.EventHandler = function(a) {
+  goog.Disposable.call(this);
+  this.handler_ = a;
+  this.keys_ = []
+};
+goog.inherits(goog.events.EventHandler, goog.Disposable);
+goog.events.EventHandler.typeArray_ = [];
+goog.events.EventHandler.prototype.listen = function(a, b, c, d, e) {
+  goog.isArray(b) || (goog.events.EventHandler.typeArray_[0] = b, b = goog.events.EventHandler.typeArray_);
+  for(var f = 0;f < b.length;f++) {
+    this.keys_.push(goog.events.listen(a, b[f], c || this, d || !1, e || this.handler_ || this))
+  }
+  return this
+};
+goog.events.EventHandler.prototype.listenOnce = function(a, b, c, d, e) {
+  if(goog.isArray(b)) {
+    for(var f = 0;f < b.length;f++) {
+      this.listenOnce(a, b[f], c, d, e)
+    }
+  }else {
+    this.keys_.push(goog.events.listenOnce(a, b, c || this, d, e || this.handler_ || this))
+  }
+  return this
+};
+goog.events.EventHandler.prototype.listenWithWrapper = function(a, b, c, d, e) {
+  b.listen(a, c, d, e || this.handler_ || this, this);
+  return this
+};
+goog.events.EventHandler.prototype.getListenerCount = function() {
+  return this.keys_.length
+};
+goog.events.EventHandler.prototype.unlisten = function(a, b, c, d, e) {
+  if(goog.isArray(b)) {
+    for(var f = 0;f < b.length;f++) {
+      this.unlisten(a, b[f], c, d, e)
+    }
+  }else {
+    if(a = goog.events.getListener(a, b, c || this, d, e || this.handler_ || this)) {
+      a = a.key, goog.events.unlistenByKey(a), goog.array.remove(this.keys_, a)
+    }
+  }
+  return this
+};
+goog.events.EventHandler.prototype.unlistenWithWrapper = function(a, b, c, d, e) {
+  b.unlisten(a, c, d, e || this.handler_ || this, this);
+  return this
+};
+goog.events.EventHandler.prototype.removeAll = function() {
+  goog.array.forEach(this.keys_, goog.events.unlistenByKey);
+  this.keys_.length = 0
+};
+goog.events.EventHandler.prototype.disposeInternal = function() {
+  goog.events.EventHandler.superClass_.disposeInternal.call(this);
+  this.removeAll()
+};
+goog.events.EventHandler.prototype.handleEvent = function() {
+  throw Error("EventHandler.handleEvent not implemented");
+};
+goog.db.Transaction = function(a) {
+  goog.events.EventTarget.call(this);
+  this.tx_ = a;
+  this.eventHandler_ = new goog.events.EventHandler(this);
+  this.eventHandler_.listen(this.tx_, "complete", goog.bind(this.dispatchEvent, this, goog.db.Transaction.EventTypes.COMPLETE));
+  this.eventHandler_.listen(this.tx_, "abort", goog.bind(this.dispatchEvent, this, goog.db.Transaction.EventTypes.ABORT));
+  this.eventHandler_.listen(this.tx_, "error", this.dispatchError_)
+};
+goog.inherits(goog.db.Transaction, goog.events.EventTarget);
+goog.db.Transaction.prototype.dispatchError_ = function(a) {
+  a.target instanceof goog.db.Error ? this.dispatchEvent({type:goog.db.Transaction.EventTypes.ERROR, target:a.target}) : this.dispatchEvent({type:goog.db.Transaction.EventTypes.ERROR, target:new goog.db.Error(a.target.errorCode, "in transaction")})
+};
+goog.db.Transaction.EventTypes = {COMPLETE:"complete", ABORT:"abort", ERROR:"error"};
+goog.db.Transaction.prototype.getMode = function() {
+  return this.tx_.mode
+};
+goog.db.Transaction.prototype.objectStore = function(a) {
+  try {
+    return new goog.db.ObjectStore(this.tx_.objectStore(a))
+  }catch(b) {
+    throw new goog.db.Error(b.code, "getting object store " + a);
+  }
+};
+goog.db.Transaction.prototype.abort = function() {
+  this.tx_.abort()
+};
+goog.db.Transaction.prototype.disposeInternal = function() {
+  goog.db.Transaction.superClass_.disposeInternal.call(this);
+  this.eventHandler_.dispose()
+};
+goog.db.Transaction.TransactionMode = {READ_ONLY:0, READ_WRITE:1, VERSION_CHANGE:2};
+goog.db.IndexedDb = function(a) {
+  this.db_ = a
+};
+goog.db.IndexedDb.prototype.open_ = !0;
+goog.db.IndexedDb.prototype.close = function() {
+  this.open_ && (this.db_.close(), this.open_ = !1)
+};
+goog.db.IndexedDb.prototype.isOpen = function() {
+  return this.open_
+};
+goog.db.IndexedDb.prototype.getName = function() {
+  return this.db_.name
+};
+goog.db.IndexedDb.prototype.getVersion = function() {
+  return this.db_.version
+};
+goog.db.IndexedDb.prototype.getObjectStoreNames = function() {
+  return this.db_.objectStoreNames
+};
+goog.db.IndexedDb.prototype.createObjectStore = function(a, b) {
+  try {
+    return new goog.db.ObjectStore(this.db_.createObjectStore(a, b))
+  }catch(c) {
+    throw new goog.db.Error(c.code, "creating object store " + a);
+  }
+};
+goog.db.IndexedDb.prototype.deleteObjectStore = function(a) {
+  try {
+    this.db_.deleteObjectStore(a)
+  }catch(b) {
+    throw new goog.db.Error(b.code, "deleting object store " + a);
+  }
+};
+goog.db.IndexedDb.prototype.setVersion = function(a) {
+  var b = new goog.async.Deferred, a = this.db_.setVersion(a);
+  a.onsuccess = function(a) {
+    b.callback(new goog.db.Transaction(a.target.result))
+  };
+  a.onerror = function(a) {
+    b.errback(new goog.db.Error(a.target.errorCode, "setting version"))
+  };
+  a.onblocked = function() {
+    b.errback(new goog.db.Error.VersionChangeBlockedError)
+  };
+  return b
+};
+goog.db.IndexedDb.prototype.createTransaction = function(a, b) {
+  try {
+    return new goog.db.Transaction(this.db_.transaction(a, b))
+  }catch(c) {
+    throw new goog.db.Error(c.code, "creating transaction");
+  }
+};
+goog.db.openDatabase = function(a) {
+  var b = goog.global.indexedDB || goog.global.mozIndexedDB || goog.global.webkitIndexedDB || goog.global.moz_indexedDB, c = new goog.async.Deferred, b = b.open(a);
+  b.onsuccess = function(a) {
+    a = new goog.db.IndexedDb(a.target.result);
+    c.callback(a)
+  };
+  b.onerror = function(b) {
+    c.errback(new goog.db.Error(b.target.code, "opening database " + a))
+  };
+  return c
+};
+torrent_client.client.core.db = {};
+goog.db.ObjectStore.prototype.cljs$core$ITransientAssociative$ = !0;
+goog.db.ObjectStore.prototype.cljs$core$ITransientAssociative$_assoc_BANG_$arity$3 = function(a, b, c) {
+  return a.put(jayq.util.clj__GT_js.call(null, c), cljs.core.name.call(null, b))
+};
+goog.db.ObjectStore.prototype.cljs$core$ILookup$ = !0;
+goog.db.ObjectStore.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
+  return cljs.core.js__GT_clj.call(null, a.get(cljs.core.name.call(null, b)))
+};
+torrent_client.client.core.db.create_object_store = function(a, b, c) {
+  return a.createObjectStore(b, jayq.util.clj__GT_js.call(null, c))
+};
+torrent_client.client.core.db.create_transaction = function(a, b, c) {
+  return a.createTransaction(jayq.util.clj__GT_js.call(null, b), c)
+};
+torrent_client.client.core.db.open_database = function(a, b, c) {
+  return function(d, e) {
+    var f = torrent_client.client.polyfills.prefix.indexedDB.open(a, b);
+    f.onerror = e;
+    f.onsuccess = function() {
+      return d.call(null, new goog.db.IndexedDb(f.result))
+    };
+    return f.onupgradeneeded = function() {
+      var a = f.result, b = cljs.core.seq.call(null, c);
+      if(cljs.core.truth_(b)) {
+        for(var d = cljs.core.first.call(null, b);;) {
+          if(cljs.core.not.call(null, a.objectStoreNames.contains("\ufdd0'name".call(null, d))) && torrent_client.client.core.db.create_object_store.call(null, a, "\ufdd0'name".call(null, d), cljs.core.ObjMap.fromObject(["\ufdd0'keyPath", "\ufdd0'autoIncrement"], {"\ufdd0'keyPath":"\ufdd0'key-path".call(null, d), "\ufdd0'autoIncrement":"\ufdd0'auto-increment".call(null, d)})), d = cljs.core.next.call(null, b), cljs.core.truth_(d)) {
+            b = d, d = cljs.core.first.call(null, b)
+          }else {
+            break
+          }
+        }
+      }
+      return a
+    }
+  }
+};
+torrent_client.client.storage = {};
+torrent_client.client.storage.connection = cljs.core.atom.call(null, null);
+torrent_client.client.storage.object_stores = cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'name"], {"\ufdd0'name":"metainfo"})]);
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'document-ready"]), function() {
+  return torrent_client.client.core.db.open_database.call(null, "ampere", "3.0", torrent_client.client.storage.object_stores).call(null, function(a) {
+    var b = torrent_client.client.core.db.create_transaction.call(null, a, cljs.core.PersistentVector.fromArray(["metainfo"]), "readonly").objectStore("metainfo").getAll();
+    cljs.core.reset_BANG_.call(null, torrent_client.client.storage.connection, a);
+    return b.addCallback(function(a) {
+      var b = cljs.core.seq.call(null, a);
+      if(cljs.core.truth_(b)) {
+        for(a = cljs.core.first.call(null, b);;) {
+          if(torrent_client.client.core.dispatch.trigger.call(null, "\ufdd0'add-metainfo-object", a), a = cljs.core.next.call(null, b), cljs.core.truth_(a)) {
+            b = a, a = cljs.core.first.call(null, b)
+          }else {
+            return null
+          }
+        }
+      }else {
+        return null
+      }
+    })
+  }, function(a) {
+    return console.error(a)
+  })
+});
+var waltz = {state:{}};
+void 0;
+waltz.state.debug_log = function() {
+  var a = function(a, b, e) {
+    return cljs.core.truth_(function() {
+      var b = console;
+      return cljs.core.truth_(b) ? cljs.core.deref.call(null, a).call(null, "\ufdd0'debug") : b
+    }()) ? (b = cljs.core.apply.call(null, cljs.core.str, waltz.state.get_name.call(null, a), " :: ", b, e), console.log(b)) : null
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.__GT_coll = function(a) {
+  return cljs.core.coll_QMARK_.call(null, a) ? a : cljs.core.PersistentVector.fromArray([a])
+};
+waltz.state.state_STAR_ = function() {
+  return cljs.core.ObjMap.fromObject(["\ufdd0'in", "\ufdd0'out", "\ufdd0'constraints"], {"\ufdd0'in":cljs.core.PersistentVector.fromArray([]), "\ufdd0'out":cljs.core.PersistentVector.fromArray([]), "\ufdd0'constraints":cljs.core.PersistentVector.fromArray([])})
+};
+waltz.state.machine = function() {
+  var a = function(a) {
+    a = cljs.core.nth.call(null, a, 0, null);
+    return cljs.core.atom.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'debug", "\ufdd0'name", "\ufdd0'current", "\ufdd0'states", "\ufdd0'events"], {"\ufdd0'debug":!0, "\ufdd0'name":cljs.core.name.call(null, a), "\ufdd0'current":cljs.core.set([]), "\ufdd0'states":cljs.core.ObjMap.fromObject([], {}), "\ufdd0'events":cljs.core.ObjMap.fromObject([], {})}))
+  }, b = function(b) {
+    var d = null;
+    goog.isDef(b) && (d = cljs.core.array_seq(Array.prototype.slice.call(arguments, 0), 0));
+    return a.call(this, d)
+  };
+  b.cljs$lang$maxFixedArity = 0;
+  b.cljs$lang$applyTo = function(b) {
+    b = cljs.core.seq(b);
+    return a(b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.get_name = function(a) {
+  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'name"]))
+};
+waltz.state.get_in_sm = function(a, b) {
+  return cljs.core.get_in.call(null, cljs.core.deref.call(null, a), b)
+};
+waltz.state.assoc_sm = function(a, b, c) {
+  return cljs.core.swap_BANG_.call(null, a, function(a) {
+    return cljs.core.assoc_in.call(null, a, b, c)
+  })
+};
+waltz.state.update_sm = function() {
+  var a = function(a, b) {
+    return cljs.core.swap_BANG_.call(null, a, function(a) {
+      return cljs.core.apply.call(null, cljs.core.update_in, a, b)
+    })
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.current = function(a) {
+  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'current"]))
+};
+waltz.state.in_QMARK_ = function(a, b) {
+  return waltz.state.current.call(null, a).call(null, b)
+};
+waltz.state.has_state_QMARK_ = function(a, b) {
+  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", b]))
+};
+waltz.state.has_event_QMARK_ = function(a, b) {
+  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'events", b]))
+};
+waltz.state.add_state = function(a, b, c) {
+  return waltz.state.assoc_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", b]), c)
+};
+waltz.state.add_event = function(a, b, c) {
+  return waltz.state.assoc_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'events", b]), c)
+};
+waltz.state.in_STAR_ = function(a, b) {
+  return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'in"]), cljs.core.conj, b)
+};
+waltz.state.out_STAR_ = function(a, b) {
+  return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'out"]), cljs.core.conj, b)
+};
+waltz.state.constraint = function(a, b) {
+  return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'constraint"]), cljs.core.conj, b)
+};
+waltz.state.can_transition_QMARK_ = function(a, b) {
+  var c = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", b, "\ufdd0'constraints"]));
+  return cljs.core.truth_(c) ? cljs.core.every_QMARK_.call(null, function(a) {
+    return a.call(null, b)
+  }, c) : !0
+};
+waltz.state.set = function() {
+  var a = function(a, b, e) {
+    b = cljs.core.seq.call(null, waltz.state.__GT_coll.call(null, b));
+    if(cljs.core.truth_(b)) {
+      for(var f = cljs.core.first.call(null, b);;) {
+        if(cljs.core.truth_(waltz.state.can_transition_QMARK_.call(null, a, f))) {
+          var g = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", f, "\ufdd0'in"]));
+          waltz.state.update_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'current"]), cljs.core.conj, f);
+          waltz.state.debug_log.call(null, a, "(set ", "" + cljs.core.str(f), ") -> ", cljs.core.pr_str.call(null, waltz.state.current.call(null, a)));
+          if(cljs.core.truth_(cljs.core.seq.call(null, g)) && (waltz.state.debug_log.call(null, a, "(in ", "" + cljs.core.str(f), ")"), g = cljs.core.seq.call(null, g), cljs.core.truth_(g))) {
+            for(f = cljs.core.first.call(null, g);;) {
+              if(cljs.core.apply.call(null, f, e), f = cljs.core.next.call(null, g), cljs.core.truth_(f)) {
+                g = f, f = cljs.core.first.call(null, g)
+              }else {
+                break
+              }
+            }
+          }
+        }
+        b = cljs.core.next.call(null, b);
+        if(cljs.core.truth_(b)) {
+          f = b, b = cljs.core.first.call(null, f), g = f, f = b, b = g
+        }else {
+          break
+        }
+      }
+    }
+    return a
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.unset = function() {
+  var a = function(a, b, e) {
+    b = cljs.core.seq.call(null, waltz.state.__GT_coll.call(null, b));
+    if(cljs.core.truth_(b)) {
+      for(var f = cljs.core.first.call(null, b);;) {
+        if(cljs.core.truth_(waltz.state.in_QMARK_.call(null, a, f))) {
+          var g = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", f, "\ufdd0'out"]));
+          waltz.state.update_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'current"]), cljs.core.disj, f);
+          waltz.state.debug_log.call(null, a, "(unset ", [cljs.core.str(f), cljs.core.str(")")].join(""), " -> ", cljs.core.pr_str.call(null, waltz.state.current.call(null, a)));
+          if(cljs.core.truth_(cljs.core.seq.call(null, g)) && (waltz.state.debug_log.call(null, a, "(out ", "" + cljs.core.str(f), ")"), g = cljs.core.seq.call(null, g), cljs.core.truth_(g))) {
+            for(f = cljs.core.first.call(null, g);;) {
+              if(cljs.core.apply.call(null, f, e), f = cljs.core.next.call(null, g), cljs.core.truth_(f)) {
+                g = f, f = cljs.core.first.call(null, g)
+              }else {
+                break
+              }
+            }
+          }
+        }
+        b = cljs.core.next.call(null, b);
+        if(cljs.core.truth_(b)) {
+          f = b, b = cljs.core.first.call(null, f), g = f, f = b, b = g
+        }else {
+          break
+        }
+      }
+    }
+    return a
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.set_ex = function() {
+  var a = function(a, b, e, f) {
+    cljs.core.apply.call(null, waltz.state.unset, a, b, f);
+    return cljs.core.apply.call(null, waltz.state.set, a, e, f)
+  }, b = function(b, d, e, f) {
+    var g = null;
+    goog.isDef(f) && (g = cljs.core.array_seq(Array.prototype.slice.call(arguments, 3), 0));
+    return a.call(this, b, d, e, g)
+  };
+  b.cljs$lang$maxFixedArity = 3;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), f = cljs.core.first(cljs.core.next(cljs.core.next(b))), b = cljs.core.rest(cljs.core.next(cljs.core.next(b)));
+    return a(d, e, f, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.trigger = function() {
+  var a = function(a, b, e) {
+    var f = cljs.core.seq.call(null, waltz.state.__GT_coll.call(null, b));
+    if(cljs.core.truth_(f)) {
+      for(b = cljs.core.first.call(null, f);;) {
+        var g = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'events", b]));
+        cljs.core.truth_(g) && (g = cljs.core.apply.call(null, g, e), waltz.state.debug_log.call(null, a, "(trans ", "" + cljs.core.str(b), ") -> ", cljs.core.boolean$.call(null, g), " :: context ", cljs.core.pr_str.call(null, e)));
+        b = cljs.core.next.call(null, f);
+        if(cljs.core.truth_(b)) {
+          f = b, b = cljs.core.first.call(null, f)
+        }else {
+          return null
+        }
+      }
+    }else {
+      return null
+    }
+  }, b = function(b, d, e) {
+    var f = null;
+    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
+    return a.call(this, b, d, f)
+  };
+  b.cljs$lang$maxFixedArity = 2;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
+    return a(d, e, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+waltz.state.set_debug = function(a, b) {
+  return waltz.state.assoc_sm.call(null, a, "\ufdd0'debug", b)
+};
+torrent_client.client.waltz = {};
+torrent_client.client.waltz.transition = function() {
+  var a = function(a, b, e, f) {
+    return cljs.core.truth_(waltz.state.in_QMARK_.call(null, a, b)) ? waltz.state.set_ex.call(null, a, b, e, f) : null
+  }, b = function(b, d, e, f) {
+    var g = null;
+    goog.isDef(f) && (g = cljs.core.array_seq(Array.prototype.slice.call(arguments, 3), 0));
+    return a.call(this, b, d, e, g)
+  };
+  b.cljs$lang$maxFixedArity = 3;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), f = cljs.core.first(cljs.core.next(cljs.core.next(b))), b = cljs.core.rest(cljs.core.next(cljs.core.next(b)));
+    return a(d, e, f, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+torrent_client.client.waltz.machine = function(a) {
+  a = cljs.core.seq_QMARK_.call(null, a) ? cljs.core.apply.call(null, cljs.core.hash_map, a) : a;
+  cljs.core.get.call(null, a, "\ufdd0'current");
+  a = cljs.core.get.call(null, a, "\ufdd0'label");
+  return cljs.core.atom.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'debug", "\ufdd0'name", "\ufdd0'current", "\ufdd0'states", "\ufdd0'events"], {"\ufdd0'debug":!0, "\ufdd0'name":cljs.core.name.call(null, a), "\ufdd0'current":cljs.core.set(["\ufdd0'init"]), "\ufdd0'states":cljs.core.ObjMap.fromObject([], {}), "\ufdd0'events":cljs.core.ObjMap.fromObject([], {})}))
+};
+goog.uri = {};
+goog.uri.utils = {};
+goog.uri.utils.CharCode_ = {AMPERSAND:38, EQUAL:61, HASH:35, QUESTION:63};
+goog.uri.utils.buildFromEncodedParts = function(a, b, c, d, e, f, g) {
+  var h = [];
+  a && h.push(a, ":");
+  c && (h.push("//"), b && h.push(b, "@"), h.push(c), d && h.push(":", d));
+  e && h.push(e);
+  f && h.push("?", f);
+  g && h.push("#", g);
+  return h.join("")
+};
+goog.uri.utils.splitRe_ = RegExp("^(?:([^:/?#.]+):)?(?://(?:([^/?#]*)@)?([\\w\\d\\-\\u0100-\\uffff.%]*)(?::([0-9]+))?)?([^?#]+)?(?:\\?([^#]*))?(?:#(.*))?$");
+goog.uri.utils.ComponentIndex = {SCHEME:1, USER_INFO:2, DOMAIN:3, PORT:4, PATH:5, QUERY_DATA:6, FRAGMENT:7};
+goog.uri.utils.split = function(a) {
+  return a.match(goog.uri.utils.splitRe_)
+};
+goog.uri.utils.decodeIfPossible_ = function(a) {
+  return a && decodeURIComponent(a)
+};
+goog.uri.utils.getComponentByIndex_ = function(a, b) {
+  return goog.uri.utils.split(b)[a] || null
+};
+goog.uri.utils.getScheme = function(a) {
+  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.SCHEME, a)
+};
+goog.uri.utils.getEffectiveScheme = function(a) {
+  a = goog.uri.utils.getScheme(a);
+  !a && self.location && (a = self.location.protocol, a = a.substr(0, a.length - 1));
+  return a ? a.toLowerCase() : ""
+};
+goog.uri.utils.getUserInfoEncoded = function(a) {
+  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.USER_INFO, a)
+};
+goog.uri.utils.getUserInfo = function(a) {
+  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getUserInfoEncoded(a))
+};
+goog.uri.utils.getDomainEncoded = function(a) {
+  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.DOMAIN, a)
+};
+goog.uri.utils.getDomain = function(a) {
+  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getDomainEncoded(a))
+};
+goog.uri.utils.getPort = function(a) {
+  return Number(goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.PORT, a)) || null
+};
+goog.uri.utils.getPathEncoded = function(a) {
+  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.PATH, a)
+};
+goog.uri.utils.getPath = function(a) {
+  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getPathEncoded(a))
+};
+goog.uri.utils.getQueryData = function(a) {
+  return goog.uri.utils.getComponentByIndex_(goog.uri.utils.ComponentIndex.QUERY_DATA, a)
+};
+goog.uri.utils.getFragmentEncoded = function(a) {
+  var b = a.indexOf("#");
+  return 0 > b ? null : a.substr(b + 1)
+};
+goog.uri.utils.setFragmentEncoded = function(a, b) {
+  return goog.uri.utils.removeFragment(a) + (b ? "#" + b : "")
+};
+goog.uri.utils.getFragment = function(a) {
+  return goog.uri.utils.decodeIfPossible_(goog.uri.utils.getFragmentEncoded(a))
+};
+goog.uri.utils.getHost = function(a) {
+  a = goog.uri.utils.split(a);
+  return goog.uri.utils.buildFromEncodedParts(a[goog.uri.utils.ComponentIndex.SCHEME], a[goog.uri.utils.ComponentIndex.USER_INFO], a[goog.uri.utils.ComponentIndex.DOMAIN], a[goog.uri.utils.ComponentIndex.PORT])
+};
+goog.uri.utils.getPathAndAfter = function(a) {
+  a = goog.uri.utils.split(a);
+  return goog.uri.utils.buildFromEncodedParts(null, null, null, null, a[goog.uri.utils.ComponentIndex.PATH], a[goog.uri.utils.ComponentIndex.QUERY_DATA], a[goog.uri.utils.ComponentIndex.FRAGMENT])
+};
+goog.uri.utils.removeFragment = function(a) {
+  var b = a.indexOf("#");
+  return 0 > b ? a : a.substr(0, b)
+};
+goog.uri.utils.haveSameDomain = function(a, b) {
+  var c = goog.uri.utils.split(a), d = goog.uri.utils.split(b);
+  return c[goog.uri.utils.ComponentIndex.DOMAIN] == d[goog.uri.utils.ComponentIndex.DOMAIN] && c[goog.uri.utils.ComponentIndex.SCHEME] == d[goog.uri.utils.ComponentIndex.SCHEME] && c[goog.uri.utils.ComponentIndex.PORT] == d[goog.uri.utils.ComponentIndex.PORT]
+};
+goog.uri.utils.assertNoFragmentsOrQueries_ = function(a) {
+  if(goog.DEBUG && (0 <= a.indexOf("#") || 0 <= a.indexOf("?"))) {
+    throw Error("goog.uri.utils: Fragment or query identifiers are not supported: [" + a + "]");
+  }
+};
+goog.uri.utils.appendQueryData_ = function(a) {
+  if(a[1]) {
+    var b = a[0], c = b.indexOf("#");
+    0 <= c && (a.push(b.substr(c)), a[0] = b = b.substr(0, c));
+    c = b.indexOf("?");
+    0 > c ? a[1] = "?" : c == b.length - 1 && (a[1] = void 0)
+  }
+  return a.join("")
+};
+goog.uri.utils.appendKeyValuePairs_ = function(a, b, c) {
+  if(goog.isArray(b)) {
+    goog.asserts.assertArray(b);
+    for(var d = 0;d < b.length;d++) {
+      goog.uri.utils.appendKeyValuePairs_(a, "" + b[d], c)
+    }
+  }else {
+    null != b && c.push("&", a, "" === b ? "" : "=", goog.string.urlEncode(b))
+  }
+};
+goog.uri.utils.buildQueryDataBuffer_ = function(a, b, c) {
+  goog.asserts.assert(0 == Math.max(b.length - (c || 0), 0) % 2, "goog.uri.utils: Key/value lists must be even in length.");
+  for(c = c || 0;c < b.length;c += 2) {
+    goog.uri.utils.appendKeyValuePairs_(b[c], b[c + 1], a)
+  }
+  return a
+};
+goog.uri.utils.buildQueryData = function(a, b) {
+  var c = goog.uri.utils.buildQueryDataBuffer_([], a, b);
+  c[0] = "";
+  return c.join("")
+};
+goog.uri.utils.buildQueryDataBufferFromMap_ = function(a, b) {
+  for(var c in b) {
+    goog.uri.utils.appendKeyValuePairs_(c, b[c], a)
+  }
+  return a
+};
+goog.uri.utils.buildQueryDataFromMap = function(a) {
+  a = goog.uri.utils.buildQueryDataBufferFromMap_([], a);
+  a[0] = "";
+  return a.join("")
+};
+goog.uri.utils.appendParams = function(a, b) {
+  return goog.uri.utils.appendQueryData_(2 == arguments.length ? goog.uri.utils.buildQueryDataBuffer_([a], arguments[1], 0) : goog.uri.utils.buildQueryDataBuffer_([a], arguments, 1))
+};
+goog.uri.utils.appendParamsFromMap = function(a, b) {
+  return goog.uri.utils.appendQueryData_(goog.uri.utils.buildQueryDataBufferFromMap_([a], b))
+};
+goog.uri.utils.appendParam = function(a, b, c) {
+  return goog.uri.utils.appendQueryData_([a, "&", b, "=", goog.string.urlEncode(c)])
+};
+goog.uri.utils.findParam_ = function(a, b, c, d) {
+  for(var e = c.length;0 <= (b = a.indexOf(c, b)) && b < d;) {
+    var f = a.charCodeAt(b - 1);
+    if(f == goog.uri.utils.CharCode_.AMPERSAND || f == goog.uri.utils.CharCode_.QUESTION) {
+      if(f = a.charCodeAt(b + e), !f || f == goog.uri.utils.CharCode_.EQUAL || f == goog.uri.utils.CharCode_.AMPERSAND || f == goog.uri.utils.CharCode_.HASH) {
+        return b
+      }
+    }
+    b += e + 1
+  }
+  return-1
+};
+goog.uri.utils.hashOrEndRe_ = /#|$/;
+goog.uri.utils.hasParam = function(a, b) {
+  return 0 <= goog.uri.utils.findParam_(a, 0, b, a.search(goog.uri.utils.hashOrEndRe_))
+};
+goog.uri.utils.getParamValue = function(a, b) {
+  var c = a.search(goog.uri.utils.hashOrEndRe_), d = goog.uri.utils.findParam_(a, 0, b, c);
+  if(0 > d) {
+    return null
+  }
+  var e = a.indexOf("&", d);
+  if(0 > e || e > c) {
+    e = c
+  }
+  d += b.length + 1;
+  return goog.string.urlDecode(a.substr(d, e - d))
+};
+goog.uri.utils.getParamValues = function(a, b) {
+  for(var c = a.search(goog.uri.utils.hashOrEndRe_), d = 0, e, f = [];0 <= (e = goog.uri.utils.findParam_(a, d, b, c));) {
+    d = a.indexOf("&", e);
+    if(0 > d || d > c) {
+      d = c
+    }
+    e += b.length + 1;
+    f.push(goog.string.urlDecode(a.substr(e, d - e)))
+  }
+  return f
+};
+goog.uri.utils.trailingQueryPunctuationRe_ = /[?&]($|#)/;
+goog.uri.utils.removeParam = function(a, b) {
+  for(var c = a.search(goog.uri.utils.hashOrEndRe_), d = 0, e, f = [];0 <= (e = goog.uri.utils.findParam_(a, d, b, c));) {
+    f.push(a.substring(d, e)), d = Math.min(a.indexOf("&", e) + 1 || c, c)
+  }
+  f.push(a.substr(d));
+  return f.join("").replace(goog.uri.utils.trailingQueryPunctuationRe_, "$1")
+};
+goog.uri.utils.setParam = function(a, b, c) {
+  return goog.uri.utils.appendParam(goog.uri.utils.removeParam(a, b), b, c)
+};
+goog.uri.utils.appendPath = function(a, b) {
+  goog.uri.utils.assertNoFragmentsOrQueries_(a);
+  goog.string.endsWith(a, "/") && (a = a.substr(0, a.length - 1));
+  goog.string.startsWith(b, "/") && (b = b.substr(1));
+  return goog.string.buildString(a, "/", b)
+};
+goog.uri.utils.StandardQueryParam = {RANDOM:"zx"};
+goog.uri.utils.makeUnique = function(a) {
+  return goog.uri.utils.setParam(a, goog.uri.utils.StandardQueryParam.RANDOM, goog.string.getRandomString())
+};
 goog.Uri = function(a, b) {
   var c;
   a instanceof goog.Uri ? (this.ignoreCase_ = goog.isDef(b) ? b : a.getIgnoreCase(), this.setScheme(a.getScheme()), this.setUserInfo(a.getUserInfo()), this.setDomain(a.getDomain()), this.setPort(a.getPort()), this.setPath(a.getPath()), this.setQueryData(a.getQueryData().clone()), this.setFragment(a.getFragment())) : a && (c = goog.uri.utils.split("" + a)) ? (this.ignoreCase_ = !!b, this.setScheme(c[goog.uri.utils.ComponentIndex.SCHEME] || "", !0), this.setUserInfo(c[goog.uri.utils.ComponentIndex.USER_INFO] || 
@@ -15747,179 +16780,32 @@ goog.Uri.QueryData.prototype.extend = function(a) {
     }, this)
   }
 };
-var clojure = {string:{}};
-clojure.string.seq_reverse = function(a) {
-  return cljs.core.reduce.call(null, cljs.core.conj, cljs.core.List.EMPTY, a)
+torrent_client.client.core.url = {};
+torrent_client.client.core.url.http_scheme_QMARK_ = function(a) {
+  var a = goog.Uri.parse.call(null, a).getScheme(), b = cljs.core._EQ_.call(null, "http", a);
+  return b ? b : cljs.core._EQ_.call(null, "https", a)
 };
-clojure.string.reverse = function(a) {
-  return a.split("").reverse().join("")
+torrent_client.client.core.url.ws_scheme_QMARK_ = function(a) {
+  var a = goog.Uri.parse.call(null, a).getScheme(), b = cljs.core._EQ_.call(null, "ws", a);
+  return b ? b : cljs.core._EQ_.call(null, "wss", a)
 };
-clojure.string.replace = function(a, b, c) {
-  if(cljs.core.string_QMARK_.call(null, b)) {
-    return a.replace(RegExp(goog.string.regExpEscape.call(null, b), "g"), c)
-  }
-  if(cljs.core.truth_(b.hasOwnProperty("source"))) {
-    return a.replace(RegExp(b.source, "g"), c)
-  }
-  throw[cljs.core.str("Invalid match arg: "), cljs.core.str(b)].join("");
-};
-clojure.string.replace_first = function(a, b, c) {
-  return a.replace(b, c)
-};
-clojure.string.join = function() {
-  var a = null, b = function(a) {
-    return cljs.core.apply.call(null, cljs.core.str, a)
-  }, c = function(a, b) {
-    return cljs.core.apply.call(null, cljs.core.str, cljs.core.interpose.call(null, a, b))
-  }, a = function(a, e) {
-    switch(arguments.length) {
-      case 1:
-        return b.call(this, a);
-      case 2:
-        return c.call(this, a, e)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$2 = c;
-  return a
-}();
-clojure.string.upper_case = function(a) {
-  return a.toUpperCase()
-};
-clojure.string.lower_case = function(a) {
-  return a.toLowerCase()
-};
-clojure.string.capitalize = function(a) {
-  return 2 > cljs.core.count.call(null, a) ? clojure.string.upper_case.call(null, a) : [cljs.core.str(clojure.string.upper_case.call(null, cljs.core.subs.call(null, a, 0, 1))), cljs.core.str(clojure.string.lower_case.call(null, cljs.core.subs.call(null, a, 1)))].join("")
-};
-clojure.string.split = function() {
-  var a = null, b = function(a, b) {
-    return cljs.core.vec.call(null, ("" + cljs.core.str(a)).split(b))
-  }, c = function(a, b, c) {
-    if(1 > c) {
-      return cljs.core.vec.call(null, ("" + cljs.core.str(a)).split(b))
-    }
-    for(var g = cljs.core.PersistentVector.fromArray([]);;) {
-      if(cljs.core._EQ_.call(null, c, 1)) {
-        return cljs.core.conj.call(null, g, a)
-      }
-      var h = cljs.core.re_find.call(null, b, a);
-      if(cljs.core.truth_(h)) {
-        var i = h, h = a.indexOf(i), i = a.substring(h + cljs.core.count.call(null, i)), c = c - 1, g = cljs.core.conj.call(null, g, a.substring(0, h)), a = i
-      }else {
-        return cljs.core.conj.call(null, g, a)
-      }
-    }
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-clojure.string.split_lines = function(a) {
-  return clojure.string.split.call(null, a, /\n|\r\n/)
-};
-clojure.string.trim = function(a) {
-  return goog.string.trim.call(null, a)
-};
-clojure.string.triml = function(a) {
-  return goog.string.trimLeft.call(null, a)
-};
-clojure.string.trimr = function(a) {
-  return goog.string.trimRight.call(null, a)
-};
-clojure.string.trim_newline = function(a) {
-  for(var b = a.length;;) {
-    if(0 === b) {
-      return""
-    }
-    var c = cljs.core.get.call(null, a, b - 1);
-    var d = cljs.core._EQ_.call(null, c, "\n"), c = d ? d : cljs.core._EQ_.call(null, c, "\r");
-    if(c) {
-      b -= 1
-    }else {
-      return a.substring(0, b)
-    }
-  }
-};
-clojure.string.blank_QMARK_ = function(a) {
-  var b = "" + cljs.core.str(a);
-  return cljs.core.truth_(function() {
-    var a = cljs.core.not.call(null, b);
-    return a ? a : (a = cljs.core._EQ_.call(null, "", b)) ? a : cljs.core.re_matches.call(null, /\s+/, b)
-  }()) ? !0 : !1
-};
-clojure.string.escape = function(a, b) {
-  for(var c = new goog.string.StringBuffer, d = a.length, e = 0;;) {
-    if(cljs.core._EQ_.call(null, d, e)) {
-      return c.toString()
-    }
-    var f = a.charAt(e), g = cljs.core.get.call(null, b, f);
-    cljs.core.truth_(g) ? c.append("" + cljs.core.str(g)) : c.append(f);
-    e += 1
-  }
-};
-var filesystem = {prefix:{}};
-filesystem.prefix.prefix = function() {
-  var a = function(a, b) {
-    var e = cljs.core.PersistentVector.fromArray(["webkit", "moz", "ms"]), e = cljs.core.into.call(null, cljs.core.ObjMap.fromObject([], {}), cljs.core.map.call(null, cljs.core.juxt.call(null, cljs.core.identity, function(b) {
-      return[cljs.core.str(b), cljs.core.str(clojure.string.capitalize.call(null, a))].join("")
-    }), e)), e = cljs.core.assoc.call(null, e, "", a), e = cljs.core.vals.call(null, cljs.core.merge.call(null, e, b)), e = cljs.core.map.call(null, function(a) {
-      return window[a]
-    }, e);
-    return cljs.core.some.call(null, function(a) {
-      return cljs.core.not.call(null, null == a) ? a : null
-    }, e)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-filesystem.prefix.requestFileSystem = filesystem.prefix.prefix.call(null, "requestFileSystem");
-filesystem.filesystem = {};
-filesystem.filesystem.request_file_system = function(a, b) {
-  return function(c, d) {
-    return window.webkitRequestFileSystem(window[cljs.core.name.call(null, a)], b, c, d)
-  }
-};
-filesystem.filesystem.request_quota = function(a, b) {
-  return function(c, d) {
-    return window.webkitStorageInfo.requestQuota(window[cljs.core.name.call(null, a)], b, c, d)
-  }
-};
-filesystem.filesystem.request_quota_then_filesystem = function(a, b) {
-  return filesystem.filesystem.request_quota.call(null, a, b).call(null, function(b) {
-    return filesystem.filesystem.request_file_system.call(null, a, b)
-  }, function(a) {
-    return console.error(a)
-  })
-};
-filesystem.filesystem.filereader = function(a) {
-  return function(b, c) {
-    var d = new FileReader;
-    d.onerror = c;
-    d.onloadend = function(a) {
-      return b.call(null, a.currentTarget.result)
-    };
-    return d.readAsArrayBuffer(a)
-  }
-};
+torrent_client.client.torrents = {};
+torrent_client.client.torrents.torrents = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'processed-torrent"]), function(a, b) {
+  console.log("Adding to torrents atom", b);
+  cljs.core.swap_BANG_.call(null, torrent_client.client.torrents.torrents, cljs.core.assoc, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"), b);
+  return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'started-torrent", b)
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null);
+  cljs.core.nth.call(null, b, 1, null);
+  var d;
+  d = cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-written");
+  d = cljs.core.truth_(d) ? d : 0;
+  d += 1;
+  cljs.core.swap_BANG_.call(null, c, cljs.core.assoc, "\ufdd0'pieces-written", d);
+  return cljs.core._EQ_.call(null, d, torrent_client.client.torrents.pieces_length) ? torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", c) : null
+});
 var async = {helpers:{}};
 async.helpers.map_async = function(a, b) {
   return function(c) {
@@ -15942,131 +16828,112 @@ async.helpers.map_async = function(a, b) {
     return d
   }
 };
-torrent_client.client.core.byte_array = {};
-void 0;
-torrent_client.client.core.byte_array.SubArray = {};
-torrent_client.client.core.byte_array.subarray = function() {
-  var a = null, b = function(a, b) {
-    var c;
-    if(a ? a.torrent_client$client$core$byte_array$SubArray$subarray$arity$2 : a) {
-      c = a.torrent_client$client$core$byte_array$SubArray$subarray$arity$2(a, b)
-    }else {
-      c = torrent_client.client.core.byte_array.subarray[goog.typeOf.call(null, a)];
-      if(!c && (c = torrent_client.client.core.byte_array.subarray._, !c)) {
-        throw cljs.core.missing_protocol.call(null, "SubArray.subarray", a);
-      }
-      c = c.call(null, a, b)
-    }
-    return c
-  }, c = function(a, b, c) {
-    if(a ? a.torrent_client$client$core$byte_array$SubArray$subarray$arity$3 : a) {
-      a = a.torrent_client$client$core$byte_array$SubArray$subarray$arity$3(a, b, c)
-    }else {
-      var g;
-      g = torrent_client.client.core.byte_array.subarray[goog.typeOf.call(null, a)];
-      if(!g && (g = torrent_client.client.core.byte_array.subarray._, !g)) {
-        throw cljs.core.missing_protocol.call(null, "SubArray.subarray", a);
-      }
-      a = g.call(null, a, b, c)
-    }
-    return a
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-void 0;
-Uint8Array.prototype.torrent_client$client$core$byte_array$SubArray$ = !0;
-Uint8Array.prototype.torrent_client$client$core$byte_array$SubArray$subarray$arity$2 = function(a, b) {
-  return a.subarray(b)
+torrent_client.client.core.pieces = {};
+torrent_client.client.core.pieces.PieceFile = function(a, b) {
+  this.meta = a;
+  this.file = b;
+  this.cljs$lang$protocol_mask$partition1$ = 0;
+  this.cljs$lang$protocol_mask$partition0$ = 2294145
 };
-Uint8Array.prototype.torrent_client$client$core$byte_array$SubArray$subarray$arity$3 = function(a, b, c) {
-  return a.subarray(b, c)
+torrent_client.client.core.pieces.PieceFile.cljs$lang$type = !0;
+torrent_client.client.core.pieces.PieceFile.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.core.pieces.PieceFile")
 };
-Uint8Array.prototype.cljs$core$IReduce$ = !0;
-Uint8Array.prototype.cljs$core$IReduce$_reduce$arity$2 = function(a, b) {
-  return cljs.core.ci_reduce.call(null, a, b)
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
+  return goog.getUid.call(null, a)
 };
-Uint8Array.prototype.cljs$core$IReduce$_reduce$arity$3 = function(a, b, c) {
-  return cljs.core.ci_reduce.call(null, a, b, c)
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$_contains_key_QMARK_$arity$2 = function(a, b) {
+  if(cljs.core.not.call(null, null == this.meta)) {
+    var c = this.meta.call(null, "\ufdd0'block-start") <= b;
+    return c ? b <= this.meta.call(null, "\ufdd0'piece-end") : c
+  }
+  return null
 };
-Uint8Array.prototype.cljs$core$ILookup$ = !0;
-Uint8Array.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  return a[b]
-};
-Uint8Array.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b, c) {
-  return cljs.core._nth.call(null, a, b, c)
-};
-Uint8Array.prototype.cljs$core$IIndexed$ = !0;
-Uint8Array.prototype.cljs$core$IIndexed$_nth$arity$2 = function(a, b) {
-  return b < a.length ? a[b] : null
-};
-Uint8Array.prototype.cljs$core$IIndexed$_nth$arity$3 = function(a, b, c) {
-  return b < a.length ? a[b] : c
-};
-Uint8Array.prototype.cljs$core$ICounted$ = !0;
-Uint8Array.prototype.cljs$core$ICounted$_count$arity$1 = function(a) {
-  return a.length
-};
-Uint8Array.prototype.cljs$core$ISeqable$ = !0;
-Uint8Array.prototype.cljs$core$ISeqable$_seq$arity$1 = function(a) {
-  return cljs.core.array_seq.call(null, a, 0)
-};
-Uint8Array.prototype.toString = function() {
-  return goog.crypt.byteArrayToString.call(null, this)
-};
-torrent_client.client.core.byte_array.uint8_array = function() {
-  var a = null, b = function(a) {
-    return new Uint8Array(a)
-  }, c = function(a, b) {
-    return new Uint8Array(a, b)
-  }, d = function(a, b, c) {
-    return new Uint8Array(a, b, c)
-  }, a = function(a, f, g) {
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IFn$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.call = function() {
+  var a = null;
+  return a = function(a, c, d) {
     switch(arguments.length) {
       case 1:
-        return b.call(this, a);
+        return this.file;
       case 2:
-        return c.call(this, a, f);
+        return cljs.core._lookup.call(null, this, c);
       case 3:
-        return d.call(this, a, f, g)
+        return cljs.core._lookup.call(null, this, c, d)
     }
     throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$2 = c;
-  a.cljs$lang$arity$3 = d;
-  return a
+  }
 }();
-torrent_client.client.core.byte_array.subarray = function() {
-  var a = null, a = function(a, c, d) {
-    switch(arguments.length) {
-      case 2:
-        return a.subarray(c);
-      case 3:
-        return a.subarray(c, d)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = function(a, c) {
-    return a.subarray(c)
-  };
-  a.cljs$lang$arity$3 = function(a, c, d) {
-    return a.subarray(c, d)
-  };
-  return a
-}();
-torrent_client.client.core.byte_array.uint8_array_QMARK_ = function(a) {
-  return cljs.core.instance_QMARK_.call(null, Uint8Array, a)
+torrent_client.client.core.pieces.PieceFile.prototype.apply = function(a, b) {
+  return a.call.apply(a, [a].concat(cljs.core.aclone.call(null, b)))
 };
+torrent_client.client.core.pieces.PieceFile.prototype.torrent_client$client$core$pieces$Fn$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
+  return cljs.core._lookup.call(null, a, b, null)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b) {
+  return cljs.core._contains_key_QMARK_.call(null, a, b)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
+  return this.meta
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
+  return new torrent_client.client.core.pieces.PieceFile(b, this.file)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.toString = function() {
+  return cljs.core.pr_str.call(null, this)
+};
+torrent_client.client.core.pieces.PieceFile;
+torrent_client.client.core.pieces.piece_file = function(a) {
+  return new torrent_client.client.core.pieces.PieceFile(null, a)
+};
+torrent_client.client.core.pieces.Piece = function(a, b, c) {
+  this.meta = a;
+  this.byte_array = b;
+  this.__hash = c;
+  this.cljs$lang$protocol_mask$partition1$ = 0;
+  this.cljs$lang$protocol_mask$partition0$ = 2293762
+};
+torrent_client.client.core.pieces.Piece.cljs$lang$type = !0;
+torrent_client.client.core.pieces.Piece.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.core.pieces.Piece")
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
+  return this.meta
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
+  return new torrent_client.client.core.pieces.Piece(b, this.byte_array, this.__hash)
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$_hash$arity$1 = function() {
+  return cljs.core.not.call(null, null == this.__hash) ? this.__hash : torrent_client.client.core.crypt.byte_array__GT_str.call(null, torrent_client.client.core.crypt.sha1.call(null, this.byte_array))
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$_count$arity$1 = function() {
+  return cljs.core.count.call(null, this.byte_array)
+};
+torrent_client.client.core.pieces.Piece;
+torrent_client.client.core.pieces.piece = function(a) {
+  var b = cljs.core.sort.call(null, "\ufdd0'begin", a), a = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, cljs.core.comp.call(null, cljs.core.count, "\ufdd0'data"), b)), a = torrent_client.client.core.byte_array.uint8_array.call(null, a), c = cljs.core.seq.call(null, b);
+  if(cljs.core.truth_(c)) {
+    for(b = cljs.core.first.call(null, c);;) {
+      if(a.set(b.call(null, "\ufdd0'data"), b.call(null, "\ufdd0'begin")), b = cljs.core.next.call(null, c), cljs.core.truth_(b)) {
+        c = b, b = cljs.core.first.call(null, c)
+      }else {
+        break
+      }
+    }
+  }
+  return new torrent_client.client.core.pieces.Piece(null, a, null)
+};
+console.log("hi");
 torrent_client.client.bitfield = {};
 torrent_client.client.bitfield.Bitfield = function(a, b) {
   this.byte_array = a;
@@ -16186,12 +17053,96 @@ torrent_client.client.bitfield.difference = function() {
   return a
 }();
 torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.deref.call(null, c).call(null, "\ufdd0'bitfield");
-  cljs.core.assoc.call(null, e, d, !0);
-  return cljs.core.truth_(cljs.core.filter.call(null, function(a) {
-    return cljs.core._EQ_.call(null, a, 255)
-  }, e.byte_array)) ? torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", c) : null
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), c = cljs.core.deref.call(null, c).call(null, "\ufdd0'bitfield");
+  return cljs.core.assoc.call(null, c, d, !0)
 });
+var filesystem = {prefix:{}};
+filesystem.prefix.prefix = function() {
+  var a = function(a, b) {
+    var e = cljs.core.PersistentVector.fromArray(["webkit", "moz", "ms"]), e = cljs.core.into.call(null, cljs.core.ObjMap.fromObject([], {}), cljs.core.map.call(null, cljs.core.juxt.call(null, cljs.core.identity, function(b) {
+      return[cljs.core.str(b), cljs.core.str(clojure.string.capitalize.call(null, a))].join("")
+    }), e)), e = cljs.core.assoc.call(null, e, "", a), e = cljs.core.vals.call(null, cljs.core.merge.call(null, e, b)), e = cljs.core.map.call(null, function(a) {
+      return window[a]
+    }, e);
+    return cljs.core.some.call(null, function(a) {
+      return cljs.core.not.call(null, null == a) ? a : null
+    }, e)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+filesystem.prefix.requestFileSystem = filesystem.prefix.prefix.call(null, "requestFileSystem");
+filesystem.filesystem = {};
+filesystem.filesystem.request_file_system = function(a, b) {
+  return function(c, d) {
+    return window.webkitRequestFileSystem(window[cljs.core.name.call(null, a)], b, c, d)
+  }
+};
+filesystem.filesystem.request_quota = function(a, b) {
+  return function(c, d) {
+    return window.webkitStorageInfo.requestQuota(window[cljs.core.name.call(null, a)], b, c, d)
+  }
+};
+filesystem.filesystem.request_quota_then_filesystem = function(a, b) {
+  return filesystem.filesystem.request_quota.call(null, a, b).call(null, function(b) {
+    return filesystem.filesystem.request_file_system.call(null, a, b)
+  }, function(a) {
+    return console.error(a)
+  })
+};
+filesystem.filesystem.filereader = function(a) {
+  return function(b, c) {
+    var d = new FileReader;
+    d.onerror = c;
+    d.onloadend = function(a) {
+      return b.call(null, a.currentTarget.result)
+    };
+    return d.readAsArrayBuffer(a)
+  }
+};
+filesystem.entry = {};
+filesystem.entry.create_writer = function(a) {
+  return function(b) {
+    return a.createWriter(b, function(a) {
+      debugger;
+      return console.error(a)
+    })
+  }
+};
+filesystem.entry.get_entry = function() {
+  var a = null, b = function(a, b) {
+    return a.entry.get_file.call(null, a, b, cljs.core.ObjMap.fromObject([], {}))
+  }, c = function(a, b, c) {
+    return function(g, h) {
+      return a.root.getFile(b, jayq.util.clj__GT_js.call(null, c), g, h)
+    }
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+filesystem.entry.file = function(a) {
+  return function(b) {
+    return a.file(b)
+  }
+};
 clojure.set = {};
 clojure.set.bubble_max_key = function(a, b) {
   var c = cljs.core.apply.call(null, cljs.core.max_key, a, b);
@@ -16417,498 +17368,6 @@ clojure.set.superset_QMARK_ = function(a, b) {
     return cljs.core.contains_QMARK_.call(null, a, b)
   }, b) : c
 };
-torrent_client.client.core.reader = {};
-void 0;
-torrent_client.client.core.reader.PushbackReader = {};
-torrent_client.client.core.reader.read = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$core$reader$PushbackReader$read$arity$2 : a) {
-    c = a.torrent_client$client$core$reader$PushbackReader$read$arity$2(a, b)
-  }else {
-    c = torrent_client.client.core.reader.read[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.core.reader.read._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "PushbackReader.read", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-void 0;
-torrent_client.client.core.reader.ArrayPushbackReader = function(a, b) {
-  this.array = a;
-  this.index_atom = b
-};
-torrent_client.client.core.reader.ArrayPushbackReader.cljs$lang$type = !0;
-torrent_client.client.core.reader.ArrayPushbackReader.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.core.reader.ArrayPushbackReader")
-};
-torrent_client.client.core.reader.ArrayPushbackReader.prototype.torrent_client$client$core$reader$PushbackReader$ = !0;
-torrent_client.client.core.reader.ArrayPushbackReader.prototype.torrent_client$client$core$reader$PushbackReader$read$arity$2 = function(a, b) {
-  var c = cljs.core.deref.call(null, this.index_atom), d;
-  d = cljs.core.truth_(b) ? b : 1;
-  c = torrent_client.client.core.byte_array.subarray.call(null, this.array, c, c + d);
-  cljs.core.swap_BANG_.call(null, this.index_atom, cljs.core._PLUS_, d);
-  return cljs.core._EQ_.call(null, d, 1) ? c[0] : c
-};
-torrent_client.client.core.reader.ArrayPushbackReader;
-torrent_client.client.core.reader.push_back_reader = function(a) {
-  return new torrent_client.client.core.reader.ArrayPushbackReader(a, cljs.core.atom.call(null, 0))
-};
-torrent_client.client.core.bencode = {};
-torrent_client.client.core.bencode.uint8_array = function() {
-  var a = null, b = function(a) {
-    return new Uint8Array(a)
-  }, c = function(a, b) {
-    return new Uint8Array(a, b)
-  }, d = function(a, b, c) {
-    return new Uint8Array(a, b, c)
-  }, a = function(a, f, g) {
-    switch(arguments.length) {
-      case 1:
-        return b.call(this, a);
-      case 2:
-        return c.call(this, a, f);
-      case 3:
-        return d.call(this, a, f, g)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$2 = c;
-  a.cljs$lang$arity$3 = d;
-  return a
-}();
-torrent_client.client.core.bencode.char$ = function(a) {
-  return cljs.core.truth_(goog.isNumber.call(null, a)) ? String.fromCharCode(a) : cljs.core.vector_QMARK_.call(null, a) ? String.fromCharCode.apply(null, jayq.util.clj__GT_js.call(null, a)) : String.fromCharCode.apply(null, a)
-};
-torrent_client.client.core.bencode.int$ = function(a) {
-  return parseInt(a)
-};
-torrent_client.client.core.bencode.decode = function() {
-  var a = function(a, b) {
-    var e = null == b ? torrent_client.client.core.reader.read.call(null, a) : cljs.core.first.call(null, b);
-    var f = 48 <= e;
-    return(f ? 57 >= e : f) ? torrent_client.client.core.bencode.decode_string.call(null, a, e) : cljs.core._EQ_.call(null, e, 105) ? torrent_client.client.core.bencode.decode_number.call(null, a, "e") : cljs.core._EQ_.call(null, e, 108) ? torrent_client.client.core.bencode.decode_list.call(null, a) : cljs.core._EQ_.call(null, e, 100) ? torrent_client.client.core.bencode.decode_map.call(null, a) : null
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-torrent_client.client.core.bencode.decode_number = function() {
-  var a = function(a, b, e) {
-    for(var f = null == e ? torrent_client.client.core.reader.read.call(null, a) : cljs.core.first.call(null, e), e = "";;) {
-      var g = torrent_client.client.core.bencode.char$.call(null, f);
-      if(cljs.core._EQ_.call(null, g, b)) {
-        return torrent_client.client.core.bencode.int$.call(null, e)
-      }
-      f = torrent_client.client.core.reader.read.call(null, a);
-      e = [cljs.core.str(e), cljs.core.str(g)].join("")
-    }
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-torrent_client.client.core.bencode.decode_string = function(a, b) {
-  var c = torrent_client.client.core.bencode.decode_number.call(null, a, ":", b);
-  return torrent_client.client.core.bencode.char$.call(null, torrent_client.client.core.reader.read.call(null, a, c))
-};
-torrent_client.client.core.bencode.decode_list = function(a) {
-  for(var b = cljs.core.PersistentVector.fromArray([]);;) {
-    var c = torrent_client.client.core.reader.read.call(null, a);
-    if(cljs.core._EQ_.call(null, c, 101)) {
-      return b
-    }
-    b = cljs.core.conj.call(null, b, torrent_client.client.core.bencode.decode.call(null, a, c))
-  }
-};
-torrent_client.client.core.bencode.decode_map = function(a) {
-  a = torrent_client.client.core.bencode.decode_list.call(null, a);
-  return cljs.core.with_meta.call(null, cljs.core.apply.call(null, cljs.core.hash_map, a), cljs.core.ObjMap.fromObject(["\ufdd0'order"], {"\ufdd0'order":cljs.core.map.call(null, cljs.core.first, cljs.core.partition.call(null, 2, a))}))
-};
-void 0;
-torrent_client.client.core.bencode.ArrayOutputStream = {};
-torrent_client.client.core.bencode.write = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$core$bencode$ArrayOutputStream$write$arity$2 : a) {
-    c = a.torrent_client$client$core$bencode$ArrayOutputStream$write$arity$2(a, b)
-  }else {
-    c = torrent_client.client.core.bencode.write[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.core.bencode.write._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "ArrayOutputStream.write", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-void 0;
-torrent_client.client.core.bencode.ByteArrayOutputStream = function(a) {
-  this.array = a
-};
-torrent_client.client.core.bencode.ByteArrayOutputStream.cljs$lang$type = !0;
-torrent_client.client.core.bencode.ByteArrayOutputStream.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.core.bencode.ByteArrayOutputStream")
-};
-torrent_client.client.core.bencode.ByteArrayOutputStream.prototype.torrent_client$client$core$bencode$ArrayOutputStream$ = !0;
-torrent_client.client.core.bencode.ByteArrayOutputStream.prototype.torrent_client$client$core$bencode$ArrayOutputStream$write$arity$2 = function(a, b) {
-  return cljs.core.number_QMARK_.call(null, b) ? this.array.push(b) : this.array.push.apply(this.array, b)
-};
-torrent_client.client.core.bencode.ByteArrayOutputStream;
-torrent_client.client.core.bencode.byte_array_output_stream = function() {
-  return new torrent_client.client.core.bencode.ByteArrayOutputStream([])
-};
-torrent_client.client.core.bencode.encode = function(a) {
-  var b = torrent_client.client.core.bencode.byte_array_output_stream.call(null);
-  torrent_client.client.core.bencode.encode_object.call(null, a, b);
-  return b.array
-};
-torrent_client.client.core.bencode.encode_object = function(a, b) {
-  return cljs.core.string_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_string.call(null, a, b) : cljs.core.number_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_number.call(null, a, b) : cljs.core.vector_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_list.call(null, a, b) : cljs.core.map_QMARK_.call(null, a) ? torrent_client.client.core.bencode.encode_dictionary.call(null, a, b) : null
-};
-torrent_client.client.core.bencode.encode_string = function(a, b) {
-  var c = goog.crypt.stringToByteArray.call(null, a), d = goog.crypt.stringToByteArray.call(null, [cljs.core.str(cljs.core.count.call(null, c)), cljs.core.str(":")].join(""));
-  torrent_client.client.core.bencode.write.call(null, b, d, 0, cljs.core.count.call(null, d));
-  return torrent_client.client.core.bencode.write.call(null, b, c, 0, cljs.core.count.call(null, c))
-};
-torrent_client.client.core.bencode.encode_number = function(a, b) {
-  var c = [cljs.core.str("i"), cljs.core.str(a), cljs.core.str("e")].join(""), c = goog.crypt.stringToByteArray.call(null, c);
-  return torrent_client.client.core.bencode.write.call(null, b, c, 0, cljs.core.count.call(null, c))
-};
-torrent_client.client.core.bencode.encode_list = function(a, b) {
-  torrent_client.client.core.bencode.write.call(null, b, 108);
-  var c = cljs.core.seq.call(null, a);
-  if(cljs.core.truth_(c)) {
-    for(var d = cljs.core.first.call(null, c);;) {
-      if(torrent_client.client.core.bencode.encode_object.call(null, d, b), d = cljs.core.next.call(null, c), cljs.core.truth_(d)) {
-        c = d, d = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return torrent_client.client.core.bencode.write.call(null, b, 101)
-};
-torrent_client.client.core.bencode.encode_dictionary = function(a, b) {
-  torrent_client.client.core.bencode.write.call(null, b, 100);
-  var c = cljs.core.seq.call(null, null == cljs.core.meta.call(null, a) ? cljs.core.keys.call(null, a) : "\ufdd0'order".call(null, cljs.core.meta.call(null, a)));
-  if(cljs.core.truth_(c)) {
-    for(var d = cljs.core.first.call(null, c);;) {
-      if(torrent_client.client.core.bencode.encode_object.call(null, d, b), torrent_client.client.core.bencode.encode_object.call(null, a.call(null, d), b), d = cljs.core.next.call(null, c), cljs.core.truth_(d)) {
-        c = d, d = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return torrent_client.client.core.bencode.write.call(null, b, 101)
-};
-goog.crypt.Hash = function() {
-};
-goog.crypt.Sha1 = function() {
-  goog.crypt.Hash.call(this);
-  this.chain_ = [];
-  this.buf_ = [];
-  this.W_ = [];
-  this.pad_ = [];
-  this.pad_[0] = 128;
-  for(var a = 1;64 > a;++a) {
-    this.pad_[a] = 0
-  }
-  this.reset()
-};
-goog.inherits(goog.crypt.Sha1, goog.crypt.Hash);
-goog.crypt.Sha1.prototype.reset = function() {
-  this.chain_[0] = 1732584193;
-  this.chain_[1] = 4023233417;
-  this.chain_[2] = 2562383102;
-  this.chain_[3] = 271733878;
-  this.chain_[4] = 3285377520;
-  this.total_ = this.inbuf_ = 0
-};
-goog.crypt.Sha1.prototype.compress_ = function(a, b) {
-  b || (b = 0);
-  for(var c = this.W_, d = b;d < b + 64;d += 4) {
-    c[d / 4] = a[d] << 24 | a[d + 1] << 16 | a[d + 2] << 8 | a[d + 3]
-  }
-  for(d = 16;80 > d;d++) {
-    var e = c[d - 3] ^ c[d - 8] ^ c[d - 14] ^ c[d - 16];
-    c[d] = (e << 1 | e >>> 31) & 4294967295
-  }
-  for(var f = this.chain_[0], g = this.chain_[1], h = this.chain_[2], i = this.chain_[3], j = this.chain_[4], k, d = 0;80 > d;d++) {
-    40 > d ? 20 > d ? (e = i ^ g & (h ^ i), k = 1518500249) : (e = g ^ h ^ i, k = 1859775393) : 60 > d ? (e = g & h | i & (g | h), k = 2400959708) : (e = g ^ h ^ i, k = 3395469782), e = (f << 5 | f >>> 27) + e + j + k + c[d] & 4294967295, j = i, i = h, h = (g << 30 | g >>> 2) & 4294967295, g = f, f = e
-  }
-  this.chain_[0] = this.chain_[0] + f & 4294967295;
-  this.chain_[1] = this.chain_[1] + g & 4294967295;
-  this.chain_[2] = this.chain_[2] + h & 4294967295;
-  this.chain_[3] = this.chain_[3] + i & 4294967295;
-  this.chain_[4] = this.chain_[4] + j & 4294967295
-};
-goog.crypt.Sha1.prototype.update = function(a, b) {
-  goog.isDef(b) || (b = a.length);
-  var c = this.buf_, d = this.inbuf_, e = 0;
-  if(goog.isString(a)) {
-    for(;e < b;) {
-      c[d++] = a.charCodeAt(e++), 64 == d && (this.compress_(c), d = 0)
-    }
-  }else {
-    for(;e < b;) {
-      c[d++] = a[e++], 64 == d && (this.compress_(c), d = 0)
-    }
-  }
-  this.inbuf_ = d;
-  this.total_ += b
-};
-goog.crypt.Sha1.prototype.digest = function() {
-  var a = [], b = 8 * this.total_;
-  56 > this.inbuf_ ? this.update(this.pad_, 56 - this.inbuf_) : this.update(this.pad_, 64 - (this.inbuf_ - 56));
-  for(var c = 63;56 <= c;c--) {
-    this.buf_[c] = b & 255, b /= 256
-  }
-  this.compress_(this.buf_);
-  for(c = b = 0;5 > c;c++) {
-    for(var d = 24;0 <= d;d -= 8) {
-      a[b++] = this.chain_[c] >> d & 255
-    }
-  }
-  return a
-};
-torrent_client.client.core.crypt = {};
-torrent_client.client.core.crypt.sha1 = function(a) {
-  var b = new goog.crypt.Sha1;
-  b.update(a);
-  return b.digest()
-};
-torrent_client.client.core.crypt.sizes = cljs.core.ObjMap.fromObject("\ufdd0'byte \ufdd0'char \ufdd0'short \ufdd0'int \ufdd0'long \ufdd0'float \ufdd0'double".split(" "), {"\ufdd0'byte":1, "\ufdd0'char":2, "\ufdd0'short":2, "\ufdd0'int":4, "\ufdd0'long":8, "\ufdd0'float":4, "\ufdd0'double":8});
-torrent_client.client.core.crypt.pack = function() {
-  var a = function(a) {
-    a = cljs.core.partition.call(null, 2, a);
-    return cljs.core.apply.call(null, cljs.core.str, cljs.core.map.call(null, torrent_client.client.core.crypt.pack_data, a))
-  }, b = function(b) {
-    var d = null;
-    goog.isDef(b) && (d = cljs.core.array_seq(Array.prototype.slice.call(arguments, 0), 0));
-    return a.call(this, d)
-  };
-  b.cljs$lang$maxFixedArity = 0;
-  b.cljs$lang$applyTo = function(b) {
-    b = cljs.core.seq(b);
-    return a(b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-torrent_client.client.core.crypt.pack_data = function() {
-  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
-  return new cljs.core.MultiFn("pack-data", function(a) {
-    var b = cljs.core.nth.call(null, a, 0, null);
-    cljs.core.nth.call(null, a, 1, null);
-    return b
-  }, "\ufdd0'default", e, a, b, c, d)
-}();
-cljs.core._add_method.call(null, torrent_client.client.core.crypt.pack_data, "\ufdd0'int", function(a) {
-  cljs.core.nth.call(null, a, 0, null);
-  a = cljs.core.nth.call(null, a, 1, null);
-  return torrent_client.client.core.bencode.char$.call(null, cljs.core.PersistentVector.fromArray([255 & a >> 24, 255 & a >> 16, 255 & a >> 8, 255 & a]))
-});
-torrent_client.client.core.crypt.unpack = function(a, b) {
-  for(var c = torrent_client.client.core.reader.push_back_reader.call(null, b), d = a, e = cljs.core.PersistentVector.fromArray([]);;) {
-    var f = cljs.core.first.call(null, d);
-    if(cljs.core.truth_(f)) {
-      var g = torrent_client.client.core.reader.read.call(null, c, torrent_client.client.core.crypt.sizes.call(null, f)), d = cljs.core.rest.call(null, d), e = cljs.core.conj.call(null, e, torrent_client.client.core.crypt.unpack_data.call(null, f, g))
-    }else {
-      return e
-    }
-  }
-};
-torrent_client.client.core.crypt.unpack_data = function() {
-  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
-  return new cljs.core.MultiFn("unpack-data", function(a) {
-    return a
-  }, "\ufdd0'default", e, a, b, c, d)
-}();
-cljs.core._add_method.call(null, torrent_client.client.core.crypt.unpack_data, "\ufdd0'int", function(a, b) {
-  return(cljs.core.nth.call(null, b, 0) << 24) + (cljs.core.nth.call(null, b, 1) << 16) + (cljs.core.nth.call(null, b, 2) << 8) + cljs.core.nth.call(null, b, 3)
-});
-torrent_client.client.core.crypt.b64_encode = function(a) {
-  return window.btoa(a)
-};
-torrent_client.client.core.crypt.b64_decode = function(a) {
-  return window.atob(a)
-};
-torrent_client.client.core.crypt.str__GT_byte_array = function(a) {
-  var b = new ArrayBuffer(cljs.core.count.call(null, a)), b = new Uint8Array(b), c = cljs.core.seq.call(null, cljs.core.range.call(null, cljs.core.count.call(null, a)));
-  if(cljs.core.truth_(c)) {
-    for(var d = cljs.core.first.call(null, c);;) {
-      var e = a.charCodeAt(d);
-      b[d] = e;
-      d = cljs.core.next.call(null, c);
-      if(cljs.core.truth_(d)) {
-        c = d, d = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return b
-};
-torrent_client.client.core.crypt.byte_array__GT_str = function(a) {
-  return goog.crypt.byteArrayToString.call(null, jayq.util.clj__GT_js.call(null, a))
-};
-torrent_client.client.core.pieces = {};
-torrent_client.client.core.pieces.PieceFile = function(a, b) {
-  this.meta = a;
-  this.file = b;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 2294145
-};
-torrent_client.client.core.pieces.PieceFile.cljs$lang$type = !0;
-torrent_client.client.core.pieces.PieceFile.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.core.pieces.PieceFile")
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
-  return goog.getUid.call(null, a)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$_contains_key_QMARK_$arity$2 = function(a, b) {
-  if(cljs.core.not.call(null, null == this.meta)) {
-    var c = this.meta.call(null, "\ufdd0'block-start") <= b;
-    return c ? b <= this.meta.call(null, "\ufdd0'piece-end") : c
-  }
-  return null
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IFn$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.call = function() {
-  var a = null;
-  return a = function(a, c, d) {
-    switch(arguments.length) {
-      case 1:
-        return this.file;
-      case 2:
-        return cljs.core._lookup.call(null, this, c);
-      case 3:
-        return cljs.core._lookup.call(null, this, c, d)
-    }
-    throw"Invalid arity: " + arguments.length;
-  }
-}();
-torrent_client.client.core.pieces.PieceFile.prototype.apply = function(a, b) {
-  return a.call.apply(a, [a].concat(cljs.core.aclone.call(null, b)))
-};
-torrent_client.client.core.pieces.PieceFile.prototype.torrent_client$client$core$pieces$Fn$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  return cljs.core._lookup.call(null, a, b, null)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b) {
-  return cljs.core._contains_key_QMARK_.call(null, a, b)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new torrent_client.client.core.pieces.PieceFile(b, this.file)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.toString = function() {
-  return cljs.core.pr_str.call(null, this)
-};
-torrent_client.client.core.pieces.PieceFile;
-torrent_client.client.core.pieces.piece_file = function(a) {
-  return new torrent_client.client.core.pieces.PieceFile(null, a)
-};
-torrent_client.client.core.pieces.Piece = function(a, b, c) {
-  this.meta = a;
-  this.byte_array = b;
-  this.__hash = c;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 2293762
-};
-torrent_client.client.core.pieces.Piece.cljs$lang$type = !0;
-torrent_client.client.core.pieces.Piece.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.core.pieces.Piece")
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new torrent_client.client.core.pieces.Piece(b, this.byte_array, this.__hash)
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$_hash$arity$1 = function() {
-  return cljs.core.not.call(null, null == this.__hash) ? this.__hash : torrent_client.client.core.crypt.byte_array__GT_str.call(null, torrent_client.client.core.crypt.sha1.call(null, this.byte_array))
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$_count$arity$1 = function() {
-  return cljs.core.count.call(null, this.byte_array)
-};
-torrent_client.client.core.pieces.Piece;
-torrent_client.client.core.pieces.piece = function(a) {
-  var b = cljs.core.sort.call(null, "\ufdd0'begin", a), a = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, cljs.core.comp.call(null, cljs.core.count, "\ufdd0'data"), b)), a = torrent_client.client.core.byte_array.uint8_array.call(null, a), c = cljs.core.seq.call(null, b);
-  if(cljs.core.truth_(c)) {
-    for(b = cljs.core.first.call(null, c);;) {
-      if(a.set(b.call(null, "\ufdd0'data"), b.call(null, "\ufdd0'begin")), b = cljs.core.next.call(null, c), cljs.core.truth_(b)) {
-        c = b, b = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return new torrent_client.client.core.pieces.Piece(null, a, null)
-};
-console.log("hi");
-filesystem.entry = {};
-filesystem.entry.create_writer = function(a) {
-  return function(b) {
-    return a.createWriter(b, function(a) {
-      debugger;
-      return console.error(a)
-    })
-  }
-};
-filesystem.entry.get_entry = function() {
-  var a = null, b = function(a, b) {
-    return a.entry.get_file.call(null, a, b, cljs.core.ObjMap.fromObject([], {}))
-  }, c = function(a, b, c) {
-    return function(g, h) {
-      return a.root.getFile(b, jayq.util.clj__GT_js.call(null, c), g, h)
-    }
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-filesystem.entry.file = function(a) {
-  return function(b) {
-    return a.file(b)
-  }
-};
 torrent_client.client.pieces = {};
 torrent_client.client.pieces.block_length = 16384;
 torrent_client.client.pieces.files = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
@@ -16937,7 +17396,7 @@ torrent_client.client.pieces.get_next_piece = function(a, b) {
       }
     }
   }
-  return cljs.core.first.call(null, e)
+  return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, e)) ? cljs.core.rand_nth.call(null, e) : null
 };
 torrent_client.client.pieces.work_next_piece = function(a, b) {
   var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), d = torrent_client.client.pieces.get_next_piece.call(null, a, b);
@@ -16945,9 +17404,19 @@ torrent_client.client.pieces.work_next_piece = function(a, b) {
   cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.working, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([c], [cljs.core.PersistentVector.fromArray([d])]));
   return d
 };
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'invalid-piece", "\ufdd0'written-piece"]), function(a, b, c) {
+  a = cljs.core.remove.call(null, function(a) {
+    return cljs.core._EQ_.call(null, c, a)
+  }, cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, "\ufdd0'info-hash"));
+  return cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.working, cljs.core.assoc, torrent_client.client.pieces.info_hash, a)
+});
 torrent_client.client.pieces.piece_length = function(a, b) {
   console.log("piece-length", b);
   return cljs.core._EQ_.call(null, b, cljs.core.deref.call(null, a).call(null, "\ufdd0'pieces-length") - 1) ? cljs.core.deref.call(null, a).call(null, "\ufdd0'last-piece-length") : cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")
+};
+torrent_client.client.pieces.piece_offset = function(a, b) {
+  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), c = cljs.core.take.call(null, b, c);
+  return cljs.core.count.call(null, cljs.core.remove.call(null, cljs.core.zero_QMARK_, c)) * cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")
 };
 torrent_client.client.pieces.piece_blocks = function(a, b) {
   var c = torrent_client.client.pieces.piece_length.call(null, a, b);
@@ -16977,7 +17446,7 @@ torrent_client.client.pieces.get_file_block = function(a, b, c) {
 };
 torrent_client.client.pieces.get_block = function(a, b, c, d) {
   return function(e) {
-    var f = b * cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length"), g = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), f = f + c, g = cljs.core.filter.call(null, function(a) {
+    var f = torrent_client.client.pieces.piece_offset.call(null, a, b), g = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), f = f + c, g = cljs.core.filter.call(null, function(a) {
       return cljs.core.contains_QMARK_.call(null, a, b)
     }, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, g));
     console.log("get-block", b, c, d);
@@ -17009,13 +17478,13 @@ torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'r
     if(cljs.core._EQ_.call(null, cljs.core.hash.call(null, h), cljs.core.nth.call(null, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-hash"), d))) {
       return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-piece", cljs.core.PersistentVector.fromArray([g, d, h]))
     }
-    console.error("invalid hash");
+    console.error("invalid hash", d);
     return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'invalid-piece", cljs.core.PersistentVector.fromArray([c, d]))
   }
   return null
 });
 torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), f = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, c), g = d * cljs.core.deref.call(null, f).call(null, "\ufdd0'piece-length"), c = cljs.core.filter.call(null, function(a) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), f = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, c), g = torrent_client.client.pieces.piece_offset.call(null, f, d), c = cljs.core.filter.call(null, function(a) {
     return cljs.core.contains_QMARK_.call(null, a, d)
   }, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, c)), h = cljs.core.seq.call(null, c);
   if(cljs.core.truth_(h)) {
@@ -17059,154 +17528,610 @@ torrent_client.client.pieces.seek_then_write = function seek_then_write(b, c, d)
   }
   return null
 };
-torrent_client.client.core.string = {};
-torrent_client.client.core.string.partition_string = function(a, b) {
-  var c = cljs.core.count.call(null, b);
-  return cljs.core.map.call(null, function(a) {
-    return cljs.core.subs.call(null, b, a, a + 20 < c ? a + 20 : c)
-  }, cljs.core.range.call(null, 0, c, 20))
-};
-torrent_client.client.core.string.pad_string = function(a, b, c) {
-  return cljs.core.count.call(null, a) > c ? (a = c - cljs.core.count.call(null, a), c = a / cljs.core.count.call(null, b), b = "" + cljs.core.str(cljs.core.take.call(null, c, cljs.core.repeat.call(null, b))), cljs.core.subs.call(null, b, 0, a)) : null
-};
-torrent_client.client.core.string.pad_string_left = function(a, b, c) {
-  return[cljs.core.str(a), cljs.core.str(torrent_client.client.core.string.pad_string.call(null, a, b, c))].join("")
-};
-torrent_client.client.core.string.pad_string_right = function(a, b, c) {
-  return[cljs.core.str(torrent_client.client.core.string.pad_string.call(null, a, b, c)), cljs.core.str(a)].join("")
-};
-torrent_client.client.core.string.a2b_part = function(a) {
-  var a = clojure.string.join.call(null, a), b = parseInt(a, 16);
-  return cljs.core.truth_(function() {
-    var a = function() {
-      var a = 65 <= b;
-      return a ? 90 >= b : a
-    }();
-    if(cljs.core.truth_(a)) {
-      return a
+torrent_client.client.torrent = {};
+torrent_client.client.torrent.set_file_data = function() {
+  var a = null, b = function(b) {
+    return a.call(null, b, 0, cljs.core.PersistentVector.fromArray([]))
+  }, c = function(a, b, c) {
+    for(;;) {
+      if(cljs.core.empty_QMARK_.call(null, a)) {
+        return c
+      }
+      var g = b + cljs.core.get.call(null, cljs.core.first.call(null, a), "\ufdd0'length"), b = cljs.core.ObjMap.fromObject(["\ufdd0'pos-start", "\ufdd0'pos-end"], {"\ufdd0'pos-start":b, "\ufdd0'pos-end":g}), b = cljs.core.merge.call(null, cljs.core.first.call(null, a), b), a = cljs.core.rest.call(null, a), c = cljs.core.conj.call(null, c, b), b = g
     }
-    a = function() {
-      var a = 97 <= b;
-      return a ? 122 >= b : a
-    }();
-    if(cljs.core.truth_(a)) {
-      return a
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 3:
+        return c.call(this, a, e, f)
     }
-    a = function() {
-      var a = 48 <= b;
-      return a ? 57 >= b : a
-    }();
-    return cljs.core.truth_(a) || (a = cljs.core._EQ_.call(null, b, 45)) || (a = cljs.core._EQ_.call(null, b, 95)) ? a : (a = cljs.core._EQ_.call(null, b, 46)) ? a : cljs.core._EQ_.call(null, b, 126)
-  }()) ? String.fromCharCode(b) : [cljs.core.str("%"), cljs.core.str(a)].join("")
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+torrent_client.client.torrent.read_metainfo_byte_array = function(a) {
+  var a = torrent_client.client.core.reader.push_back_reader.call(null, torrent_client.client.core.bencode.uint8_array.call(null, a, 0)), a = torrent_client.client.core.bencode.decode.call(null, a), b = a.call(null, "info"), c = torrent_client.client.core.crypt.sha1.call(null, torrent_client.client.core.bencode.encode.call(null, b)), d = torrent_client.client.core.string.pad_string_left.call(null, goog.crypt.byteArrayToHex.call(null, c), "0", 40), e = torrent_client.client.core.string.partition_string.call(null, 
+  20, b.call(null, "pieces")), f = cljs.core.count.call(null, e), g = b.call(null, "piece length"), h = torrent_client.client.bitfield.bitfield.call(null, f), i = cljs.core.PersistentVector.fromArray([a.call(null, "announce")]), i = cljs.core.reduce.call(null, cljs.core.conj, i, cljs.core.flatten.call(null, a.call(null, "announce-list"))), j;
+  j = cljs.core.js__GT_clj.call(null, b.call(null, "files"), "\ufdd0'keywordize", !0);
+  j = cljs.core.truth_(j) ? j : cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'path", "\ufdd0'length"], {"\ufdd0'path":b.call(null, "name"), "\ufdd0'length":b.call(null, "length")})]);
+  j = torrent_client.client.torrent.set_file_data.call(null, j);
+  var k = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, "\ufdd0'length", j)), l = cljs.core.rem.call(null, k, g), l = 0 === l ? g : l;
+  return cljs.core.ObjMap.fromObject("\ufdd0'piece-length \ufdd0'pieces-hash \ufdd0'comment \ufdd0'pretty-info-hash \ufdd0'name \ufdd0'bitfield \ufdd0'total-length \ufdd0'pieces-length \ufdd0'announce-list \ufdd0'current-length \ufdd0'encoding \ufdd0'files \ufdd0'info-hash \ufdd0'last-piece-length".split(" "), {"\ufdd0'piece-length":g, "\ufdd0'pieces-hash":e, "\ufdd0'comment":b.call(null, "comment"), "\ufdd0'pretty-info-hash":d, "\ufdd0'name":b.call(null, "name"), "\ufdd0'bitfield":h, "\ufdd0'total-length":k, 
+  "\ufdd0'pieces-length":f, "\ufdd0'announce-list":cljs.core.filter.call(null, torrent_client.client.core.url.http_scheme_QMARK_, i), "\ufdd0'current-length":0, "\ufdd0'encoding":a.call(null, "encoding"), "\ufdd0'files":j, "\ufdd0'info-hash":c, "\ufdd0'last-piece-length":l})
 };
-torrent_client.client.core.string.a2b_hex = function(a) {
-  console.log("a2b-hex", a, clojure.string.join.call(null, cljs.core.map.call(null, torrent_client.client.core.string.a2b_part, cljs.core.partition.call(null, 2, a))));
-  return clojure.string.join.call(null, cljs.core.map.call(null, torrent_client.client.core.string.a2b_part, cljs.core.partition.call(null, 2, a)))
+torrent_client.client.torrent.read_metainfo_file = function(a) {
+  return function(b) {
+    return filesystem.filesystem.filereader.call(null, a).call(null, function(a) {
+      return b.call(null, torrent_client.client.torrent.read_metainfo_byte_array.call(null, a))
+    }, function(a) {
+      return console.error(a)
+    })
+  }
 };
-torrent_client.client.blocks = {};
-torrent_client.client.blocks.BlockFile = function(a, b) {
-  this.meta = a;
-  this.file = b;
+torrent_client.client.torrent.write_input_to_file = function(a, b, c) {
+  console.log("write-input-to-file", b, c);
+  return function(d, e) {
+    return filesystem.entry.get_entry.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'create"], {"\ufdd0'create":!0})).call(null, function(a) {
+      return filesystem.entry.create_writer.call(null, a).call(null, function(b) {
+        b.onerror = e;
+        b.onwriteend = function() {
+          return d.call(null, a)
+        };
+        return null == c ? d.call(null, a) : b.write(c)
+      }, function(a) {
+        return console.error(a)
+      })
+    }, function(a) {
+      return console.error(a)
+    })
+  }
+};
+torrent_client.client.torrent.write_metainfo_to_db = function(a) {
+  var b = torrent_client.client.core.db.create_transaction.call(null, cljs.core.deref.call(null, torrent_client.client.storage.connection), cljs.core.PersistentVector.fromArray(["metainfo"]), "readwrite").objectStore("metainfo");
+  return cljs.core.assoc_BANG_.call(null, b, a.call(null, "\ufdd0'pretty-info-hash"), a)
+};
+torrent_client.client.torrent.build_files = function(a, b, c) {
+  var d = cljs.core.deref.call(null, a).call(null, "\ufdd0'total-length");
+  return filesystem.filesystem.request_quota.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
+    return filesystem.filesystem.request_file_system.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
+      var e = cljs.core.seq.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'files"));
+      if(cljs.core.truth_(e)) {
+        for(var h = cljs.core.first.call(null, e);;) {
+          var i = cljs.core.first.call(null, cljs.core.filter.call(null, function(a) {
+            return function(b) {
+              return cljs.core._EQ_.call(null, b.name, "\ufdd0'path".call(null, a))
+            }
+          }(h, e), b));
+          torrent_client.client.torrent.write_input_to_file.call(null, d, "\ufdd0'path".call(null, h), i).call(null, function(b) {
+            return function(d) {
+              torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'add-file", cljs.core.PersistentVector.fromArray([a, d, b]));
+              return c.call(null, d)
+            }
+          }(h, e, i), function() {
+            return function(a) {
+              return console.error(a)
+            }
+          }(h, e, i));
+          h = cljs.core.next.call(null, e);
+          if(cljs.core.truth_(h)) {
+            e = h, h = cljs.core.first.call(null, e)
+          }else {
+            return null
+          }
+        }
+      }else {
+        return null
+      }
+    }, function(a) {
+      return console.error(a)
+    })
+  }, function(a) {
+    return console.error(a)
+  })
+};
+torrent_client.client.torrent.torrent_machine = function(a, b) {
+  var c = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'torrent-machine", "\ufdd0'current":"\ufdd0'init"})), d = cljs.core.atom.call(null, a);
+  waltz.state.add_event.call(null, c, "\ufdd0'add-files", function(a) {
+    console.log(":add-files");
+    return torrent_client.client.torrent.build_files.call(null, d, a, function(a) {
+      return waltz.state.trigger.call(null, c, "\ufdd0'file", a)
+    })
+  });
+  waltz.state.add_event.call(null, c, "\ufdd0'file", function() {
+    return cljs.core._EQ_.call(null, cljs.core.count.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'files")), cljs.core.count.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'pretty-info-hash")))) ? waltz.state.set.call(null, c, "\ufdd0'has-files") : null
+  });
+  var e = waltz.state.state_STAR_.call(null);
+  waltz.state.add_state.call(null, c, "\ufdd0'init", e);
+  e = waltz.state.in_STAR_.call(null, "Once the metainfo is generated check the files".call(null, waltz.state.state_STAR_.call(null)), function() {
+    return waltz.state.trigger.call(null, c, "\ufdd0'add-files", b)
+  });
+  waltz.state.add_state.call(null, c, "\ufdd0'has-metainfo", e);
+  e = waltz.state.in_STAR_.call(null, "Once the files are checked/created move to ready".call(null, waltz.state.state_STAR_.call(null)), function() {
+    0 !== cljs.core.count.call(null, b) && (torrent_client.client.bitfield.fill_bitfield.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'bitfield"), cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'pieces-written", cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", d));
+    return waltz.state.set.call(null, c, "\ufdd0'ready")
+  });
+  waltz.state.add_state.call(null, c, "\ufdd0'has-files", e);
+  e = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'status", "\ufdd0'processed");
+    console.log("about to :add-torrent");
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'processed-torrent", d)
+  });
+  waltz.state.add_state.call(null, c, "\ufdd0'ready", e);
+  return waltz.state.set.call(null, c, "\ufdd0'has-metainfo")
+};
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-object"]), function(a, b) {
+  return torrent_client.client.torrent.torrent_machine.call(null, b, cljs.core.PersistentVector.fromArray([]))
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file"]), function(a, b) {
+  return torrent_client.client.torrent.read_metainfo_file.call(null, b).call(null, function(a) {
+    return torrent_client.client.torrent.torrent_machine.call(null, a, cljs.core.PersistentVector.fromArray([]))
+  }, function(a) {
+    return console.error(a)
+  })
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-byte-array"]), function(a, b) {
+  var c = torrent_client.client.torrent.read_metainfo_byte_array.call(null, b);
+  return torrent_client.client.torrent.torrent_machine.call(null, c, cljs.core.PersistentVector.fromArray([]))
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-and-files"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
+  return torrent_client.client.torrent.torrent_machine.call(null, c, d)
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file-and-files"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
+  return torrent_client.client.torrent.read_metainfo_file.call(null, c).call(null, function(a) {
+    return torrent_client.client.torrent.torrent_machine.call(null, a, d)
+  }, function(a) {
+    return console.error(a)
+  })
+});
+torrent_client.client.peer_id = {};
+torrent_client.client.peer_id.peer_id = cljs.core.atom.call(null, null);
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'document-ready"]), function() {
+  return cljs.core.reset_BANG_.call(null, torrent_client.client.peer_id.peer_id, torrent_client.client.peer_id.generate_peer_id.call(null))
+});
+torrent_client.client.peer_id.generate_peer_id = function() {
+  var a = goog.string.getRandomString.call(null), a = goog.crypt.byteArrayToHex.call(null, torrent_client.client.core.crypt.sha1.call(null, a));
+  return[cljs.core.str("AM1-0-0--"), cljs.core.str(cljs.core.subs.call(null, a, 0, 20 - cljs.core.count.call(null, "AM1-0-0--")))].join("")
+};
+torrent_client.client.protocol.bittorrent = {};
+torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_ = function(a) {
+  return cljs.core.instance_QMARK_.call(null, Uint8Array, a)
+};
+torrent_client.client.protocol.bittorrent.Char = function(a) {
+  this.code = a;
   this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 2294145
+  this.cljs$lang$protocol_mask$partition0$ = 3145730
 };
-torrent_client.client.blocks.BlockFile.cljs$lang$type = !0;
-torrent_client.client.blocks.BlockFile.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.blocks.BlockFile")
+torrent_client.client.protocol.bittorrent.Char.cljs$lang$type = !0;
+torrent_client.client.protocol.bittorrent.Char.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.Char")
 };
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
-  return goog.getUid.call(null, a)
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$ = !0;
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$_count$arity$1 = function() {
+  return 1
 };
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IAssociative$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IAssociative$_contains_key_QMARK_$arity$2 = function(a, b) {
-  if(cljs.core.not.call(null, null == this.meta)) {
-    var c = this.meta.call(null, "\ufdd0'block-start") <= b;
-    return c ? b <= this.meta.call(null, "\ufdd0'block-end") : c
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$ = !0;
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
+  return goog.string.hashCode.call(null, cljs.core.pr_str.call(null, a))
+};
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$ = !0;
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$_equiv$arity$2 = function(a, b) {
+  if(torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_.call(null, b)) {
+    var c = cljs.core._EQ_.call(null, cljs.core.count.call(null, b), 1);
+    return c ? cljs.core._EQ_.call(null, cljs.core.first.call(null, b), this.code) : c
+  }
+  return cljs.core.string_QMARK_.call(null, b) ? cljs.core._EQ_.call(null, b, "" + cljs.core.str(this.code)) : cljs.core._EQ_.call(null, b, this.code)
+};
+torrent_client.client.protocol.bittorrent.Char.prototype.toString = function() {
+  return String.fromCharCode(this.code)
+};
+torrent_client.client.protocol.bittorrent.Char;
+torrent_client.client.protocol.bittorrent.char$ = function(a) {
+  return new torrent_client.client.protocol.bittorrent.Char(a)
+};
+torrent_client.client.protocol.bittorrent.msg_choke = torrent_client.client.protocol.bittorrent.char$.call(null, 0);
+torrent_client.client.protocol.bittorrent.msg_unchoke = torrent_client.client.protocol.bittorrent.char$.call(null, 1);
+torrent_client.client.protocol.bittorrent.msg_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 2);
+torrent_client.client.protocol.bittorrent.msg_not_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 3);
+torrent_client.client.protocol.bittorrent.msg_have = torrent_client.client.protocol.bittorrent.char$.call(null, 4);
+torrent_client.client.protocol.bittorrent.msg_bitfield = torrent_client.client.protocol.bittorrent.char$.call(null, 5);
+torrent_client.client.protocol.bittorrent.msg_request = torrent_client.client.protocol.bittorrent.char$.call(null, 6);
+torrent_client.client.protocol.bittorrent.msg_piece = torrent_client.client.protocol.bittorrent.char$.call(null, 7);
+torrent_client.client.protocol.bittorrent.msg_cancel = torrent_client.client.protocol.bittorrent.char$.call(null, 8);
+torrent_client.client.protocol.bittorrent.msg_handshake = torrent_client.client.protocol.bittorrent.char$.call(null, 19);
+torrent_client.client.protocol.bittorrent.receive_data = function() {
+  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
+  return new cljs.core.MultiFn("receive-data", function(a, b) {
+    return torrent_client.client.protocol.bittorrent.char$.call(null, cljs.core.first.call(null, b))
+  }, "\ufdd0'default", e, a, b, c, d)
+}();
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_choke, function(a) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-choke")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_unchoke, function(a) {
+  console.log("msg-unchoke");
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-unchoke")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_interested, function(a) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-interested")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_not_interested, function(a) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-not-interested")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_have, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int"]), cljs.core.rest.call(null, b));
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-have", c)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_bitfield, function(a, b) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-bitfield", torrent_client.client.bitfield.bitfield.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 1)))
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_request, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-request", d, e, c)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_piece, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1, 9)), d = cljs.core.nth.call(null, c, 0, null), c = cljs.core.nth.call(null, c, 1, null), e = torrent_client.client.core.byte_array.subarray.call(null, b, 9);
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-block", d, c, e)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_cancel, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), cljs.core.rest.call(null, b)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-cancel", d, e, c)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, "\ufdd0'default", function(a, b) {
+  var c = cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 28, 48)), d = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 48, 68)));
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-handshake", c, d)
+});
+torrent_client.client.protocol.bittorrent.BittorrentProtocol = function(a, b, c) {
+  this.torrent = a;
+  this.channel = b;
+  this.peer = c
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$type = !0;
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.BittorrentProtocol")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$ = !0;
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_request$arity$4 = function(a, b, c, d) {
+  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_request, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$2 = function(a, b) {
+  return this.channel.send(b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$3 = function(a, b, c) {
+  if(null == c) {
+    return torrent_client.client.protocol.main.send_data.call(null, a, "" + cljs.core.str(b))
+  }
+  if(cljs.core.string_QMARK_.call(null, c)) {
+    return torrent_client.client.protocol.main.send_data.call(null, a, [cljs.core.str(b), cljs.core.str(c)].join(""))
+  }
+  c = cljs.core.vector_QMARK_.call(null, c) ? c : cljs.core.vector.call(null, c);
+  b = [cljs.core.str(b), cljs.core.str(cljs.core.apply.call(null, cljs.core.str, c))].join("");
+  return torrent_client.client.protocol.main.send_data.call(null, a, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1 = function(a) {
+  var b = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.PersistentVector.fromArray([0, 0, 0, 0, 0, 0, 0, 0])), c = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'info-hash")), b = [cljs.core.str("BitTorrent protocol"), cljs.core.str(b), cljs.core.str(c), cljs.core.str(cljs.core.deref.call(null, torrent_client.client.peer_id.peer_id))].join("");
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_handshake, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_choke$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_choke, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_interested$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_interested, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_unchoke, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4 = function(a, b, c, d) {
+  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_cancel, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_have$arity$2 = function(a, b) {
+  var c = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_have, c)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_block$arity$4 = function(a, b, c, d) {
+  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_piece, cljs.core.PersistentVector.fromArray([b, d]))
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1 = function(a) {
+  var b = cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'bitfield").byte_array;
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_bitfield, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_not_interested, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1 = function() {
+  var a = this;
+  return a.channel.onmessage = function(b) {
+    return cljs.core.string_QMARK_.call(null, b.data) ? torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, torrent_client.client.core.crypt.str__GT_byte_array.call(null, b.data)) : torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, b.data)
+  }
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol;
+torrent_client.client.protocol.bittorrent.generate_protocol = function(a, b, c) {
+  a = new torrent_client.client.protocol.bittorrent.BittorrentProtocol(a, b, c);
+  torrent_client.client.protocol.main.watch_channel.call(null, a);
+  return a
+};
+torrent_client.client.peer = {};
+torrent_client.client.peer.peer_machine = function(a, b, c, d) {
+  var e = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'peer-machine", "\ufdd0'current":"\ufdd0'init"})), f = torrent_client.client.protocol.bittorrent.generate_protocol.call(null, a, b, e), g = cljs.core.atom.call(null, cljs.core.merge.call(null, c, cljs.core.ObjMap.fromObject(["\ufdd0'choking", "\ufdd0'interested"], {"\ufdd0'choking":!0, "\ufdd0'interested":!1})));
+  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'choke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
+    return waltz.state.trigger.call(null, e, "\ufdd0'choke-peer")
+  });
+  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
+    console.log("dispatched");
+    return waltz.state.trigger.call(null, e, "\ufdd0'unchoke-peer")
+  });
+  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'invalid-piece", "\ufdd0'written-piece"]), function() {
+    return waltz.state.trigger.call(null, e, "\ufdd0'request-piece")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-handshake", function(b, c) {
+    console.log("recieve handshake", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c);
+    var d;
+    d = (d = cljs.core._EQ_.call(null, cljs.core.vec.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'info-hash")), b)) ? cljs.core._EQ_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c) : d;
+    return d ? (torrent_client.client.waltz.transition.call(null, e, "\ufdd0'sent-handshake", "\ufdd0'sent-bitfield"), torrent_client.client.waltz.transition.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake")) : null
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-choke", function() {
+    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'choked-not-interested");
+    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-interested", "\ufdd0'choked-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-unchoke", function() {
+    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'not-choked-not-interested");
+    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-interested", "\ufdd0'not-choked-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-interested", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !0);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-interested", a)
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-not-interested", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !1);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-not-interested", a)
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-have", function(b) {
+    bitfield.set_BANG_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"), b, !0);
+    b = torrent_client.client.pieces.get_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
+    return cljs.core.truth_(b) ? torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'not-choked-interested") : torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'choked-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-bitfield", function(b) {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'bitfield", b);
+    cljs.core.not.call(null, waltz.state.in_QMARK_.call(null, e, "\ufdd0'sent-bitfield")) && waltz.state.set.call(null, e, "\ufdd0'sent-bitfield");
+    b = torrent_client.client.pieces.get_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
+    return cljs.core.truth_(b) ? waltz.state.set.call(null, e, "\ufdd0'choked-interested") : waltz.state.set.call(null, e, "\ufdd0'choked-not-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-request", function(b, c, d) {
+    return cljs.core.truth_(cljs.core.deref.call(null, g).call(null, "\ufdd0'choking")) ? null : cljs.core.not.call(null, 0 === cljs.core.nth.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), b)) ? torrent_client.client.pieces.get_block.call(null, a, b, c, d).call(null, function(a) {
+      return torrent_client.client.protocol.main.send_block.call(null, f, b, c, a)
+    }, function(a) {
+      return console.error(a)
+    }) : null
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-block", function(b, c, d) {
+    console.log("received block", b, c);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-block", cljs.core.PersistentVector.fromArray([a, b, c, d]))
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'request-piece", function() {
+    console.log("written-piece");
+    var b = torrent_client.client.pieces.work_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
+    if(cljs.core.truth_(b)) {
+      var c = cljs.core.seq.call(null, torrent_client.client.pieces.piece_blocks.call(null, a, b));
+      if(cljs.core.truth_(c)) {
+        var d = cljs.core.first.call(null, c);
+        cljs.core.nth.call(null, d, 0, null);
+        for(cljs.core.nth.call(null, d, 1, null);;) {
+          var e = d, d = cljs.core.nth.call(null, e, 0, null), e = cljs.core.nth.call(null, e, 1, null);
+          torrent_client.client.protocol.main.send_request.call(null, f, b, d, e);
+          c = cljs.core.next.call(null, c);
+          if(cljs.core.truth_(c)) {
+            d = c, c = cljs.core.first.call(null, d), e = d, d = c, c = e
+          }else {
+            return null
+          }
+        }
+      }else {
+        return null
+      }
+    }else {
+      return null
+    }
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-cancel", function() {
+    return null
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'choke-peer", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !0);
+    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'unchoke-peer", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !1);
+    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
+  });
+  b = waltz.state.state_STAR_.call(null);
+  waltz.state.add_state.call(null, e, "\ufdd0'init", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_handshake.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'sent-handshake", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_bitfield.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'sent-bitfield", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'choked-not-interested", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_interested.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'choked-interested", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-not-interested", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    torrent_client.client.protocol.main.send_interested.call(null, f);
+    var b = torrent_client.client.pieces.work_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
+    if(cljs.core.truth_(b)) {
+      var c = cljs.core.seq.call(null, torrent_client.client.pieces.piece_blocks.call(null, a, torrent_client.client.peer.block_index));
+      if(cljs.core.truth_(c)) {
+        var d = cljs.core.first.call(null, c);
+        cljs.core.nth.call(null, d, 0, null);
+        for(cljs.core.nth.call(null, d, 1, null);;) {
+          var k = d, d = cljs.core.nth.call(null, k, 0, null), k = cljs.core.nth.call(null, k, 1, null);
+          torrent_client.client.protocol.main.send_request.call(null, f, b, d, k);
+          c = cljs.core.next.call(null, c);
+          if(cljs.core.truth_(c)) {
+            d = c, c = cljs.core.first.call(null, d), k = d, d = c, c = k
+          }else {
+            return null
+          }
+        }
+      }else {
+        return null
+      }
+    }else {
+      return waltz.state.set.call(null, e, "\ufdd0'not-choked-not-interested")
+    }
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-interested", b);
+  cljs.core.truth_(d) && (console.log("INITIATE HANDSHAKE"), waltz.state.set_ex.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake"));
+  return g
+};
+torrent_client.client.peer.generate_peer = function(a, b, c, d) {
+  console.log("generate-peer", c, d);
+  return torrent_client.client.peer.peer_machine.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'peer-id"], {"\ufdd0'peer-id":c}), d)
+};
+console.log("loaded js");
+goog.Timer = function(a, b) {
+  goog.events.EventTarget.call(this);
+  this.interval_ = a || 1;
+  this.timerObject_ = b || goog.Timer.defaultTimerObject;
+  this.boundTick_ = goog.bind(this.tick_, this);
+  this.last_ = goog.now()
+};
+goog.inherits(goog.Timer, goog.events.EventTarget);
+goog.Timer.MAX_TIMEOUT_ = 2147483647;
+goog.Timer.prototype.enabled = !1;
+goog.Timer.defaultTimerObject = goog.global.window;
+goog.Timer.intervalScale = 0.8;
+goog.Timer.prototype.timer_ = null;
+goog.Timer.prototype.getInterval = function() {
+  return this.interval_
+};
+goog.Timer.prototype.setInterval = function(a) {
+  this.interval_ = a;
+  this.timer_ && this.enabled ? (this.stop(), this.start()) : this.timer_ && this.stop()
+};
+goog.Timer.prototype.tick_ = function() {
+  if(this.enabled) {
+    var a = goog.now() - this.last_;
+    0 < a && a < this.interval_ * goog.Timer.intervalScale ? this.timer_ = this.timerObject_.setTimeout(this.boundTick_, this.interval_ - a) : (this.dispatchTick(), this.enabled && (this.timer_ = this.timerObject_.setTimeout(this.boundTick_, this.interval_), this.last_ = goog.now()))
+  }
+};
+goog.Timer.prototype.dispatchTick = function() {
+  this.dispatchEvent(goog.Timer.TICK)
+};
+goog.Timer.prototype.start = function() {
+  this.enabled = !0;
+  this.timer_ || (this.timer_ = this.timerObject_.setTimeout(this.boundTick_, this.interval_), this.last_ = goog.now())
+};
+goog.Timer.prototype.stop = function() {
+  this.enabled = !1;
+  this.timer_ && (this.timerObject_.clearTimeout(this.timer_), this.timer_ = null)
+};
+goog.Timer.prototype.disposeInternal = function() {
+  goog.Timer.superClass_.disposeInternal.call(this);
+  this.stop();
+  delete this.timerObject_
+};
+goog.Timer.TICK = "tick";
+goog.Timer.callOnce = function(a, b, c) {
+  if(goog.isFunction(a)) {
+    c && (a = goog.bind(a, c))
+  }else {
+    if(a && "function" == typeof a.handleEvent) {
+      a = goog.bind(a.handleEvent, a)
+    }else {
+      throw Error("Invalid listener argument");
+    }
+  }
+  return b > goog.Timer.MAX_TIMEOUT_ ? -1 : goog.Timer.defaultTimerObject.setTimeout(a, b || 0)
+};
+goog.Timer.clear = function(a) {
+  goog.Timer.defaultTimerObject.clearTimeout(a)
+};
+torrent_client.client.peers = {};
+torrent_client.client.peers.optimistic_unchoke_period = 1E4;
+torrent_client.client.peers.download_count = 4;
+torrent_client.client.peers.peers = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.peers.unchoked = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'started-torrent"]), function() {
+  return(new goog.Timer(torrent_client.client.peers.optimistic_unchoke_period)).start()
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'paused-torrent"]), function() {
+  return null
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-channel"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nthnext.call(null, b, 2), e = cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, e), "\ufdd0'handshake"), f = d.label, g = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, f), c = torrent_client.client.peer.generate_peer.call(null, g, d, c, e);
+  console.log("peer", c);
+  d.close = function() {
+    debugger;
+    return torrent_client.client.peers.create_data_channel.call(null, torrent_client.client.peers.connection, f)
+  };
+  return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.peers, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([f], [cljs.core.PersistentVector.fromArray([c])]))
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-not-interested", "\ufdd0'receive-interested"]), function(a, b) {
+  return torrent_client.client.peers.change_interested.call(null, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"))
+});
+torrent_client.client.peers.set_unchoked_BANG_ = function(a) {
+  var b = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
+  if(cljs.core.truth_(b)) {
+    var c = cljs.core.sort_by.call(null, cljs.core.comp.call(null, cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested", "\ufdd0'upload"), cljs.core.deref), b), b = cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested").call(null, cljs.core.deref.call(null, cljs.core.first.call(null, c)));
+    cljs.core._EQ_.call(null, cljs.core.PersistentVector.fromArray([!0, !1]), b);
+    var d = cljs.core.count.call(null, c) < (cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4) ? cljs.core.count.call(null, c) : cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4, b = cljs.core.subvec.call(null, c, 0, d), c = d < cljs.core.count.call(null, c) ? cljs.core.subvec.call(null, c, d) : null, e = cljs.core.seq.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), b));
+    if(cljs.core.truth_(e)) {
+      for(d = cljs.core.first.call(null, e);;) {
+        if(torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, d).call(null, "\ufdd0'peer-id")])), d = cljs.core.next.call(null, e), cljs.core.truth_(d)) {
+          e = d, d = cljs.core.first.call(null, e)
+        }else {
+          break
+        }
+      }
+    }
+    d = cljs.core.seq.call(null, cljs.core.remove.call(null, "\ufdd0'choking", cljs.core.map.call(null, function(a) {
+      return cljs.core.deref.call(null, a)
+    }, c)));
+    if(cljs.core.truth_(d)) {
+      for(c = cljs.core.first.call(null, d);;) {
+        if(torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'choke", cljs.core.deref.call(null, c).call(null, "\ufdd0'peer-id")])), c = cljs.core.next.call(null, d), cljs.core.truth_(c)) {
+          d = c, c = cljs.core.first.call(null, d)
+        }else {
+          break
+        }
+      }
+    }
+    return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.unchoked, cljs.core.assoc, a, b)
   }
   return null
 };
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IFn$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.call = function() {
-  var a = null;
-  return a = function(a, c, d) {
-    switch(arguments.length) {
-      case 1:
-        return this.file;
-      case 2:
-        return cljs.core._lookup.call(null, this, c);
-      case 3:
-        return cljs.core._lookup.call(null, this, c, d)
-    }
-    throw"Invalid arity: " + arguments.length;
+torrent_client.client.peers.unoptimistic = function(a) {
+  a = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
+  return cljs.core.truth_(a) ? (a = cljs.core.first.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), a)), torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unoptimistic", cljs.core.deref.call(null, a).call(null, "\ufdd0'peer-id")]))) : null
+};
+torrent_client.client.peers.optimistic_unchoke = function(a) {
+  if(cljs.core.contains_QMARK_.call(null, cljs.core.deref.call(null, torrent_client.client.peers.peers), a)) {
+    var b = cljs.core.remove.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a))), b = cljs.core.rand_nth.call(null, b);
+    torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, b).call(null, "\ufdd0'peer-id")]));
+    return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
   }
-}();
-torrent_client.client.blocks.BlockFile.prototype.apply = function(a, b) {
-  return a.call.apply(a, [a].concat(cljs.core.aclone.call(null, b)))
+  return null
 };
-torrent_client.client.blocks.BlockFile.prototype.torrent_client$client$blocks$Fn$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$ILookup$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  return cljs.core._lookup.call(null, a, b, null)
-};
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b) {
-  return cljs.core._contains_key_QMARK_.call(null, a, b)
-};
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IMeta$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IWithMeta$ = !0;
-torrent_client.client.blocks.BlockFile.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new torrent_client.client.blocks.BlockFile(b, this.file)
-};
-torrent_client.client.blocks.BlockFile.prototype.toString = function() {
-  return cljs.core.pr_str.call(null, this)
-};
-torrent_client.client.blocks.BlockFile;
-torrent_client.client.blocks.block_file = function(a) {
-  return new torrent_client.client.blocks.BlockFile(null, a)
-};
-torrent_client.client.blocks.Block = function(a, b, c) {
-  this.meta = a;
-  this.byte_array = b;
-  this.__hash = c;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 2293762
-};
-torrent_client.client.blocks.Block.cljs$lang$type = !0;
-torrent_client.client.blocks.Block.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.blocks.Block")
-};
-torrent_client.client.blocks.Block.prototype.cljs$core$IMeta$ = !0;
-torrent_client.client.blocks.Block.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-torrent_client.client.blocks.Block.prototype.cljs$core$IWithMeta$ = !0;
-torrent_client.client.blocks.Block.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new torrent_client.client.blocks.Block(b, this.byte_array, this.__hash)
-};
-torrent_client.client.blocks.Block.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.blocks.Block.prototype.cljs$core$IHash$_hash$arity$1 = function() {
-  return cljs.core.not.call(null, null == this.__hash) ? this.__hash : torrent_client.client.core.crypt.byte_array__GT_str.call(null, torrent_client.client.core.crypt.sha1.call(null, this.byte_array))
-};
-torrent_client.client.blocks.Block.prototype.cljs$core$ICounted$ = !0;
-torrent_client.client.blocks.Block.prototype.cljs$core$ICounted$_count$arity$1 = function() {
-  return cljs.core.count.call(null, this.byte_array)
-};
-torrent_client.client.blocks.Block;
-torrent_client.client.blocks.block = function(a) {
-  var b = cljs.core.sort.call(null, "\ufdd0'begin", a), a = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, cljs.core.comp.call(null, cljs.core.count, "\ufdd0'data"), b)), a = torrent_client.client.core.byte_array.uint8_array.call(null, a), c = cljs.core.seq.call(null, b);
-  if(cljs.core.truth_(c)) {
-    for(b = cljs.core.first.call(null, c);;) {
-      if(a.set(b.call(null, "\ufdd0'data"), b.call(null, "\ufdd0'begin")), b = cljs.core.next.call(null, c), cljs.core.truth_(b)) {
-        c = b, b = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return new torrent_client.client.blocks.Block(null, a, null)
+torrent_client.client.peers.change_interested = function(a) {
+  return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
 };
 goog.dom = {};
 goog.dom.BrowserFeature = {CAN_ADD_NAME_OR_TYPE_ATTRIBUTES:!goog.userAgent.IE || goog.userAgent.isDocumentMode(9), CAN_USE_CHILDREN_ATTRIBUTE:!goog.userAgent.GECKO && !goog.userAgent.IE || goog.userAgent.IE && goog.userAgent.isDocumentMode(9) || goog.userAgent.GECKO && goog.userAgent.isVersion("1.9.1"), CAN_USE_INNER_TEXT:goog.userAgent.IE && !goog.userAgent.isVersion("9"), CAN_USE_PARENT_ELEMENT_PROPERTY:goog.userAgent.IE || goog.userAgent.OPERA || goog.userAgent.WEBKIT, INNER_HTML_NEEDS_SCOPED_ELEMENT:goog.userAgent.IE};
@@ -18958,108 +19883,7 @@ goog.format.insertWordBreaksBasic = function(a, b) {
 goog.format.IS_IE8_OR_ABOVE_ = goog.userAgent.IE && goog.userAgent.isVersion(8);
 goog.format.WORD_BREAK_HTML = goog.userAgent.WEBKIT ? "<wbr></wbr>" : goog.userAgent.OPERA ? "&shy;" : goog.format.IS_IE8_OR_ABOVE_ ? "&#8203;" : "<wbr>";
 goog.format.WbrToken_ = {LT:60, GT:62, AMP:38, SEMI_COLON:59, SPACE:32};
-filesystem.blockfile = {};
-void 0;
-filesystem.blockfile.IFile = {};
-filesystem.blockfile._file = function(a) {
-  if(a ? a.filesystem$blockfile$IFile$_file$arity$1 : a) {
-    a = a.filesystem$blockfile$IFile$_file$arity$1(a)
-  }else {
-    var b;
-    b = filesystem.blockfile._file[goog.typeOf.call(null, a)];
-    if(!b && (b = filesystem.blockfile._file._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "IFile.-file", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-void 0;
-File.prototype.filesystem$blockfile$IFile$ = !0;
-File.prototype.filesystem$blockfile$IFile$_file$arity$1 = function(a) {
-  return a
-};
-filesystem.blockfile.BlockFile = function(a, b) {
-  this.meta = a;
-  this.file = b;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 196993
-};
-filesystem.blockfile.BlockFile.cljs$lang$type = !0;
-filesystem.blockfile.BlockFile.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "filesystem.blockfile.BlockFile")
-};
-filesystem.blockfile.BlockFile.prototype.filesystem$blockfile$IFile$ = !0;
-filesystem.blockfile.BlockFile.prototype.filesystem$blockfile$IFile$_file$arity$1 = function() {
-  return this.file
-};
-filesystem.blockfile.BlockFile.prototype.cljs$core$IAssociative$ = !0;
-filesystem.blockfile.BlockFile.prototype.cljs$core$IAssociative$_contains_key_QMARK_$arity$2 = function(a, b) {
-  var c = this.meta.call(null, "\ufdd0'block-start") <= b;
-  return c ? b <= this.meta.call(null, "\ufdd0'block-end") : c
-};
-filesystem.blockfile.BlockFile.prototype.cljs$core$IFn$ = !0;
-filesystem.blockfile.BlockFile.prototype.call = function() {
-  var a = null;
-  return a = function(a, c, d) {
-    switch(arguments.length) {
-      case 1:
-        return this.file;
-      case 2:
-        return cljs.core._lookup.call(null, this, c);
-      case 3:
-        return cljs.core._lookup.call(null, this, c, d)
-    }
-    throw"Invalid arity: " + arguments.length;
-  }
-}();
-filesystem.blockfile.BlockFile.prototype.apply = function(a, b) {
-  return a.call.apply(a, [a].concat(cljs.core.aclone.call(null, b)))
-};
-filesystem.blockfile.BlockFile.prototype.filesystem$blockfile$Fn$ = !0;
-filesystem.blockfile.BlockFile.prototype.cljs$core$ILookup$ = !0;
-filesystem.blockfile.BlockFile.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  return cljs.core._lookup.call(null, a, b, null)
-};
-filesystem.blockfile.BlockFile.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b) {
-  return cljs.core._contains_key_QMARK_.call(null, a, b)
-};
-filesystem.blockfile.BlockFile.prototype.cljs$core$IMeta$ = !0;
-filesystem.blockfile.BlockFile.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-filesystem.blockfile.BlockFile.prototype.cljs$core$IWithMeta$ = !0;
-filesystem.blockfile.BlockFile.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new filesystem.blockfile.BlockFile(b, this.file)
-};
-filesystem.blockfile.BlockFile.prototype.toString = function() {
-  return cljs.core.pr_str.call(null, this)
-};
-filesystem.blockfile.BlockFile;
-filesystem.blockfile.block_file = function(a) {
-  return new filesystem.blockfile.BlockFile(null, a)
-};
-filesystem.blockfile.get_file = function(a) {
-  return filesystem.blockfile._file.call(null, a)
-};
-console.log("not last");
-torrent_client.client.channel = {};
-torrent_client.client.channel.generate_channel = function(a, b) {
-  var c = a.createDataChannel(cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"));
-  c.binaryType = "arraybuffer";
-  return c
-};
-torrent_client.client.peer_id = {};
-torrent_client.client.peer_id.peer_id = cljs.core.atom.call(null, null);
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'document-ready"]), function() {
-  return cljs.core.reset_BANG_.call(null, torrent_client.client.peer_id.peer_id, torrent_client.client.peer_id.generate_peer_id.call(null))
-});
-torrent_client.client.peer_id.generate_peer_id = function() {
-  var a = goog.string.getRandomString.call(null), a = goog.crypt.byteArrayToHex.call(null, torrent_client.client.core.crypt.sha1.call(null, a));
-  return[cljs.core.str("AM1-0-0--"), cljs.core.str(cljs.core.subs.call(null, a, 0, 20 - cljs.core.count.call(null, "AM1-0-0--")))].join("")
-};
-torrent_client.client.speed = {};
-console.log("not-last");
+torrent_client.client.files = {};
 var crate = {binding:{}};
 crate.binding.SubAtom = function(a, b, c, d) {
   this.atm = a;
@@ -19435,6 +20259,424 @@ crate.binding.bound = function() {
   b.cljs$lang$arity$variadic = a;
   return b
 }();
+torrent_client.jayq.core = {};
+torrent_client.jayq.core.append = function append(b, c) {
+  if(cljs.core.sequential_QMARK_.call(null, c)) {
+    var d = cljs.core.seq.call(null, c);
+    if(cljs.core.truth_(d)) {
+      for(var e = cljs.core.first.call(null, d);;) {
+        if(append.call(null, b, e), e = cljs.core.next.call(null, d), cljs.core.truth_(e)) {
+          d = e, e = cljs.core.first.call(null, d)
+        }else {
+          return null
+        }
+      }
+    }else {
+      return null
+    }
+  }else {
+    return b.append(c)
+  }
+};
+torrent_client.jayq.core.input_files = function(a) {
+  return torrent_client.jayq.core.filelist_files.call(null, cljs.core.first.call(null, a))
+};
+torrent_client.jayq.core.event_files = function(a) {
+  return torrent_client.jayq.core.filelist_files.call(null, a.getBrowserEvent().dataTransfer)
+};
+torrent_client.jayq.core.filelist_files = function(a) {
+  var b = a.files;
+  return cljs.core.vec.call(null, function() {
+    return function d(a) {
+      return new cljs.core.LazySeq(null, !1, function() {
+        for(var f = a;;) {
+          if(cljs.core.truth_(cljs.core.seq.call(null, f))) {
+            var g = cljs.core.first.call(null, f), g = b[g];
+            if(cljs.core.type.call(null, g) === File) {
+              return cljs.core.cons.call(null, g, d.call(null, cljs.core.rest.call(null, f)))
+            }
+            f = cljs.core.rest.call(null, f)
+          }else {
+            return null
+          }
+        }
+      })
+    }.call(null, cljs.core.js_keys.call(null, b))
+  }())
+};
+torrent_client.jayq.core.param = function(a) {
+  console.log("PARAM YO");
+  return jQuery.param(jayq.util.clj__GT_js.call(null, a))
+};
+torrent_client.jayq.core.modal = function(a, b) {
+  return a.modal(b)
+};
+torrent_client.jayq.core.tab = function(a, b) {
+  return a.tab(b)
+};
+torrent_client.jayq.core.css = function() {
+  var a = null, b = function(a, b) {
+    return a.css(jayq.util.clj__GT_js.call(null, b))
+  }, c = function(a, b, c) {
+    return a.css(cljs.core.name.call(null, b), c)
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+goog.debug.LogRecord = function(a, b, c, d, e) {
+  this.reset(a, b, c, d, e)
+};
+goog.debug.LogRecord.prototype.sequenceNumber_ = 0;
+goog.debug.LogRecord.prototype.exception_ = null;
+goog.debug.LogRecord.prototype.exceptionText_ = null;
+goog.debug.LogRecord.ENABLE_SEQUENCE_NUMBERS = !0;
+goog.debug.LogRecord.nextSequenceNumber_ = 0;
+goog.debug.LogRecord.prototype.reset = function(a, b, c, d, e) {
+  goog.debug.LogRecord.ENABLE_SEQUENCE_NUMBERS && (this.sequenceNumber_ = "number" == typeof e ? e : goog.debug.LogRecord.nextSequenceNumber_++);
+  this.time_ = d || goog.now();
+  this.level_ = a;
+  this.msg_ = b;
+  this.loggerName_ = c;
+  delete this.exception_;
+  delete this.exceptionText_
+};
+goog.debug.LogRecord.prototype.getLoggerName = function() {
+  return this.loggerName_
+};
+goog.debug.LogRecord.prototype.getException = function() {
+  return this.exception_
+};
+goog.debug.LogRecord.prototype.setException = function(a) {
+  this.exception_ = a
+};
+goog.debug.LogRecord.prototype.getExceptionText = function() {
+  return this.exceptionText_
+};
+goog.debug.LogRecord.prototype.setExceptionText = function(a) {
+  this.exceptionText_ = a
+};
+goog.debug.LogRecord.prototype.setLoggerName = function(a) {
+  this.loggerName_ = a
+};
+goog.debug.LogRecord.prototype.getLevel = function() {
+  return this.level_
+};
+goog.debug.LogRecord.prototype.setLevel = function(a) {
+  this.level_ = a
+};
+goog.debug.LogRecord.prototype.getMessage = function() {
+  return this.msg_
+};
+goog.debug.LogRecord.prototype.setMessage = function(a) {
+  this.msg_ = a
+};
+goog.debug.LogRecord.prototype.getMillis = function() {
+  return this.time_
+};
+goog.debug.LogRecord.prototype.setMillis = function(a) {
+  this.time_ = a
+};
+goog.debug.LogRecord.prototype.getSequenceNumber = function() {
+  return this.sequenceNumber_
+};
+goog.debug.LogBuffer = function() {
+  goog.asserts.assert(goog.debug.LogBuffer.isBufferingEnabled(), "Cannot use goog.debug.LogBuffer without defining goog.debug.LogBuffer.CAPACITY.");
+  this.clear()
+};
+goog.debug.LogBuffer.getInstance = function() {
+  goog.debug.LogBuffer.instance_ || (goog.debug.LogBuffer.instance_ = new goog.debug.LogBuffer);
+  return goog.debug.LogBuffer.instance_
+};
+goog.debug.LogBuffer.CAPACITY = 0;
+goog.debug.LogBuffer.prototype.addRecord = function(a, b, c) {
+  var d = (this.curIndex_ + 1) % goog.debug.LogBuffer.CAPACITY;
+  this.curIndex_ = d;
+  if(this.isFull_) {
+    return d = this.buffer_[d], d.reset(a, b, c), d
+  }
+  this.isFull_ = d == goog.debug.LogBuffer.CAPACITY - 1;
+  return this.buffer_[d] = new goog.debug.LogRecord(a, b, c)
+};
+goog.debug.LogBuffer.isBufferingEnabled = function() {
+  return 0 < goog.debug.LogBuffer.CAPACITY
+};
+goog.debug.LogBuffer.prototype.clear = function() {
+  this.buffer_ = Array(goog.debug.LogBuffer.CAPACITY);
+  this.curIndex_ = -1;
+  this.isFull_ = !1
+};
+goog.debug.LogBuffer.prototype.forEachRecord = function(a) {
+  var b = this.buffer_;
+  if(b[0]) {
+    var c = this.curIndex_, d = this.isFull_ ? c : -1;
+    do {
+      d = (d + 1) % goog.debug.LogBuffer.CAPACITY, a(b[d])
+    }while(d != c)
+  }
+};
+goog.debug.Logger = function(a) {
+  this.name_ = a
+};
+goog.debug.Logger.prototype.parent_ = null;
+goog.debug.Logger.prototype.level_ = null;
+goog.debug.Logger.prototype.children_ = null;
+goog.debug.Logger.prototype.handlers_ = null;
+goog.debug.Logger.ENABLE_HIERARCHY = !0;
+goog.debug.Logger.ENABLE_HIERARCHY || (goog.debug.Logger.rootHandlers_ = []);
+goog.debug.Logger.Level = function(a, b) {
+  this.name = a;
+  this.value = b
+};
+goog.debug.Logger.Level.prototype.toString = function() {
+  return this.name
+};
+goog.debug.Logger.Level.OFF = new goog.debug.Logger.Level("OFF", Infinity);
+goog.debug.Logger.Level.SHOUT = new goog.debug.Logger.Level("SHOUT", 1200);
+goog.debug.Logger.Level.SEVERE = new goog.debug.Logger.Level("SEVERE", 1E3);
+goog.debug.Logger.Level.WARNING = new goog.debug.Logger.Level("WARNING", 900);
+goog.debug.Logger.Level.INFO = new goog.debug.Logger.Level("INFO", 800);
+goog.debug.Logger.Level.CONFIG = new goog.debug.Logger.Level("CONFIG", 700);
+goog.debug.Logger.Level.FINE = new goog.debug.Logger.Level("FINE", 500);
+goog.debug.Logger.Level.FINER = new goog.debug.Logger.Level("FINER", 400);
+goog.debug.Logger.Level.FINEST = new goog.debug.Logger.Level("FINEST", 300);
+goog.debug.Logger.Level.ALL = new goog.debug.Logger.Level("ALL", 0);
+goog.debug.Logger.Level.PREDEFINED_LEVELS = [goog.debug.Logger.Level.OFF, goog.debug.Logger.Level.SHOUT, goog.debug.Logger.Level.SEVERE, goog.debug.Logger.Level.WARNING, goog.debug.Logger.Level.INFO, goog.debug.Logger.Level.CONFIG, goog.debug.Logger.Level.FINE, goog.debug.Logger.Level.FINER, goog.debug.Logger.Level.FINEST, goog.debug.Logger.Level.ALL];
+goog.debug.Logger.Level.predefinedLevelsCache_ = null;
+goog.debug.Logger.Level.createPredefinedLevelsCache_ = function() {
+  goog.debug.Logger.Level.predefinedLevelsCache_ = {};
+  for(var a = 0, b;b = goog.debug.Logger.Level.PREDEFINED_LEVELS[a];a++) {
+    goog.debug.Logger.Level.predefinedLevelsCache_[b.value] = b;
+    goog.debug.Logger.Level.predefinedLevelsCache_[b.name] = b
+  }
+};
+goog.debug.Logger.Level.getPredefinedLevel = function(a) {
+  goog.debug.Logger.Level.predefinedLevelsCache_ || goog.debug.Logger.Level.createPredefinedLevelsCache_();
+  return goog.debug.Logger.Level.predefinedLevelsCache_[a] || null
+};
+goog.debug.Logger.Level.getPredefinedLevelByValue = function(a) {
+  goog.debug.Logger.Level.predefinedLevelsCache_ || goog.debug.Logger.Level.createPredefinedLevelsCache_();
+  if(a in goog.debug.Logger.Level.predefinedLevelsCache_) {
+    return goog.debug.Logger.Level.predefinedLevelsCache_[a]
+  }
+  for(var b = 0;b < goog.debug.Logger.Level.PREDEFINED_LEVELS.length;++b) {
+    var c = goog.debug.Logger.Level.PREDEFINED_LEVELS[b];
+    if(c.value <= a) {
+      return c
+    }
+  }
+  return null
+};
+goog.debug.Logger.getLogger = function(a) {
+  return goog.debug.LogManager.getLogger(a)
+};
+goog.debug.Logger.logToProfilers = function(a) {
+  goog.global.console && (goog.global.console.timeStamp ? goog.global.console.timeStamp(a) : goog.global.console.markTimeline && goog.global.console.markTimeline(a));
+  goog.global.msWriteProfilerMark && goog.global.msWriteProfilerMark(a)
+};
+goog.debug.Logger.prototype.getName = function() {
+  return this.name_
+};
+goog.debug.Logger.prototype.addHandler = function(a) {
+  if(goog.debug.Logger.ENABLE_HIERARCHY) {
+    if(!this.handlers_) {
+      this.handlers_ = []
+    }
+    this.handlers_.push(a)
+  }else {
+    goog.asserts.assert(!this.name_, "Cannot call addHandler on a non-root logger when goog.debug.Logger.ENABLE_HIERARCHY is false.");
+    goog.debug.Logger.rootHandlers_.push(a)
+  }
+};
+goog.debug.Logger.prototype.removeHandler = function(a) {
+  var b = goog.debug.Logger.ENABLE_HIERARCHY ? this.handlers_ : goog.debug.Logger.rootHandlers_;
+  return!!b && goog.array.remove(b, a)
+};
+goog.debug.Logger.prototype.getParent = function() {
+  return this.parent_
+};
+goog.debug.Logger.prototype.getChildren = function() {
+  if(!this.children_) {
+    this.children_ = {}
+  }
+  return this.children_
+};
+goog.debug.Logger.prototype.setLevel = function(a) {
+  if(goog.debug.Logger.ENABLE_HIERARCHY) {
+    this.level_ = a
+  }else {
+    goog.asserts.assert(!this.name_, "Cannot call setLevel() on a non-root logger when goog.debug.Logger.ENABLE_HIERARCHY is false.");
+    goog.debug.Logger.rootLevel_ = a
+  }
+};
+goog.debug.Logger.prototype.getLevel = function() {
+  return this.level_
+};
+goog.debug.Logger.prototype.getEffectiveLevel = function() {
+  if(!goog.debug.Logger.ENABLE_HIERARCHY) {
+    return goog.debug.Logger.rootLevel_
+  }
+  if(this.level_) {
+    return this.level_
+  }
+  if(this.parent_) {
+    return this.parent_.getEffectiveLevel()
+  }
+  goog.asserts.fail("Root logger has no level set.");
+  return null
+};
+goog.debug.Logger.prototype.isLoggable = function(a) {
+  return a.value >= this.getEffectiveLevel().value
+};
+goog.debug.Logger.prototype.log = function(a, b, c) {
+  this.isLoggable(a) && this.doLogRecord_(this.getLogRecord(a, b, c))
+};
+goog.debug.Logger.prototype.getLogRecord = function(a, b, c) {
+  var d = goog.debug.LogBuffer.isBufferingEnabled() ? goog.debug.LogBuffer.getInstance().addRecord(a, b, this.name_) : new goog.debug.LogRecord(a, "" + b, this.name_);
+  if(c) {
+    d.setException(c);
+    d.setExceptionText(goog.debug.exposeException(c, arguments.callee.caller))
+  }
+  return d
+};
+goog.debug.Logger.prototype.shout = function(a, b) {
+  this.log(goog.debug.Logger.Level.SHOUT, a, b)
+};
+goog.debug.Logger.prototype.severe = function(a, b) {
+  this.log(goog.debug.Logger.Level.SEVERE, a, b)
+};
+goog.debug.Logger.prototype.warning = function(a, b) {
+  this.log(goog.debug.Logger.Level.WARNING, a, b)
+};
+goog.debug.Logger.prototype.info = function(a, b) {
+  this.log(goog.debug.Logger.Level.INFO, a, b)
+};
+goog.debug.Logger.prototype.config = function(a, b) {
+  this.log(goog.debug.Logger.Level.CONFIG, a, b)
+};
+goog.debug.Logger.prototype.fine = function(a, b) {
+  this.log(goog.debug.Logger.Level.FINE, a, b)
+};
+goog.debug.Logger.prototype.finer = function(a, b) {
+  this.log(goog.debug.Logger.Level.FINER, a, b)
+};
+goog.debug.Logger.prototype.finest = function(a, b) {
+  this.log(goog.debug.Logger.Level.FINEST, a, b)
+};
+goog.debug.Logger.prototype.logRecord = function(a) {
+  this.isLoggable(a.getLevel()) && this.doLogRecord_(a)
+};
+goog.debug.Logger.prototype.doLogRecord_ = function(a) {
+  goog.debug.Logger.logToProfilers("log:" + a.getMessage());
+  if(goog.debug.Logger.ENABLE_HIERARCHY) {
+    for(var b = this;b;) {
+      b.callPublish_(a);
+      b = b.getParent()
+    }
+  }else {
+    for(var b = 0, c;c = goog.debug.Logger.rootHandlers_[b++];) {
+      c(a)
+    }
+  }
+};
+goog.debug.Logger.prototype.callPublish_ = function(a) {
+  if(this.handlers_) {
+    for(var b = 0, c;c = this.handlers_[b];b++) {
+      c(a)
+    }
+  }
+};
+goog.debug.Logger.prototype.setParent_ = function(a) {
+  this.parent_ = a
+};
+goog.debug.Logger.prototype.addChild_ = function(a, b) {
+  this.getChildren()[a] = b
+};
+goog.debug.LogManager = {};
+goog.debug.LogManager.loggers_ = {};
+goog.debug.LogManager.rootLogger_ = null;
+goog.debug.LogManager.initialize = function() {
+  if(!goog.debug.LogManager.rootLogger_) {
+    goog.debug.LogManager.rootLogger_ = new goog.debug.Logger("");
+    goog.debug.LogManager.loggers_[""] = goog.debug.LogManager.rootLogger_;
+    goog.debug.LogManager.rootLogger_.setLevel(goog.debug.Logger.Level.CONFIG)
+  }
+};
+goog.debug.LogManager.getLoggers = function() {
+  return goog.debug.LogManager.loggers_
+};
+goog.debug.LogManager.getRoot = function() {
+  goog.debug.LogManager.initialize();
+  return goog.debug.LogManager.rootLogger_
+};
+goog.debug.LogManager.getLogger = function(a) {
+  goog.debug.LogManager.initialize();
+  return goog.debug.LogManager.loggers_[a] || goog.debug.LogManager.createLogger_(a)
+};
+goog.debug.LogManager.createFunctionForCatchErrors = function(a) {
+  return function(b) {
+    (a || goog.debug.LogManager.getRoot()).severe("Error: " + b.message + " (" + b.fileName + " @ Line: " + b.line + ")")
+  }
+};
+goog.debug.LogManager.createLogger_ = function(a) {
+  var b = new goog.debug.Logger(a);
+  if(goog.debug.Logger.ENABLE_HIERARCHY) {
+    var c = a.lastIndexOf("."), d = a.substr(0, c), c = a.substr(c + 1), d = goog.debug.LogManager.getLogger(d);
+    d.addChild_(c, b);
+    b.setParent_(d)
+  }
+  return goog.debug.LogManager.loggers_[a] = b
+};
+goog.events.FileDropHandler = function(a, b) {
+  goog.events.EventTarget.call(this);
+  this.eventHandler_ = new goog.events.EventHandler(this);
+  var c = a;
+  b && (c = goog.dom.getOwnerDocument(a));
+  this.eventHandler_.listen(c, goog.events.EventType.DRAGENTER, this.onDocDragEnter_);
+  c != a && this.eventHandler_.listen(c, goog.events.EventType.DRAGOVER, this.onDocDragOver_);
+  this.eventHandler_.listen(a, goog.events.EventType.DRAGOVER, this.onElemDragOver_);
+  this.eventHandler_.listen(a, goog.events.EventType.DROP, this.onElemDrop_)
+};
+goog.inherits(goog.events.FileDropHandler, goog.events.EventTarget);
+goog.events.FileDropHandler.prototype.dndContainsFiles_ = !1;
+goog.events.FileDropHandler.prototype.logger_ = goog.debug.Logger.getLogger("goog.events.FileDropHandler");
+goog.events.FileDropHandler.EventType = {DROP:goog.events.EventType.DROP};
+goog.events.FileDropHandler.prototype.disposeInternal = function() {
+  goog.events.FileDropHandler.superClass_.disposeInternal.call(this);
+  this.eventHandler_.dispose()
+};
+goog.events.FileDropHandler.prototype.dispatch_ = function(a) {
+  this.logger_.fine("Firing DROP event...");
+  a = new goog.events.BrowserEvent(a.getBrowserEvent());
+  a.type = goog.events.FileDropHandler.EventType.DROP;
+  this.dispatchEvent(a)
+};
+goog.events.FileDropHandler.prototype.onDocDragEnter_ = function(a) {
+  this.logger_.finer('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
+  var b = a.getBrowserEvent().dataTransfer;
+  (this.dndContainsFiles_ = !(!b || !(b.types && (goog.array.contains(b.types, "Files") || goog.array.contains(b.types, "public.file-url")) || b.files && 0 < b.files.length))) && a.preventDefault();
+  this.logger_.finer("dndContainsFiles_: " + this.dndContainsFiles_)
+};
+goog.events.FileDropHandler.prototype.onDocDragOver_ = function(a) {
+  this.logger_.finest('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
+  this.dndContainsFiles_ && (a.preventDefault(), a.getBrowserEvent().dataTransfer.dropEffect = "none")
+};
+goog.events.FileDropHandler.prototype.onElemDragOver_ = function(a) {
+  this.logger_.finest('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
+  this.dndContainsFiles_ && (a.preventDefault(), a.stopPropagation(), a = a.getBrowserEvent().dataTransfer, a.effectAllowed = "all", a.dropEffect = "copy")
+};
+goog.events.FileDropHandler.prototype.onElemDrop_ = function(a) {
+  this.logger_.finer('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
+  this.dndContainsFiles_ && (a.preventDefault(), a.stopPropagation(), this.dispatch_(a))
+};
 crate.compiler = {};
 crate.compiler.xmlns = cljs.core.ObjMap.fromObject(["\ufdd0'xhtml", "\ufdd0'svg"], {"\ufdd0'xhtml":"http://www.w3.org/1999/xhtml", "\ufdd0'svg":"http://www.w3.org/2000/svg"});
 void 0;
@@ -19795,2511 +21037,7 @@ crate.core.html = function() {
   return b
 }();
 crate.core.h = crate.util.escape_html;
-var waltz = {state:{}};
-void 0;
-waltz.state.debug_log = function() {
-  var a = function(a, b, e) {
-    return cljs.core.truth_(function() {
-      var b = console;
-      return cljs.core.truth_(b) ? cljs.core.deref.call(null, a).call(null, "\ufdd0'debug") : b
-    }()) ? (b = cljs.core.apply.call(null, cljs.core.str, waltz.state.get_name.call(null, a), " :: ", b, e), console.log(b)) : null
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.__GT_coll = function(a) {
-  return cljs.core.coll_QMARK_.call(null, a) ? a : cljs.core.PersistentVector.fromArray([a])
-};
-waltz.state.state_STAR_ = function() {
-  return cljs.core.ObjMap.fromObject(["\ufdd0'in", "\ufdd0'out", "\ufdd0'constraints"], {"\ufdd0'in":cljs.core.PersistentVector.fromArray([]), "\ufdd0'out":cljs.core.PersistentVector.fromArray([]), "\ufdd0'constraints":cljs.core.PersistentVector.fromArray([])})
-};
-waltz.state.machine = function() {
-  var a = function(a) {
-    a = cljs.core.nth.call(null, a, 0, null);
-    return cljs.core.atom.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'debug", "\ufdd0'name", "\ufdd0'current", "\ufdd0'states", "\ufdd0'events"], {"\ufdd0'debug":!0, "\ufdd0'name":cljs.core.name.call(null, a), "\ufdd0'current":cljs.core.set([]), "\ufdd0'states":cljs.core.ObjMap.fromObject([], {}), "\ufdd0'events":cljs.core.ObjMap.fromObject([], {})}))
-  }, b = function(b) {
-    var d = null;
-    goog.isDef(b) && (d = cljs.core.array_seq(Array.prototype.slice.call(arguments, 0), 0));
-    return a.call(this, d)
-  };
-  b.cljs$lang$maxFixedArity = 0;
-  b.cljs$lang$applyTo = function(b) {
-    b = cljs.core.seq(b);
-    return a(b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.get_name = function(a) {
-  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'name"]))
-};
-waltz.state.get_in_sm = function(a, b) {
-  return cljs.core.get_in.call(null, cljs.core.deref.call(null, a), b)
-};
-waltz.state.assoc_sm = function(a, b, c) {
-  return cljs.core.swap_BANG_.call(null, a, function(a) {
-    return cljs.core.assoc_in.call(null, a, b, c)
-  })
-};
-waltz.state.update_sm = function() {
-  var a = function(a, b) {
-    return cljs.core.swap_BANG_.call(null, a, function(a) {
-      return cljs.core.apply.call(null, cljs.core.update_in, a, b)
-    })
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.current = function(a) {
-  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'current"]))
-};
-waltz.state.in_QMARK_ = function(a, b) {
-  return waltz.state.current.call(null, a).call(null, b)
-};
-waltz.state.has_state_QMARK_ = function(a, b) {
-  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", b]))
-};
-waltz.state.has_event_QMARK_ = function(a, b) {
-  return waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'events", b]))
-};
-waltz.state.add_state = function(a, b, c) {
-  return waltz.state.assoc_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", b]), c)
-};
-waltz.state.add_event = function(a, b, c) {
-  return waltz.state.assoc_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'events", b]), c)
-};
-waltz.state.in_STAR_ = function(a, b) {
-  return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'in"]), cljs.core.conj, b)
-};
-waltz.state.out_STAR_ = function(a, b) {
-  return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'out"]), cljs.core.conj, b)
-};
-waltz.state.constraint = function(a, b) {
-  return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'constraint"]), cljs.core.conj, b)
-};
-waltz.state.can_transition_QMARK_ = function(a, b) {
-  var c = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", b, "\ufdd0'constraints"]));
-  return cljs.core.truth_(c) ? cljs.core.every_QMARK_.call(null, function(a) {
-    return a.call(null, b)
-  }, c) : !0
-};
-waltz.state.set = function() {
-  var a = function(a, b, e) {
-    b = cljs.core.seq.call(null, waltz.state.__GT_coll.call(null, b));
-    if(cljs.core.truth_(b)) {
-      for(var f = cljs.core.first.call(null, b);;) {
-        if(cljs.core.truth_(waltz.state.can_transition_QMARK_.call(null, a, f))) {
-          var g = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", f, "\ufdd0'in"]));
-          waltz.state.update_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'current"]), cljs.core.conj, f);
-          waltz.state.debug_log.call(null, a, "(set ", "" + cljs.core.str(f), ") -> ", cljs.core.pr_str.call(null, waltz.state.current.call(null, a)));
-          if(cljs.core.truth_(cljs.core.seq.call(null, g)) && (waltz.state.debug_log.call(null, a, "(in ", "" + cljs.core.str(f), ")"), g = cljs.core.seq.call(null, g), cljs.core.truth_(g))) {
-            for(f = cljs.core.first.call(null, g);;) {
-              if(cljs.core.apply.call(null, f, e), f = cljs.core.next.call(null, g), cljs.core.truth_(f)) {
-                g = f, f = cljs.core.first.call(null, g)
-              }else {
-                break
-              }
-            }
-          }
-        }
-        b = cljs.core.next.call(null, b);
-        if(cljs.core.truth_(b)) {
-          f = b, b = cljs.core.first.call(null, f), g = f, f = b, b = g
-        }else {
-          break
-        }
-      }
-    }
-    return a
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.unset = function() {
-  var a = function(a, b, e) {
-    b = cljs.core.seq.call(null, waltz.state.__GT_coll.call(null, b));
-    if(cljs.core.truth_(b)) {
-      for(var f = cljs.core.first.call(null, b);;) {
-        if(cljs.core.truth_(waltz.state.in_QMARK_.call(null, a, f))) {
-          var g = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'states", f, "\ufdd0'out"]));
-          waltz.state.update_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'current"]), cljs.core.disj, f);
-          waltz.state.debug_log.call(null, a, "(unset ", [cljs.core.str(f), cljs.core.str(")")].join(""), " -> ", cljs.core.pr_str.call(null, waltz.state.current.call(null, a)));
-          if(cljs.core.truth_(cljs.core.seq.call(null, g)) && (waltz.state.debug_log.call(null, a, "(out ", "" + cljs.core.str(f), ")"), g = cljs.core.seq.call(null, g), cljs.core.truth_(g))) {
-            for(f = cljs.core.first.call(null, g);;) {
-              if(cljs.core.apply.call(null, f, e), f = cljs.core.next.call(null, g), cljs.core.truth_(f)) {
-                g = f, f = cljs.core.first.call(null, g)
-              }else {
-                break
-              }
-            }
-          }
-        }
-        b = cljs.core.next.call(null, b);
-        if(cljs.core.truth_(b)) {
-          f = b, b = cljs.core.first.call(null, f), g = f, f = b, b = g
-        }else {
-          break
-        }
-      }
-    }
-    return a
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.set_ex = function() {
-  var a = function(a, b, e, f) {
-    cljs.core.apply.call(null, waltz.state.unset, a, b, f);
-    return cljs.core.apply.call(null, waltz.state.set, a, e, f)
-  }, b = function(b, d, e, f) {
-    var g = null;
-    goog.isDef(f) && (g = cljs.core.array_seq(Array.prototype.slice.call(arguments, 3), 0));
-    return a.call(this, b, d, e, g)
-  };
-  b.cljs$lang$maxFixedArity = 3;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), f = cljs.core.first(cljs.core.next(cljs.core.next(b))), b = cljs.core.rest(cljs.core.next(cljs.core.next(b)));
-    return a(d, e, f, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.trigger = function() {
-  var a = function(a, b, e) {
-    var f = cljs.core.seq.call(null, waltz.state.__GT_coll.call(null, b));
-    if(cljs.core.truth_(f)) {
-      for(b = cljs.core.first.call(null, f);;) {
-        var g = waltz.state.get_in_sm.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'events", b]));
-        cljs.core.truth_(g) && (g = cljs.core.apply.call(null, g, e), waltz.state.debug_log.call(null, a, "(trans ", "" + cljs.core.str(b), ") -> ", cljs.core.boolean$.call(null, g), " :: context ", cljs.core.pr_str.call(null, e)));
-        b = cljs.core.next.call(null, f);
-        if(cljs.core.truth_(b)) {
-          f = b, b = cljs.core.first.call(null, f)
-        }else {
-          return null
-        }
-      }
-    }else {
-      return null
-    }
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-waltz.state.set_debug = function(a, b) {
-  return waltz.state.assoc_sm.call(null, a, "\ufdd0'debug", b)
-};
-torrent_client.client.waltz = {};
-torrent_client.client.waltz.transition = function() {
-  var a = function(a, b, e, f) {
-    return cljs.core.truth_(waltz.state.in_QMARK_.call(null, a, b)) ? waltz.state.set_ex.call(null, a, b, e, f) : null
-  }, b = function(b, d, e, f) {
-    var g = null;
-    goog.isDef(f) && (g = cljs.core.array_seq(Array.prototype.slice.call(arguments, 3), 0));
-    return a.call(this, b, d, e, g)
-  };
-  b.cljs$lang$maxFixedArity = 3;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), f = cljs.core.first(cljs.core.next(cljs.core.next(b))), b = cljs.core.rest(cljs.core.next(cljs.core.next(b)));
-    return a(d, e, f, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-torrent_client.client.waltz.machine = function(a) {
-  a = cljs.core.seq_QMARK_.call(null, a) ? cljs.core.apply.call(null, cljs.core.hash_map, a) : a;
-  cljs.core.get.call(null, a, "\ufdd0'current");
-  a = cljs.core.get.call(null, a, "\ufdd0'label");
-  return cljs.core.atom.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'debug", "\ufdd0'name", "\ufdd0'current", "\ufdd0'states", "\ufdd0'events"], {"\ufdd0'debug":!0, "\ufdd0'name":cljs.core.name.call(null, a), "\ufdd0'current":cljs.core.set(["\ufdd0'init"]), "\ufdd0'states":cljs.core.ObjMap.fromObject([], {}), "\ufdd0'events":cljs.core.ObjMap.fromObject([], {})}))
-};
-goog.events.EventHandler = function(a) {
-  goog.Disposable.call(this);
-  this.handler_ = a;
-  this.keys_ = []
-};
-goog.inherits(goog.events.EventHandler, goog.Disposable);
-goog.events.EventHandler.typeArray_ = [];
-goog.events.EventHandler.prototype.listen = function(a, b, c, d, e) {
-  goog.isArray(b) || (goog.events.EventHandler.typeArray_[0] = b, b = goog.events.EventHandler.typeArray_);
-  for(var f = 0;f < b.length;f++) {
-    this.keys_.push(goog.events.listen(a, b[f], c || this, d || !1, e || this.handler_ || this))
-  }
-  return this
-};
-goog.events.EventHandler.prototype.listenOnce = function(a, b, c, d, e) {
-  if(goog.isArray(b)) {
-    for(var f = 0;f < b.length;f++) {
-      this.listenOnce(a, b[f], c, d, e)
-    }
-  }else {
-    this.keys_.push(goog.events.listenOnce(a, b, c || this, d, e || this.handler_ || this))
-  }
-  return this
-};
-goog.events.EventHandler.prototype.listenWithWrapper = function(a, b, c, d, e) {
-  b.listen(a, c, d, e || this.handler_ || this, this);
-  return this
-};
-goog.events.EventHandler.prototype.getListenerCount = function() {
-  return this.keys_.length
-};
-goog.events.EventHandler.prototype.unlisten = function(a, b, c, d, e) {
-  if(goog.isArray(b)) {
-    for(var f = 0;f < b.length;f++) {
-      this.unlisten(a, b[f], c, d, e)
-    }
-  }else {
-    if(a = goog.events.getListener(a, b, c || this, d, e || this.handler_ || this)) {
-      a = a.key, goog.events.unlistenByKey(a), goog.array.remove(this.keys_, a)
-    }
-  }
-  return this
-};
-goog.events.EventHandler.prototype.unlistenWithWrapper = function(a, b, c, d, e) {
-  b.unlisten(a, c, d, e || this.handler_ || this, this);
-  return this
-};
-goog.events.EventHandler.prototype.removeAll = function() {
-  goog.array.forEach(this.keys_, goog.events.unlistenByKey);
-  this.keys_.length = 0
-};
-goog.events.EventHandler.prototype.disposeInternal = function() {
-  goog.events.EventHandler.superClass_.disposeInternal.call(this);
-  this.removeAll()
-};
-goog.events.EventHandler.prototype.handleEvent = function() {
-  throw Error("EventHandler.handleEvent not implemented");
-};
-goog.db.Transaction = function(a) {
-  goog.events.EventTarget.call(this);
-  this.tx_ = a;
-  this.eventHandler_ = new goog.events.EventHandler(this);
-  this.eventHandler_.listen(this.tx_, "complete", goog.bind(this.dispatchEvent, this, goog.db.Transaction.EventTypes.COMPLETE));
-  this.eventHandler_.listen(this.tx_, "abort", goog.bind(this.dispatchEvent, this, goog.db.Transaction.EventTypes.ABORT));
-  this.eventHandler_.listen(this.tx_, "error", this.dispatchError_)
-};
-goog.inherits(goog.db.Transaction, goog.events.EventTarget);
-goog.db.Transaction.prototype.dispatchError_ = function(a) {
-  a.target instanceof goog.db.Error ? this.dispatchEvent({type:goog.db.Transaction.EventTypes.ERROR, target:a.target}) : this.dispatchEvent({type:goog.db.Transaction.EventTypes.ERROR, target:new goog.db.Error(a.target.errorCode, "in transaction")})
-};
-goog.db.Transaction.EventTypes = {COMPLETE:"complete", ABORT:"abort", ERROR:"error"};
-goog.db.Transaction.prototype.getMode = function() {
-  return this.tx_.mode
-};
-goog.db.Transaction.prototype.objectStore = function(a) {
-  try {
-    return new goog.db.ObjectStore(this.tx_.objectStore(a))
-  }catch(b) {
-    throw new goog.db.Error(b.code, "getting object store " + a);
-  }
-};
-goog.db.Transaction.prototype.abort = function() {
-  this.tx_.abort()
-};
-goog.db.Transaction.prototype.disposeInternal = function() {
-  goog.db.Transaction.superClass_.disposeInternal.call(this);
-  this.eventHandler_.dispose()
-};
-goog.db.Transaction.TransactionMode = {READ_ONLY:0, READ_WRITE:1, VERSION_CHANGE:2};
-goog.db.IndexedDb = function(a) {
-  this.db_ = a
-};
-goog.db.IndexedDb.prototype.open_ = !0;
-goog.db.IndexedDb.prototype.close = function() {
-  this.open_ && (this.db_.close(), this.open_ = !1)
-};
-goog.db.IndexedDb.prototype.isOpen = function() {
-  return this.open_
-};
-goog.db.IndexedDb.prototype.getName = function() {
-  return this.db_.name
-};
-goog.db.IndexedDb.prototype.getVersion = function() {
-  return this.db_.version
-};
-goog.db.IndexedDb.prototype.getObjectStoreNames = function() {
-  return this.db_.objectStoreNames
-};
-goog.db.IndexedDb.prototype.createObjectStore = function(a, b) {
-  try {
-    return new goog.db.ObjectStore(this.db_.createObjectStore(a, b))
-  }catch(c) {
-    throw new goog.db.Error(c.code, "creating object store " + a);
-  }
-};
-goog.db.IndexedDb.prototype.deleteObjectStore = function(a) {
-  try {
-    this.db_.deleteObjectStore(a)
-  }catch(b) {
-    throw new goog.db.Error(b.code, "deleting object store " + a);
-  }
-};
-goog.db.IndexedDb.prototype.setVersion = function(a) {
-  var b = new goog.async.Deferred, a = this.db_.setVersion(a);
-  a.onsuccess = function(a) {
-    b.callback(new goog.db.Transaction(a.target.result))
-  };
-  a.onerror = function(a) {
-    b.errback(new goog.db.Error(a.target.errorCode, "setting version"))
-  };
-  a.onblocked = function() {
-    b.errback(new goog.db.Error.VersionChangeBlockedError)
-  };
-  return b
-};
-goog.db.IndexedDb.prototype.createTransaction = function(a, b) {
-  try {
-    return new goog.db.Transaction(this.db_.transaction(a, b))
-  }catch(c) {
-    throw new goog.db.Error(c.code, "creating transaction");
-  }
-};
-goog.db.openDatabase = function(a) {
-  var b = goog.global.indexedDB || goog.global.mozIndexedDB || goog.global.webkitIndexedDB || goog.global.moz_indexedDB, c = new goog.async.Deferred, b = b.open(a);
-  b.onsuccess = function(a) {
-    a = new goog.db.IndexedDb(a.target.result);
-    c.callback(a)
-  };
-  b.onerror = function(b) {
-    c.errback(new goog.db.Error(b.target.code, "opening database " + a))
-  };
-  return c
-};
-torrent_client.client.polyfills = {};
-torrent_client.client.polyfills.prefix = {};
-torrent_client.client.polyfills.prefix.prefix = function() {
-  var a = function(a, b) {
-    var e = cljs.core.PersistentVector.fromArray(["webkit", "moz", "ms"]), f = [cljs.core.str(clojure.string.upper_case.call(null, cljs.core.subs.call(null, a, 0, 1))), cljs.core.str(cljs.core.subs.call(null, a, 1))].join(""), e = cljs.core.into.call(null, cljs.core.ObjMap.fromObject([], {}), cljs.core.map.call(null, cljs.core.juxt.call(null, cljs.core.identity, function(a) {
-      return[cljs.core.str(a), cljs.core.str(f)].join("")
-    }), e)), e = cljs.core.assoc.call(null, e, "", a), e = cljs.core.vals.call(null, cljs.core.merge.call(null, e, b)), e = cljs.core.map.call(null, function(a) {
-      return window[a]
-    }, e);
-    return cljs.core.some.call(null, function(a) {
-      return cljs.core.not.call(null, null == a) ? a : null
-    }, e)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-torrent_client.client.polyfills.prefix.indexedDB = torrent_client.client.polyfills.prefix.prefix.call(null, "indexedDB");
-torrent_client.client.polyfills.prefix.RTCPeerConnection = torrent_client.client.polyfills.prefix.prefix.call(null, "RTCPeerConnection");
-torrent_client.client.core.db = {};
-goog.db.ObjectStore.prototype.cljs$core$ITransientAssociative$ = !0;
-goog.db.ObjectStore.prototype.cljs$core$ITransientAssociative$_assoc_BANG_$arity$3 = function(a, b, c) {
-  return a.put(jayq.util.clj__GT_js.call(null, c), cljs.core.name.call(null, b))
-};
-goog.db.ObjectStore.prototype.cljs$core$ILookup$ = !0;
-goog.db.ObjectStore.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  return cljs.core.js__GT_clj.call(null, a.get(cljs.core.name.call(null, b)))
-};
-torrent_client.client.core.db.create_object_store = function(a, b, c) {
-  return a.createObjectStore(b, jayq.util.clj__GT_js.call(null, c))
-};
-torrent_client.client.core.db.create_transaction = function(a, b, c) {
-  return a.createTransaction(jayq.util.clj__GT_js.call(null, b), c)
-};
-torrent_client.client.core.db.open_database = function(a, b, c) {
-  return function(d, e) {
-    var f = torrent_client.client.polyfills.prefix.indexedDB.open(a, b);
-    f.onerror = e;
-    f.onsuccess = function() {
-      return d.call(null, new goog.db.IndexedDb(f.result))
-    };
-    return f.onupgradeneeded = function() {
-      var a = f.result, b = cljs.core.seq.call(null, c);
-      if(cljs.core.truth_(b)) {
-        for(var d = cljs.core.first.call(null, b);;) {
-          if(cljs.core.not.call(null, a.objectStoreNames.contains("\ufdd0'name".call(null, d))) && torrent_client.client.core.db.create_object_store.call(null, a, "\ufdd0'name".call(null, d), cljs.core.ObjMap.fromObject(["\ufdd0'keyPath", "\ufdd0'autoIncrement"], {"\ufdd0'keyPath":"\ufdd0'key-path".call(null, d), "\ufdd0'autoIncrement":"\ufdd0'auto-increment".call(null, d)})), d = cljs.core.next.call(null, b), cljs.core.truth_(d)) {
-            b = d, d = cljs.core.first.call(null, b)
-          }else {
-            break
-          }
-        }
-      }
-      return a
-    }
-  }
-};
-cljs.reader = {};
-void 0;
-cljs.reader.PushbackReader = {};
-cljs.reader.read_char = function(a) {
-  if(a ? a.cljs$reader$PushbackReader$read_char$arity$1 : a) {
-    a = a.cljs$reader$PushbackReader$read_char$arity$1(a)
-  }else {
-    var b;
-    b = cljs.reader.read_char[goog.typeOf.call(null, a)];
-    if(!b && (b = cljs.reader.read_char._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "PushbackReader.read-char", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-cljs.reader.unread = function(a, b) {
-  var c;
-  if(a ? a.cljs$reader$PushbackReader$unread$arity$2 : a) {
-    c = a.cljs$reader$PushbackReader$unread$arity$2(a, b)
-  }else {
-    c = cljs.reader.unread[goog.typeOf.call(null, a)];
-    if(!c && (c = cljs.reader.unread._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "PushbackReader.unread", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-void 0;
-cljs.reader.StringPushbackReader = function(a, b, c) {
-  this.s = a;
-  this.index_atom = b;
-  this.buffer_atom = c
-};
-cljs.reader.StringPushbackReader.cljs$lang$type = !0;
-cljs.reader.StringPushbackReader.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "cljs.reader.StringPushbackReader")
-};
-cljs.reader.StringPushbackReader.prototype.cljs$reader$PushbackReader$ = !0;
-cljs.reader.StringPushbackReader.prototype.cljs$reader$PushbackReader$read_char$arity$1 = function() {
-  if(cljs.core.empty_QMARK_.call(null, cljs.core.deref.call(null, this.buffer_atom))) {
-    var a = cljs.core.deref.call(null, this.index_atom);
-    cljs.core.swap_BANG_.call(null, this.index_atom, cljs.core.inc);
-    return this.s[a]
-  }
-  a = cljs.core.deref.call(null, this.buffer_atom);
-  cljs.core.swap_BANG_.call(null, this.buffer_atom, cljs.core.rest);
-  return cljs.core.first.call(null, a)
-};
-cljs.reader.StringPushbackReader.prototype.cljs$reader$PushbackReader$unread$arity$2 = function(a, b) {
-  return cljs.core.swap_BANG_.call(null, this.buffer_atom, function(a) {
-    return cljs.core.cons.call(null, b, a)
-  })
-};
-cljs.reader.StringPushbackReader;
-cljs.reader.push_back_reader = function(a) {
-  return new cljs.reader.StringPushbackReader(a, cljs.core.atom.call(null, 0), cljs.core.atom.call(null, null))
-};
-cljs.reader.whitespace_QMARK_ = function(a) {
-  var b = goog.string.isBreakingWhitespace.call(null, a);
-  return cljs.core.truth_(b) ? b : "," === a
-};
-cljs.reader.numeric_QMARK_ = function(a) {
-  return goog.string.isNumeric.call(null, a)
-};
-cljs.reader.comment_prefix_QMARK_ = function(a) {
-  return";" === a
-};
-cljs.reader.number_literal_QMARK_ = function(a, b) {
-  var c = cljs.reader.numeric_QMARK_.call(null, b);
-  if(c) {
-    return c
-  }
-  c = function() {
-    var a = "+" === b;
-    return a ? a : "-" === b
-  }();
-  return cljs.core.truth_(c) ? cljs.reader.numeric_QMARK_.call(null, function() {
-    var b = cljs.reader.read_char.call(null, a);
-    cljs.reader.unread.call(null, a, b);
-    return b
-  }()) : c
-};
-void 0;
-void 0;
-void 0;
-cljs.reader.reader_error = function() {
-  var a = function(a, b) {
-    throw cljs.core.apply.call(null, cljs.core.str, b);
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-cljs.reader.macro_terminating_QMARK_ = function(a) {
-  var b = "#" != a;
-  return b && (b = "'" != a) ? (b = ":" != a) ? cljs.reader.macros.call(null, a) : b : b
-};
-cljs.reader.read_token = function(a, b) {
-  for(var c = new goog.string.StringBuffer(b), d = cljs.reader.read_char.call(null, a);;) {
-    var e;
-    e = null == d;
-    e || (e = (e = cljs.reader.whitespace_QMARK_.call(null, d)) ? e : cljs.reader.macro_terminating_QMARK_.call(null, d));
-    if(e) {
-      return cljs.reader.unread.call(null, a, d), c.toString()
-    }
-    c.append(d);
-    d = cljs.reader.read_char.call(null, a)
-  }
-};
-cljs.reader.skip_line = function(a) {
-  for(;;) {
-    var b = cljs.reader.read_char.call(null, a);
-    var c = "n" === b;
-    b = c ? c : (c = "r" === b) ? c : null == b;
-    if(b) {
-      return a
-    }
-  }
-};
-cljs.reader.int_pattern = cljs.core.re_pattern.call(null, "([-+]?)(?:(0)|([1-9][0-9]*)|0[xX]([0-9A-Fa-f]+)|0([0-7]+)|([1-9][0-9]?)[rR]([0-9A-Za-z]+)|0[0-9]+)(N)?");
-cljs.reader.ratio_pattern = cljs.core.re_pattern.call(null, "([-+]?[0-9]+)/([0-9]+)");
-cljs.reader.float_pattern = cljs.core.re_pattern.call(null, "([-+]?[0-9]+(\\.[0-9]*)?([eE][-+]?[0-9]+)?)(M)?");
-cljs.reader.symbol_pattern = cljs.core.re_pattern.call(null, "[:]?([^0-9/].*/)?([^0-9/][^/]*)");
-cljs.reader.re_find_STAR_ = function(a, b) {
-  var c = a.exec(b);
-  return null != c ? 1 === c.length ? c[0] : c : null
-};
-cljs.reader.match_int = function(a) {
-  var a = cljs.reader.re_find_STAR_.call(null, cljs.reader.int_pattern, a), b = a[2];
-  var c = null == b, b = c ? c : 1 > b.length;
-  if(!b) {
-    return 0
-  }
-  b = "-" === a[1] ? -1 : 1;
-  c = cljs.core.truth_(a[3]) ? [a[3], 10] : cljs.core.truth_(a[4]) ? [a[4], 16] : cljs.core.truth_(a[5]) ? [a[5], 8] : cljs.core.truth_(a[7]) ? [a[7], parseInt(a[7])] : [null, null];
-  a = c[0];
-  c = c[1];
-  return null == a ? null : b * parseInt(a, c)
-};
-cljs.reader.match_ratio = function(a) {
-  var a = cljs.reader.re_find_STAR_.call(null, cljs.reader.ratio_pattern, a), b = a[2];
-  return parseInt(a[1]) / parseInt(b)
-};
-cljs.reader.match_float = function(a) {
-  return parseFloat(a)
-};
-cljs.reader.re_matches_STAR_ = function(a, b) {
-  var c = a.exec(b), d;
-  d = (d = null != c) ? c[0] === b : d;
-  return d ? 1 === c.length ? c[0] : c : null
-};
-cljs.reader.match_number = function(a) {
-  return cljs.core.truth_(cljs.reader.re_matches_STAR_.call(null, cljs.reader.int_pattern, a)) ? cljs.reader.match_int.call(null, a) : cljs.core.truth_(cljs.reader.re_matches_STAR_.call(null, cljs.reader.ratio_pattern, a)) ? cljs.reader.match_ratio.call(null, a) : cljs.core.truth_(cljs.reader.re_matches_STAR_.call(null, cljs.reader.float_pattern, a)) ? cljs.reader.match_float.call(null, a) : null
-};
-cljs.reader.escape_char_map = function(a) {
-  return"f" === a ? "\u000c" : "b" === a ? "\u0008" : '"' === a ? '"' : "\\" === a ? "\\" : "n" === a ? "\n" : "r" === a ? "\r" : "t" === a ? "\t" : null
-};
-cljs.reader.read_unicode_char = function(a) {
-  return cljs.reader.reader_error.call(null, a, "Unicode characters not supported by reader (yet)")
-};
-cljs.reader.escape_char = function(a, b) {
-  var c = cljs.reader.read_char.call(null, b), d = cljs.reader.escape_char_map.call(null, c);
-  if(cljs.core.truth_(d)) {
-    return d
-  }
-  d = (d = "u" === c) ? d : cljs.reader.numeric_QMARK_.call(null, c);
-  return d ? cljs.reader.read_unicode_char.call(null, b, c) : cljs.reader.reader_error.call(null, b, "Unsupported escape character: \\", c)
-};
-cljs.reader.read_past = function(a, b) {
-  for(var c = cljs.reader.read_char.call(null, b);;) {
-    if(cljs.core.truth_(a.call(null, c))) {
-      c = cljs.reader.read_char.call(null, b)
-    }else {
-      return c
-    }
-  }
-};
-cljs.reader.read_delimited_list = function(a, b, c) {
-  for(var d = cljs.core.transient$.call(null, cljs.core.PersistentVector.fromArray([]));;) {
-    var e = cljs.reader.read_past.call(null, cljs.reader.whitespace_QMARK_, b);
-    cljs.core.truth_(e) || cljs.reader.reader_error.call(null, b, "EOF");
-    if(a === e) {
-      return cljs.core.persistent_BANG_.call(null, d)
-    }
-    var f = cljs.reader.macros.call(null, e);
-    cljs.core.truth_(f) ? e = f.call(null, b, e) : (cljs.reader.unread.call(null, b, e), e = cljs.reader.read.call(null, b, !0, null, c));
-    d = e === b ? d : cljs.core.conj_BANG_.call(null, d, e)
-  }
-};
-cljs.reader.not_implemented = function(a, b) {
-  return cljs.reader.reader_error.call(null, a, "Reader for ", b, " not implemented yet")
-};
-void 0;
-cljs.reader.read_dispatch = function(a, b) {
-  var c = cljs.reader.read_char.call(null, a), d = cljs.reader.dispatch_macros.call(null, c);
-  if(cljs.core.truth_(d)) {
-    return d.call(null, a, b)
-  }
-  d = cljs.reader.maybe_read_tagged_type.call(null, a, c);
-  return cljs.core.truth_(d) ? d : cljs.reader.reader_error.call(null, a, "No dispatch macro for ", c)
-};
-cljs.reader.read_unmatched_delimiter = function(a, b) {
-  return cljs.reader.reader_error.call(null, a, "Unmached delimiter ", b)
-};
-cljs.reader.read_list = function(a) {
-  return cljs.core.apply.call(null, cljs.core.list, cljs.reader.read_delimited_list.call(null, ")", a, !0))
-};
-cljs.reader.read_comment = cljs.reader.skip_line;
-cljs.reader.read_vector = function(a) {
-  return cljs.reader.read_delimited_list.call(null, "]", a, !0)
-};
-cljs.reader.read_map = function(a) {
-  var b = cljs.reader.read_delimited_list.call(null, "}", a, !0);
-  cljs.core.odd_QMARK_.call(null, cljs.core.count.call(null, b)) && cljs.reader.reader_error.call(null, a, "Map literal must contain an even number of forms");
-  return cljs.core.apply.call(null, cljs.core.hash_map, b)
-};
-cljs.reader.read_number = function(a, b) {
-  for(var c = new goog.string.StringBuffer(b), d = cljs.reader.read_char.call(null, a);;) {
-    if(cljs.core.truth_(function() {
-      var a = null == d;
-      return a ? a : (a = cljs.reader.whitespace_QMARK_.call(null, d)) ? a : cljs.reader.macros.call(null, d)
-    }())) {
-      cljs.reader.unread.call(null, a, d);
-      var e = c.toString(), c = cljs.reader.match_number.call(null, e);
-      return cljs.core.truth_(c) ? c : cljs.reader.reader_error.call(null, a, "Invalid number format [", e, "]")
-    }
-    c.append(d);
-    d = e = cljs.reader.read_char.call(null, a)
-  }
-};
-cljs.reader.read_string_STAR_ = function(a) {
-  for(var b = new goog.string.StringBuffer, c = cljs.reader.read_char.call(null, a);;) {
-    if(null == c) {
-      return cljs.reader.reader_error.call(null, a, "EOF while reading string")
-    }
-    if("\\" === c) {
-      b.append(cljs.reader.escape_char.call(null, b, a))
-    }else {
-      if('"' === c) {
-        return b.toString()
-      }
-      b.append(c)
-    }
-    c = cljs.reader.read_char.call(null, a)
-  }
-};
-cljs.reader.special_symbols = cljs.core.ObjMap.fromObject(["nil", "true", "false"], {nil:null, "true":!0, "false":!1});
-cljs.reader.read_symbol = function(a, b) {
-  var c = cljs.reader.read_token.call(null, a, b);
-  return cljs.core.truth_(goog.string.contains.call(null, c, "/")) ? cljs.core.symbol.call(null, cljs.core.subs.call(null, c, 0, c.indexOf("/")), cljs.core.subs.call(null, c, c.indexOf("/") + 1, c.length)) : cljs.core.get.call(null, cljs.reader.special_symbols, c, cljs.core.symbol.call(null, c))
-};
-cljs.reader.read_keyword = function(a) {
-  var b = cljs.reader.read_token.call(null, a, cljs.reader.read_char.call(null, a)), b = cljs.reader.re_matches_STAR_.call(null, cljs.reader.symbol_pattern, b), c = b[0], d = b[1], e = b[2];
-  return cljs.core.truth_(function() {
-    var a;
-    a = (a = void 0 !== d) ? ":/" === d.substring(d.length - 2, d.length) : a;
-    return cljs.core.truth_(a) ? a : (a = ":" === e[e.length - 1]) ? a : -1 !== c.indexOf("::", 1)
-  }()) ? cljs.reader.reader_error.call(null, a, "Invalid token: ", c) : cljs.core.truth_(d) ? cljs.core.keyword.call(null, d.substring(0, d.indexOf("/")), e) : cljs.core.keyword.call(null, c)
-};
-cljs.reader.desugar_meta = function(a) {
-  return cljs.core.symbol_QMARK_.call(null, a) ? cljs.core.ObjMap.fromObject(["\ufdd0'tag"], {"\ufdd0'tag":a}) : cljs.core.string_QMARK_.call(null, a) ? cljs.core.ObjMap.fromObject(["\ufdd0'tag"], {"\ufdd0'tag":a}) : cljs.core.keyword_QMARK_.call(null, a) ? cljs.core.PersistentArrayMap.fromArrays([a], [!0]) : a
-};
-cljs.reader.wrapping_reader = function(a) {
-  return function(b) {
-    return cljs.core.list.call(null, a, cljs.reader.read.call(null, b, !0, null, !0))
-  }
-};
-cljs.reader.throwing_reader = function(a) {
-  return function(b) {
-    return cljs.reader.reader_error.call(null, b, a)
-  }
-};
-cljs.reader.read_meta = function(a) {
-  var b = cljs.reader.desugar_meta.call(null, cljs.reader.read.call(null, a, !0, null, !0));
-  cljs.core.map_QMARK_.call(null, b) || cljs.reader.reader_error.call(null, a, "Metadata must be Symbol,Keyword,String or Map");
-  var c = cljs.reader.read.call(null, a, !0, null, !0), d;
-  null != c ? (d = (d = c.cljs$lang$protocol_mask$partition0$ & 131072) ? d : c.cljs$core$IWithMeta$, d = d ? !0 : c.cljs$lang$protocol_mask$partition0$ ? !1 : cljs.core.type_satisfies_.call(null, cljs.core.IWithMeta, c)) : d = cljs.core.type_satisfies_.call(null, cljs.core.IWithMeta, c);
-  return d ? cljs.core.with_meta.call(null, c, cljs.core.merge.call(null, cljs.core.meta.call(null, c), b)) : cljs.reader.reader_error.call(null, a, "Metadata can only be applied to IWithMetas")
-};
-cljs.reader.read_set = function(a) {
-  return cljs.core.set.call(null, cljs.reader.read_delimited_list.call(null, "}", a, !0))
-};
-cljs.reader.read_regex = function(a, b) {
-  return cljs.core.re_pattern.call(null, cljs.reader.read_string_STAR_.call(null, a, b))
-};
-cljs.reader.read_discard = function(a) {
-  cljs.reader.read.call(null, a, !0, null, !0);
-  return a
-};
-cljs.reader.macros = function(a) {
-  return"@" === a ? cljs.reader.wrapping_reader.call(null, "\ufdd1'deref") : "`" === a ? cljs.reader.not_implemented : '"' === a ? cljs.reader.read_string_STAR_ : "#" === a ? cljs.reader.read_dispatch : "%" === a ? cljs.reader.not_implemented : "'" === a ? cljs.reader.wrapping_reader.call(null, "\ufdd1'quote") : "(" === a ? cljs.reader.read_list : ")" === a ? cljs.reader.read_unmatched_delimiter : ":" === a ? cljs.reader.read_keyword : ";" === a ? cljs.reader.not_implemented : "[" === a ? cljs.reader.read_vector : 
-  "{" === a ? cljs.reader.read_map : "\\" === a ? cljs.reader.read_char : "]" === a ? cljs.reader.read_unmatched_delimiter : "}" === a ? cljs.reader.read_unmatched_delimiter : "^" === a ? cljs.reader.read_meta : "~" === a ? cljs.reader.not_implemented : null
-};
-cljs.reader.dispatch_macros = function(a) {
-  return"_" === a ? cljs.reader.read_discard : "!" === a ? cljs.reader.read_comment : '"' === a ? cljs.reader.read_regex : "<" === a ? cljs.reader.throwing_reader.call(null, "Unreadable form") : "{" === a ? cljs.reader.read_set : null
-};
-cljs.reader.read = function(a, b, c) {
-  for(;;) {
-    var d = cljs.reader.read_char.call(null, a);
-    if(null == d) {
-      return cljs.core.truth_(b) ? cljs.reader.reader_error.call(null, a, "EOF") : c
-    }
-    if(!cljs.reader.whitespace_QMARK_.call(null, d)) {
-      if(cljs.reader.comment_prefix_QMARK_.call(null, d)) {
-        a = cljs.reader.read_comment.call(null, a, d)
-      }else {
-        var e = cljs.reader.macros.call(null, d), d = cljs.core.truth_(e) ? e.call(null, a, d) : cljs.reader.number_literal_QMARK_.call(null, a, d) ? cljs.reader.read_number.call(null, a, d) : cljs.reader.read_symbol.call(null, a, d);
-        if(d !== a) {
-          return d
-        }
-      }
-    }
-  }
-};
-cljs.reader.read_string = function(a) {
-  a = cljs.reader.push_back_reader.call(null, a);
-  return cljs.reader.read.call(null, a, !0, null, !1)
-};
-cljs.reader.read_date = function(a) {
-  return new Date(Date.parse.call(null, a))
-};
-cljs.reader.read_queue = function(a) {
-  return cljs.core.vector_QMARK_.call(null, a) ? cljs.core.into.call(null, cljs.core.PersistentQueue.EMPTY, a) : cljs.reader.reader_error.call(null, null, "Queue literal expects a vector for its elements.")
-};
-cljs.reader._STAR_tag_table_STAR_ = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject(["inst", "uuid", "queue"], {inst:cljs.core.identity, uuid:cljs.core.identity, queue:cljs.reader.read_queue}));
-cljs.reader.maybe_read_tagged_type = function(a, b) {
-  var c = cljs.reader.read_symbol.call(null, a, b), d = cljs.reader.read.call(null, a, !0, null, !1), e = cljs.core.get.call(null, cljs.core.deref.call(null, cljs.reader._STAR_tag_table_STAR_), cljs.core.name.call(null, c));
-  return cljs.core.truth_(e) ? e.call(null, d) : cljs.reader.reader_error.call(null, a, "Could not find tag parser for ", cljs.core.name.call(null, c), cljs.core.pr_str.call(null, cljs.core.deref.call(null, cljs.reader._STAR_tag_table_STAR_)))
-};
-cljs.reader.register_tag_parser_BANG_ = function(a, b) {
-  var c = cljs.core.name.call(null, a), d = cljs.core.get.call(null, cljs.core.deref.call(null, cljs.reader._STAR_tag_table_STAR_), c);
-  cljs.core.swap_BANG_.call(null, cljs.reader._STAR_tag_table_STAR_, cljs.core.assoc, c, b);
-  return d
-};
-crate.element = {};
-crate.element.javascript_tag = function(a) {
-  return cljs.core.PersistentVector.fromArray(["\ufdd0'script", cljs.core.ObjMap.fromObject(["\ufdd0'type"], {"\ufdd0'type":"text/javascript"}), [cljs.core.str("//<![CDATA[\n"), cljs.core.str(a), cljs.core.str("\n//]]\>")].join("")])
-};
-void 0;
-var func__9237__auto____17304 = function() {
-  var a = function(a, b) {
-    return cljs.core.PersistentVector.fromArray(["\ufdd0'a", cljs.core.ObjMap.fromObject(["\ufdd0'href"], {"\ufdd0'href":crate.util.to_uri.call(null, a)}), b])
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-crate.element.link_to = crate.compiler.add_optional_attrs.call(null, func__9237__auto____17304);
-void 0;
-var func__9237__auto____17312 = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null);
-    return cljs.core.PersistentVector.fromArray(["\ufdd0'a", cljs.core.ObjMap.fromObject(["\ufdd0'href"], {"\ufdd0'href":[cljs.core.str("mailto:"), cljs.core.str(a)].join("")}), cljs.core.truth_(e) ? e : a])
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-crate.element.mail_to = crate.compiler.add_optional_attrs.call(null, func__9237__auto____17312);
-void 0;
-var func__9237__auto____17320 = function(a) {
-  return cljs.core.PersistentVector.fromArray(["\ufdd0'ul", function() {
-    return function c(a) {
-      return new cljs.core.LazySeq(null, !1, function() {
-        for(;;) {
-          if(cljs.core.truth_(cljs.core.seq.call(null, a))) {
-            var e = cljs.core.first.call(null, a);
-            return cljs.core.cons.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'li", e]), c.call(null, cljs.core.rest.call(null, a)))
-          }
-          return null
-        }
-      })
-    }.call(null, a)
-  }()])
-};
-crate.element.unordered_list = crate.compiler.add_optional_attrs.call(null, func__9237__auto____17320);
-void 0;
-var func__9237__auto____17326 = function(a) {
-  return cljs.core.PersistentVector.fromArray(["\ufdd0'ol", function() {
-    return function c(a) {
-      return new cljs.core.LazySeq(null, !1, function() {
-        for(;;) {
-          if(cljs.core.truth_(cljs.core.seq.call(null, a))) {
-            var e = cljs.core.first.call(null, a);
-            return cljs.core.cons.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'li", e]), c.call(null, cljs.core.rest.call(null, a)))
-          }
-          return null
-        }
-      })
-    }.call(null, a)
-  }()])
-};
-crate.element.ordered_list = crate.compiler.add_optional_attrs.call(null, func__9237__auto____17326);
-void 0;
-var func__9237__auto____17327 = function() {
-  var a = null;
-  return a = function(a, c) {
-    switch(arguments.length) {
-      case 1:
-        return cljs.core.PersistentVector.fromArray(["\ufdd0'img", cljs.core.ObjMap.fromObject(["\ufdd0'src"], {"\ufdd0'src":crate.util.to_uri.call(null, a)})]);
-      case 2:
-        return cljs.core.PersistentVector.fromArray(["\ufdd0'img", cljs.core.ObjMap.fromObject(["\ufdd0'src", "\ufdd0'alt"], {"\ufdd0'src":crate.util.to_uri.call(null, a), "\ufdd0'alt":c})])
-    }
-    throw"Invalid arity: " + arguments.length;
-  }
-}();
-crate.element.image = crate.compiler.add_optional_attrs.call(null, func__9237__auto____17327);
-var fetch = {util:{}};
-fetch.util.clj__GT_js = function clj__GT_js(b) {
-  return cljs.core.string_QMARK_.call(null, b) ? b : cljs.core.keyword_QMARK_.call(null, b) ? cljs.core.name.call(null, b) : cljs.core.map_QMARK_.call(null, b) ? cljs.core.reduce.call(null, function(b, d) {
-    var e = cljs.core.nth.call(null, d, 0, null), f = cljs.core.nth.call(null, d, 1, null);
-    return cljs.core.assoc.call(null, b, clj__GT_js.call(null, e), clj__GT_js.call(null, f))
-  }, cljs.core.ObjMap.fromObject([], {}), b).strobj : cljs.core.coll_QMARK_.call(null, b) ? cljs.core.apply.call(null, cljs.core.array, cljs.core.map.call(null, clj__GT_js, b)) : b
-};
-fetch.core = {};
-fetch.core.__GT_method = function(a) {
-  return clojure.string.upper_case.call(null, cljs.core.name.call(null, a))
-};
-fetch.core.parse_route = function(a) {
-  if(cljs.core.string_QMARK_.call(null, a)) {
-    return cljs.core.PersistentVector.fromArray(["GET", a])
-  }
-  if(cljs.core.vector_QMARK_.call(null, a)) {
-    var b = cljs.core.nth.call(null, a, 0, null), a = cljs.core.nth.call(null, a, 1, null);
-    return cljs.core.PersistentVector.fromArray([fetch.core.__GT_method.call(null, b), a])
-  }
-  return cljs.core.PersistentVector.fromArray(["GET", a])
-};
-fetch.core.__GT_data = function(a) {
-  a = fetch.util.clj__GT_js.call(null, a);
-  a = goog.Uri.QueryData.createFromMap.call(null, new goog.structs.Map(a));
-  return"" + cljs.core.str(a)
-};
-fetch.core.__GT_callback = function(a) {
-  return cljs.core.truth_(a) ? function(b) {
-    b = b.getResponseText();
-    return a.call(null, b)
-  } : null
-};
-fetch.core.xhr = function() {
-  var a = function(a, b, e, f) {
-    var f = cljs.core.nth.call(null, f, 0, null), g = new goog.net.XhrIo, h = fetch.core.parse_route.call(null, a), a = cljs.core.nth.call(null, h, 0, null), h = cljs.core.nth.call(null, h, 1, null), b = fetch.core.__GT_data.call(null, b), i = fetch.core.__GT_callback.call(null, e);
-    cljs.core.truth_(i) && goog.events.listen.call(null, g, goog.net.EventType.COMPLETE, function() {
-      return i.call(null, g)
-    });
-    return g.send(h, a, b, cljs.core.truth_(f) ? fetch.util.clj__GT_js.call(null, f) : null)
-  }, b = function(b, d, e, f) {
-    var g = null;
-    goog.isDef(f) && (g = cljs.core.array_seq(Array.prototype.slice.call(arguments, 3), 0));
-    return a.call(this, b, d, e, g)
-  };
-  b.cljs$lang$maxFixedArity = 3;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), f = cljs.core.first(cljs.core.next(cljs.core.next(b))), b = cljs.core.rest(cljs.core.next(cljs.core.next(b)));
-    return a(d, e, f, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core = {};
-jayq.core.crate_meta = function(a) {
-  return a.prototype._crateGroup
-};
-jayq.core.__GT_selector = function(a) {
-  if(cljs.core.string_QMARK_.call(null, a)) {
-    return a
-  }
-  if(cljs.core.fn_QMARK_.call(null, a)) {
-    var b = jayq.core.crate_meta.call(null, a);
-    return cljs.core.truth_(b) ? [cljs.core.str("[crateGroup="), cljs.core.str(b), cljs.core.str("]")].join("") : a
-  }
-  return cljs.core.keyword_QMARK_.call(null, a) ? cljs.core.name.call(null, a) : a
-};
-jayq.core.$ = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null);
-    return cljs.core.not.call(null, e) ? jQuery(jayq.core.__GT_selector.call(null, a)) : jQuery(jayq.core.__GT_selector.call(null, a), e)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jQuery.prototype.cljs$core$IReduce$ = !0;
-jQuery.prototype.cljs$core$IReduce$_reduce$arity$2 = function(a, b) {
-  return cljs.core.ci_reduce.call(null, a, b)
-};
-jQuery.prototype.cljs$core$IReduce$_reduce$arity$3 = function(a, b, c) {
-  return cljs.core.ci_reduce.call(null, a, b, c)
-};
-jQuery.prototype.cljs$core$ILookup$ = !0;
-jQuery.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  var c = a.slice(b, b + 1);
-  return cljs.core.truth_(c) ? c : null
-};
-jQuery.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b, c) {
-  return cljs.core._nth.call(null, a, b, c)
-};
-jQuery.prototype.cljs$core$ISequential$ = !0;
-jQuery.prototype.cljs$core$IIndexed$ = !0;
-jQuery.prototype.cljs$core$IIndexed$_nth$arity$2 = function(a, b) {
-  return b < cljs.core.count.call(null, a) ? a.slice(b, b + 1) : null
-};
-jQuery.prototype.cljs$core$IIndexed$_nth$arity$3 = function(a, b, c) {
-  return b < cljs.core.count.call(null, a) ? a.slice(b, b + 1) : void 0 === c ? null : c
-};
-jQuery.prototype.cljs$core$ICounted$ = !0;
-jQuery.prototype.cljs$core$ICounted$_count$arity$1 = function(a) {
-  return a.size()
-};
-jQuery.prototype.cljs$core$ISeq$ = !0;
-jQuery.prototype.cljs$core$ISeq$_first$arity$1 = function(a) {
-  return a.get(0)
-};
-jQuery.prototype.cljs$core$ISeq$_rest$arity$1 = function(a) {
-  return 1 < cljs.core.count.call(null, a) ? a.slice(1) : cljs.core.list.call(null)
-};
-jQuery.prototype.cljs$core$ISeqable$ = !0;
-jQuery.prototype.cljs$core$ISeqable$_seq$arity$1 = function(a) {
-  return cljs.core.truth_(a.get(0)) ? a : null
-};
-jQuery.prototype.call = function() {
-  var a = null;
-  return a = function(a, c, d) {
-    switch(arguments.length) {
-      case 2:
-        return cljs.core._lookup.call(null, this, c);
-      case 3:
-        return cljs.core._lookup.call(null, this, c, d)
-    }
-    throw"Invalid arity: " + arguments.length;
-  }
-}();
-jayq.core.anim = function(a, b, c) {
-  return a.animate(jayq.util.clj__GT_js.call(null, b), c)
-};
-jayq.core.text = function(a, b) {
-  return a.text(b)
-};
-jayq.core.css = function(a, b) {
-  return cljs.core.keyword_QMARK_.call(null, b) ? a.css(cljs.core.name.call(null, b)) : a.css(jayq.util.clj__GT_js.call(null, b))
-};
-jayq.core.attr = function() {
-  var a = function(a, b, e) {
-    e = cljs.core.nth.call(null, e, 0, null);
-    b = cljs.core.name.call(null, b);
-    return cljs.core.not.call(null, e) ? a.attr(b) : a.attr(b, e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.remove_attr = function(a, b) {
-  return a.removeAttr(cljs.core.name.call(null, b))
-};
-jayq.core.data = function() {
-  var a = function(a, b, e) {
-    e = cljs.core.nth.call(null, e, 0, null);
-    b = cljs.core.name.call(null, b);
-    return cljs.core.not.call(null, e) ? a.data(b) : a.data(b, e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.position = function(a) {
-  return cljs.core.js__GT_clj.call(null, a.position(), "\ufdd0'keywordize-keys", !0)
-};
-jayq.core.add_class = function(a, b) {
-  var c = cljs.core.name.call(null, b);
-  return a.addClass(c)
-};
-jayq.core.remove_class = function(a, b) {
-  var c = cljs.core.name.call(null, b);
-  return a.removeClass(c)
-};
-jayq.core.toggle_class = function(a, b) {
-  var c = cljs.core.name.call(null, b);
-  return a.toggleClass(c)
-};
-jayq.core.has_class = function(a, b) {
-  var c = cljs.core.name.call(null, b);
-  return a.hasClass(c)
-};
-jayq.core.after = function(a, b) {
-  return a.after(b)
-};
-jayq.core.before = function(a, b) {
-  return a.before(b)
-};
-jayq.core.append = function(a, b) {
-  return a.append(b)
-};
-jayq.core.prepend = function(a, b) {
-  return a.prepend(b)
-};
-jayq.core.remove = function(a) {
-  return a.remove()
-};
-jayq.core.hide = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.hide(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.show = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.show(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.toggle = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.toggle(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.fade_out = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.fadeOut(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.fade_in = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.fadeIn(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.slide_up = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.slideUp(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.slide_down = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null), f = cljs.core.nth.call(null, b, 1, null);
-    return a.slideDown(e, f)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.parent = function(a) {
-  return a.parent()
-};
-jayq.core.find = function(a, b) {
-  return a.find(cljs.core.name.call(null, b))
-};
-jayq.core.closest = function() {
-  var a = function(a, b, e) {
-    e = cljs.core.nth.call(null, e, 0, null);
-    return a.closest(b, e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.clone = function(a) {
-  return a.clone()
-};
-jayq.core.inner = function(a, b) {
-  return a.html(b)
-};
-jayq.core.empty = function(a) {
-  return a.empty()
-};
-jayq.core.val = function() {
-  var a = function(a, b) {
-    var e = cljs.core.nth.call(null, b, 0, null);
-    return cljs.core.truth_(e) ? a.val(e) : a.val()
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.serialize = function(a) {
-  return a.serialize()
-};
-jayq.core.queue = function(a, b) {
-  return a.queue(b)
-};
-jayq.core.dequeue = function(a) {
-  return jayq.core.$.call(null, a).dequeue()
-};
-jayq.core.document_ready = function(a) {
-  return jayq.core.$.call(null, document).ready(a)
-};
-jayq.core.xhr = function(a, b, c) {
-  var d = cljs.core.nth.call(null, a, 0, null), a = cljs.core.nth.call(null, a, 1, null), b = jayq.util.clj__GT_js.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'type", "\ufdd0'data", "\ufdd0'success"], {"\ufdd0'type":clojure.string.upper_case.call(null, cljs.core.name.call(null, d)), "\ufdd0'data":jayq.util.clj__GT_js.call(null, b), "\ufdd0'success":c}));
-  return jQuery.ajax(a, b)
-};
-jayq.core.ajax = function() {
-  var a = null, b = function(a) {
-    return jQuery.ajax(jayq.util.clj__GT_js.call(null, a))
-  }, c = function(a, b) {
-    return jQuery.ajax(a, jayq.util.clj__GT_js.call(null, b))
-  }, a = function(a, e) {
-    switch(arguments.length) {
-      case 1:
-        return b.call(this, a);
-      case 2:
-        return c.call(this, a, e)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$2 = c;
-  return a
-}();
-jayq.core.bind = function(a, b, c) {
-  return a.bind(cljs.core.name.call(null, b), c)
-};
-jayq.core.unbind = function() {
-  var a = function(a, b, e) {
-    e = cljs.core.nth.call(null, e, 0, null);
-    return a.unbind(cljs.core.name.call(null, b), e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.trigger = function(a, b) {
-  return a.trigger(cljs.core.name.call(null, b))
-};
-jayq.core.delegate = function(a, b, c, d) {
-  return a.delegate(jayq.core.__GT_selector.call(null, b), cljs.core.name.call(null, c), d)
-};
-jayq.core.__GT_event = function(a) {
-  if(cljs.core.keyword_QMARK_.call(null, a)) {
-    return cljs.core.name.call(null, a)
-  }
-  if(cljs.core.map_QMARK_.call(null, a)) {
-    return jayq.util.clj__GT_js.call(null, a)
-  }
-  if(cljs.core.coll_QMARK_.call(null, a)) {
-    return clojure.string.join.call(null, " ", cljs.core.map.call(null, cljs.core.name, a))
-  }
-  throw Error([cljs.core.str("Unknown event type: "), cljs.core.str(a)].join(""));
-};
-jayq.core.on = function() {
-  var a = function(a, b, e) {
-    var f = cljs.core.nth.call(null, e, 0, null), g = cljs.core.nth.call(null, e, 1, null), e = cljs.core.nth.call(null, e, 2, null);
-    return a.on(jayq.core.__GT_event.call(null, b), jayq.core.__GT_selector.call(null, f), g, e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.one = function() {
-  var a = function(a, b, e) {
-    var f = cljs.core.nth.call(null, e, 0, null), g = cljs.core.nth.call(null, e, 1, null), e = cljs.core.nth.call(null, e, 2, null);
-    return a.one(jayq.core.__GT_event.call(null, b), jayq.core.__GT_selector.call(null, f), g, e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.off = function() {
-  var a = function(a, b, e) {
-    var f = cljs.core.nth.call(null, e, 0, null), e = cljs.core.nth.call(null, e, 1, null);
-    return a.off(jayq.core.__GT_event.call(null, b), jayq.core.__GT_selector.call(null, f), e)
-  }, b = function(b, d, e) {
-    var f = null;
-    goog.isDef(e) && (f = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0));
-    return a.call(this, b, d, f)
-  };
-  b.cljs$lang$maxFixedArity = 2;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), e = cljs.core.first(cljs.core.next(b)), b = cljs.core.rest(cljs.core.next(b));
-    return a(d, e, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-jayq.core.prevent = function(a) {
-  return a.preventDefault()
-};
-var noir = {cljs:{}};
-noir.cljs.client = {};
-noir.cljs.client.watcher = {};
-noir.cljs.client.watcher.wait = function(a, b) {
-  return setTimeout(b, a)
-};
-noir.cljs.client.watcher.$body = jayq.core.$.call(null, "\ufdd0'body");
-noir.cljs.client.watcher.callbacks = cljs.core.atom.call(null, cljs.core.PersistentVector.fromArray([]));
-noir.cljs.client.watcher.cur_mode = cljs.core.atom.call(null, "\ufdd0'simple");
-noir.cljs.client.watcher.poll = function poll() {
-  return noir.cljs.client.watcher.wait.call(null, 100, function() {
-    return fetch.core.xhr.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'get", "/noir-cljs-get-updated"]), cljs.core.ObjMap.fromObject([], {}), function(b) {
-      if(cljs.core.truth_(cljs.core.truth_(b) ? cljs.core.not_EQ_.call(null, b, "") : b)) {
-        eval(b);
-        var c = cljs.core.seq.call(null, cljs.core.deref.call(null, noir.cljs.client.watcher.callbacks));
-        if(cljs.core.truth_(c)) {
-          for(var d = cljs.core.first.call(null, c);;) {
-            if(d.call(null, b), d = cljs.core.next.call(null, c), cljs.core.truth_(d)) {
-              c = d, d = cljs.core.first.call(null, c)
-            }else {
-              break
-            }
-          }
-        }
-      }
-      return cljs.core._EQ_.call(null, cljs.core.deref.call(null, noir.cljs.client.watcher.cur_mode), "\ufdd0'interactive") ? poll.call(null) : null
-    })
-  })
-};
-noir.cljs.client.watcher.on_update = function(a) {
-  return cljs.core.swap_BANG_.call(null, noir.cljs.client.watcher.callbacks, cljs.core.conj, a)
-};
-noir.cljs.client.watcher.set_mode = function(a) {
-  return fetch.core.xhr.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'post", "/noir-cljs-mode"]), cljs.core.ObjMap.fromObject(["\ufdd0'm"], {"\ufdd0'm":a}), function() {
-    cljs.core.reset_BANG_.call(null, noir.cljs.client.watcher.cur_mode, a);
-    return cljs.core._EQ_.call(null, a, "\ufdd0'interactive") ? noir.cljs.client.watcher.poll.call(null) : null
-  })
-};
-noir.cljs.client.watcher.get_mode = function(a) {
-  return fetch.core.xhr.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'get", "/noir-cljs-mode"]), cljs.core.ObjMap.fromObject([], {}), function(b) {
-    return a.call(null, cljs.reader.read_string.call(null, b))
-  })
-};
-noir.cljs.client.watcher.buttons = cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'mode", "\ufdd0'label"], {"\ufdd0'mode":"\ufdd0'advanced", "\ufdd0'label":"A"}), cljs.core.ObjMap.fromObject(["\ufdd0'mode", "\ufdd0'label"], {"\ufdd0'mode":"\ufdd0'simple", "\ufdd0'label":"S"}), cljs.core.ObjMap.fromObject(["\ufdd0'mode", "\ufdd0'label"], {"\ufdd0'mode":"\ufdd0'interactive", "\ufdd0'label":"I"})]);
-var group__9224__auto____17261 = cljs.core.swap_BANG_.call(null, crate.core.group_id, cljs.core.inc);
-noir.cljs.client.watcher.selector_button = function() {
-  var a = function(a, b) {
-    var e = cljs.core.seq_QMARK_.call(null, a) ? cljs.core.apply.call(null, cljs.core.hash_map, a) : a, f = cljs.core.get.call(null, e, "\ufdd0'label"), g = cljs.core.get.call(null, e, "\ufdd0'mode"), h = cljs.core.nth.call(null, b, 0, null), e = crate.core.html.call(null, function() {
-      var a = [cljs.core.str("noir-cljs-button "), cljs.core.str(cljs.core._EQ_.call(null, g, h) ? "active" : null)].join("");
-      return cljs.core.PersistentVector.fromArray(["\ufdd0'li", crate.element.link_to.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'class", "\ufdd0'data-mode"], {"\ufdd0'class":a, "\ufdd0'data-mode":g}), "#", f)])
-    }());
-    e.setAttribute("crateGroup", group__9224__auto____17261);
-    return e
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-noir.cljs.client.watcher.selector_button.prototype._crateGroup = group__9224__auto____17261;
-var group__9224__auto____17275 = cljs.core.swap_BANG_.call(null, crate.core.group_id, cljs.core.inc);
-noir.cljs.client.watcher.selector = function(a) {
-  var b = crate.core.html.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'div", cljs.core.PersistentVector.fromArray(["\ufdd0'style", cljs.core.ObjMap.fromObject(["\ufdd0'type"], {"\ufdd0'type":"text/css"}), "#noir-cljs-selector {position:fixed; bottom:15px; right:30px; list-style:none; }\n     #noir-cljs-selector li {}\n     #noir-cljs-selector a { float:left; display:inline; text-decoration:none; line-height:1em; height:19px; padding:5px 10px; background:#77c; width:10px; border:1px solid #55c; text-align:center; border-radius:5px; margin-bottom:8px; color:#449; }\n     #noir-cljs-selector a:hover {background:#99f;}\n     #noir-cljs-selector .active {background:#7cc; border-color:#599;} "]), 
-  cljs.core.PersistentVector.fromArray(["\ufdd0'ul#noir-cljs-selector", cljs.core.map.call(null, function(b) {
-    return noir.cljs.client.watcher.selector_button.call(null, b, a)
-  }, noir.cljs.client.watcher.buttons)])]));
-  b.setAttribute("crateGroup", group__9224__auto____17275);
-  return b
-};
-noir.cljs.client.watcher.selector.prototype._crateGroup = group__9224__auto____17275;
-jayq.core.delegate.call(null, noir.cljs.client.watcher.$body, "\ufdd0'.noir-cljs-button", "\ufdd0'click", function(a) {
-  a.preventDefault();
-  jayq.core.remove_class.call(null, jayq.core.find.call(null, jayq.core.$.call(null, noir.cljs.client.watcher.selector), "\ufdd0'.noir-cljs-button"), "\ufdd0'active");
-  var a = jayq.core.$.call(null, this), b = jayq.core.data.call(null, a, "\ufdd0'mode");
-  jayq.core.add_class.call(null, a, "\ufdd0'active");
-  return noir.cljs.client.watcher.set_mode.call(null, b)
-});
-noir.cljs.client.watcher.init = function() {
-  return noir.cljs.client.watcher.get_mode.call(null, function(a) {
-    return jayq.core.append.call(null, noir.cljs.client.watcher.$body, noir.cljs.client.watcher.selector.call(null, a))
-  })
-};
-torrent_client.client.polyfills.datachannel = {};
-console.log("start shim");
-DCPF_install("wss://datachannel-piranna.dotcloud.com");
-void 0;
-torrent_client.client.polyfills.datachannel.RTCPeerConnection = {};
-torrent_client.client.polyfills.datachannel.local_id = function(a) {
-  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$local_id$arity$1 : a) {
-    a = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$local_id$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.polyfills.datachannel.local_id[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.polyfills.datachannel.local_id._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.local-id", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.polyfills.datachannel.remote_id = function(a) {
-  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$remote_id$arity$1 : a) {
-    a = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$remote_id$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.polyfills.datachannel.remote_id[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.polyfills.datachannel.remote_id._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.remote-id", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.polyfills.datachannel.set_local_description = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_local_description$arity$2 : a) {
-    c = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_local_description$arity$2(a, b)
-  }else {
-    c = torrent_client.client.polyfills.datachannel.set_local_description[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.polyfills.datachannel.set_local_description._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.set-local-description", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-torrent_client.client.polyfills.datachannel.set_remote_description = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_remote_description$arity$2 : a) {
-    c = a.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_remote_description$arity$2(a, b)
-  }else {
-    c = torrent_client.client.polyfills.datachannel.set_remote_description[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.polyfills.datachannel.set_remote_description._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "RTCPeerConnection.set-remote-description", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-void 0;
-torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$ = !0;
-torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$local_id$arity$1 = function(a) {
-  return cljs.core.re_matches.call(null, /\/^o=.+\/gm/, a.localDescription)
-};
-torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$remote_id$arity$1 = function(a) {
-  return cljs.core.re_matches.call(null, /\/^o=.+\/gm/, a.remoteDescription)
-};
-torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_local_description$arity$2 = function(a, b) {
-  return a.setLocalDescription(b)
-};
-torrent_client.client.polyfills.prefix.RTCPeerConnection.prototype.torrent_client$client$polyfills$datachannel$RTCPeerConnection$set_remote_description$arity$2 = function(a, b) {
-  return a.setRemoteDescription(b)
-};
-console.log("suvived the fucking shim");
-torrent_client.client.protocol = {};
-torrent_client.client.protocol.main = {};
-void 0;
-torrent_client.client.protocol.main.Protocol = {};
-torrent_client.client.protocol.main.watch_channel = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.watch_channel[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.watch_channel._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.watch-channel", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_data = function() {
-  var a = null, b = function(a, b) {
-    var c;
-    if(a ? a.torrent_client$client$protocol$main$Protocol$send_data$arity$2 : a) {
-      c = a.torrent_client$client$protocol$main$Protocol$send_data$arity$2(a, b)
-    }else {
-      c = torrent_client.client.protocol.main.send_data[goog.typeOf.call(null, a)];
-      if(!c && (c = torrent_client.client.protocol.main.send_data._, !c)) {
-        throw cljs.core.missing_protocol.call(null, "Protocol.send-data", a);
-      }
-      c = c.call(null, a, b)
-    }
-    return c
-  }, c = function(a, b, c) {
-    if(a ? a.torrent_client$client$protocol$main$Protocol$send_data$arity$3 : a) {
-      a = a.torrent_client$client$protocol$main$Protocol$send_data$arity$3(a, b, c)
-    }else {
-      var g;
-      g = torrent_client.client.protocol.main.send_data[goog.typeOf.call(null, a)];
-      if(!g && (g = torrent_client.client.protocol.main.send_data._, !g)) {
-        throw cljs.core.missing_protocol.call(null, "Protocol.send-data", a);
-      }
-      a = g.call(null, a, b, c)
-    }
-    return a
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-torrent_client.client.protocol.main.send_handshake = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.send_handshake[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.send_handshake._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-handshake", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_choke = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_choke$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_choke$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.send_choke[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.send_choke._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-choke", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_unchoke = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.send_unchoke[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.send_unchoke._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-unchoke", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_interested = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_interested$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_interested$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.send_interested[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.send_interested._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-interested", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_not_interested = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.send_not_interested[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.send_not_interested._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-not-interested", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_have = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_have$arity$2 : a) {
-    c = a.torrent_client$client$protocol$main$Protocol$send_have$arity$2(a, b)
-  }else {
-    c = torrent_client.client.protocol.main.send_have[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.protocol.main.send_have._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-have", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-torrent_client.client.protocol.main.send_bitfield = function(a) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1(a)
-  }else {
-    var b;
-    b = torrent_client.client.protocol.main.send_bitfield[goog.typeOf.call(null, a)];
-    if(!b && (b = torrent_client.client.protocol.main.send_bitfield._, !b)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-bitfield", a);
-    }
-    a = b.call(null, a)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_request = function(a, b, c, d) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_request$arity$4 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_request$arity$4(a, b, c, d)
-  }else {
-    var e;
-    e = torrent_client.client.protocol.main.send_request[goog.typeOf.call(null, a)];
-    if(!e && (e = torrent_client.client.protocol.main.send_request._, !e)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-request", a);
-    }
-    a = e.call(null, a, b, c, d)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_block = function(a, b, c, d) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_block$arity$4 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_block$arity$4(a, b, c, d)
-  }else {
-    var e;
-    e = torrent_client.client.protocol.main.send_block[goog.typeOf.call(null, a)];
-    if(!e && (e = torrent_client.client.protocol.main.send_block._, !e)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-block", a);
-    }
-    a = e.call(null, a, b, c, d)
-  }
-  return a
-};
-torrent_client.client.protocol.main.send_cancel = function(a, b, c, d) {
-  if(a ? a.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4 : a) {
-    a = a.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4(a, b, c, d)
-  }else {
-    var e;
-    e = torrent_client.client.protocol.main.send_cancel[goog.typeOf.call(null, a)];
-    if(!e && (e = torrent_client.client.protocol.main.send_cancel._, !e)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.send-cancel", a);
-    }
-    a = e.call(null, a, b, c, d)
-  }
-  return a
-};
-torrent_client.client.protocol.main.receive_handshake = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$protocol$main$Protocol$receive_handshake$arity$2 : a) {
-    c = a.torrent_client$client$protocol$main$Protocol$receive_handshake$arity$2(a, b)
-  }else {
-    c = torrent_client.client.protocol.main.receive_handshake[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.protocol.main.receive_handshake._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.receive-handshake", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-torrent_client.client.protocol.main.receive_bitfield = function(a, b) {
-  var c;
-  if(a ? a.torrent_client$client$protocol$main$Protocol$receive_bitfield$arity$2 : a) {
-    c = a.torrent_client$client$protocol$main$Protocol$receive_bitfield$arity$2(a, b)
-  }else {
-    c = torrent_client.client.protocol.main.receive_bitfield[goog.typeOf.call(null, a)];
-    if(!c && (c = torrent_client.client.protocol.main.receive_bitfield._, !c)) {
-      throw cljs.core.missing_protocol.call(null, "Protocol.receive-bitfield", a);
-    }
-    c = c.call(null, a, b)
-  }
-  return c
-};
-void 0;
-torrent_client.client.storage = {};
-torrent_client.client.storage.connection = cljs.core.atom.call(null, null);
-torrent_client.client.storage.object_stores = cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'name"], {"\ufdd0'name":"metainfo"})]);
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'document-ready"]), function() {
-  return torrent_client.client.core.db.open_database.call(null, "ampere", "3.0", torrent_client.client.storage.object_stores).call(null, function(a) {
-    var b = torrent_client.client.core.db.create_transaction.call(null, a, cljs.core.PersistentVector.fromArray(["metainfo"]), "readonly").objectStore("metainfo").getAll();
-    cljs.core.reset_BANG_.call(null, torrent_client.client.storage.connection, a);
-    return b.addCallback(function(a) {
-      var b = cljs.core.seq.call(null, a);
-      if(cljs.core.truth_(b)) {
-        for(a = cljs.core.first.call(null, b);;) {
-          if(torrent_client.client.core.dispatch.trigger.call(null, "\ufdd0'add-metainfo-object", a), a = cljs.core.next.call(null, b), cljs.core.truth_(a)) {
-            b = a, a = cljs.core.first.call(null, b)
-          }else {
-            return null
-          }
-        }
-      }else {
-        return null
-      }
-    })
-  }, function(a) {
-    return console.error(a)
-  })
-});
-torrent_client.client.core.url = {};
-torrent_client.client.core.url.http_scheme_QMARK_ = function(a) {
-  var a = goog.Uri.parse.call(null, a).getScheme(), b = cljs.core._EQ_.call(null, "http", a);
-  return b ? b : cljs.core._EQ_.call(null, "https", a)
-};
-torrent_client.client.core.url.ws_scheme_QMARK_ = function(a) {
-  var a = goog.Uri.parse.call(null, a).getScheme(), b = cljs.core._EQ_.call(null, "ws", a);
-  return b ? b : cljs.core._EQ_.call(null, "wss", a)
-};
-torrent_client.client.torrent = {};
-torrent_client.client.torrent.set_file_data = function() {
-  var a = null, b = function(b) {
-    return a.call(null, b, 0, cljs.core.PersistentVector.fromArray([]))
-  }, c = function(a, b, c) {
-    for(;;) {
-      if(cljs.core.empty_QMARK_.call(null, a)) {
-        return c
-      }
-      var g = b + cljs.core.get.call(null, cljs.core.first.call(null, a), "\ufdd0'length"), b = cljs.core.ObjMap.fromObject(["\ufdd0'pos-start", "\ufdd0'pos-end"], {"\ufdd0'pos-start":b, "\ufdd0'pos-end":g}), b = cljs.core.merge.call(null, cljs.core.first.call(null, a), b), a = cljs.core.rest.call(null, a), c = cljs.core.conj.call(null, c, b), b = g
-    }
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 1:
-        return b.call(this, a);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-torrent_client.client.torrent.read_metainfo_byte_array = function(a) {
-  var a = torrent_client.client.core.reader.push_back_reader.call(null, torrent_client.client.core.bencode.uint8_array.call(null, a, 0)), a = torrent_client.client.core.bencode.decode.call(null, a), b = a.call(null, "info"), c = torrent_client.client.core.crypt.sha1.call(null, torrent_client.client.core.bencode.encode.call(null, b)), d = torrent_client.client.core.string.pad_string_left.call(null, goog.crypt.byteArrayToHex.call(null, c), "0", 40), e = torrent_client.client.core.string.partition_string.call(null, 
-  20, b.call(null, "pieces")), f = cljs.core.count.call(null, e), g = b.call(null, "piece length"), h = torrent_client.client.bitfield.bitfield.call(null, f), i = cljs.core.PersistentVector.fromArray([a.call(null, "announce")]), i = cljs.core.reduce.call(null, cljs.core.conj, i, cljs.core.flatten.call(null, a.call(null, "announce-list"))), j;
-  j = cljs.core.js__GT_clj.call(null, b.call(null, "files"), "\ufdd0'keywordize", !0);
-  j = cljs.core.truth_(j) ? j : cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'path", "\ufdd0'length"], {"\ufdd0'path":b.call(null, "name"), "\ufdd0'length":b.call(null, "length")})]);
-  j = torrent_client.client.torrent.set_file_data.call(null, j);
-  var k = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, "\ufdd0'length", j)), l = cljs.core.rem.call(null, k, g), l = 0 === l ? g : l;
-  return cljs.core.ObjMap.fromObject("\ufdd0'piece-length \ufdd0'pieces-hash \ufdd0'comment \ufdd0'pretty-info-hash \ufdd0'name \ufdd0'bitfield \ufdd0'total-length \ufdd0'pieces-length \ufdd0'announce-list \ufdd0'current-length \ufdd0'encoding \ufdd0'files \ufdd0'info-hash \ufdd0'last-piece-length".split(" "), {"\ufdd0'piece-length":g, "\ufdd0'pieces-hash":e, "\ufdd0'comment":b.call(null, "comment"), "\ufdd0'pretty-info-hash":d, "\ufdd0'name":b.call(null, "name"), "\ufdd0'bitfield":h, "\ufdd0'total-length":k, 
-  "\ufdd0'pieces-length":f, "\ufdd0'announce-list":cljs.core.filter.call(null, torrent_client.client.core.url.http_scheme_QMARK_, i), "\ufdd0'current-length":0, "\ufdd0'encoding":a.call(null, "encoding"), "\ufdd0'files":j, "\ufdd0'info-hash":c, "\ufdd0'last-piece-length":l})
-};
-torrent_client.client.torrent.read_metainfo_file = function(a) {
-  return function(b) {
-    return filesystem.filesystem.filereader.call(null, a).call(null, function(a) {
-      return b.call(null, torrent_client.client.torrent.read_metainfo_byte_array.call(null, a))
-    }, function(a) {
-      return console.error(a)
-    })
-  }
-};
-torrent_client.client.torrent.write_input_to_file = function(a, b, c) {
-  console.log("write-input-to-file", b, c);
-  return function(d, e) {
-    return filesystem.entry.get_entry.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'create"], {"\ufdd0'create":!0})).call(null, function(a) {
-      return filesystem.entry.create_writer.call(null, a).call(null, function(b) {
-        b.onerror = e;
-        b.onwriteend = function() {
-          return d.call(null, a)
-        };
-        return null == c ? d.call(null, a) : b.write(c)
-      }, function(a) {
-        return console.error(a)
-      })
-    }, function(a) {
-      return console.error(a)
-    })
-  }
-};
-torrent_client.client.torrent.write_metainfo_to_db = function(a) {
-  var b = torrent_client.client.core.db.create_transaction.call(null, cljs.core.deref.call(null, torrent_client.client.storage.connection), cljs.core.PersistentVector.fromArray(["metainfo"]), "readwrite").objectStore("metainfo");
-  return cljs.core.assoc_BANG_.call(null, b, a.call(null, "\ufdd0'pretty-info-hash"), a)
-};
-torrent_client.client.torrent.build_files = function(a, b, c) {
-  var d = cljs.core.deref.call(null, a).call(null, "\ufdd0'total-length");
-  return filesystem.filesystem.request_quota.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
-    return filesystem.filesystem.request_file_system.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
-      var e = cljs.core.seq.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'files"));
-      if(cljs.core.truth_(e)) {
-        for(var h = cljs.core.first.call(null, e);;) {
-          var i = cljs.core.first.call(null, cljs.core.filter.call(null, function(a) {
-            return function(b) {
-              return cljs.core._EQ_.call(null, b.name, "\ufdd0'path".call(null, a))
-            }
-          }(h, e), b));
-          torrent_client.client.torrent.write_input_to_file.call(null, d, "\ufdd0'path".call(null, h), i).call(null, function(b) {
-            return function(d) {
-              torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'add-file", cljs.core.PersistentVector.fromArray([a, d, b]));
-              return c.call(null, d)
-            }
-          }(h, e, i), function() {
-            return function(a) {
-              return console.error(a)
-            }
-          }(h, e, i));
-          h = cljs.core.next.call(null, e);
-          if(cljs.core.truth_(h)) {
-            e = h, h = cljs.core.first.call(null, e)
-          }else {
-            return null
-          }
-        }
-      }else {
-        return null
-      }
-    }, function(a) {
-      return console.error(a)
-    })
-  }, function(a) {
-    return console.error(a)
-  })
-};
-torrent_client.client.torrent.torrent_machine = function(a, b) {
-  var c = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'torrent-machine", "\ufdd0'current":"\ufdd0'init"})), d = cljs.core.atom.call(null, a);
-  waltz.state.add_event.call(null, c, "\ufdd0'add-files", function(a) {
-    console.log(":add-files");
-    return torrent_client.client.torrent.build_files.call(null, d, a, function(a) {
-      return waltz.state.trigger.call(null, c, "\ufdd0'file", a)
-    })
-  });
-  waltz.state.add_event.call(null, c, "\ufdd0'file", function() {
-    return cljs.core._EQ_.call(null, cljs.core.count.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'files")), cljs.core.count.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'pretty-info-hash")))) ? waltz.state.set.call(null, c, "\ufdd0'has-files") : null
-  });
-  var e = waltz.state.state_STAR_.call(null);
-  waltz.state.add_state.call(null, c, "\ufdd0'init", e);
-  e = waltz.state.in_STAR_.call(null, "Once the metainfo is generated check the files".call(null, waltz.state.state_STAR_.call(null)), function() {
-    return waltz.state.trigger.call(null, c, "\ufdd0'add-files", b)
-  });
-  waltz.state.add_state.call(null, c, "\ufdd0'has-metainfo", e);
-  e = waltz.state.in_STAR_.call(null, "Once the files are checked/created move to ready".call(null, waltz.state.state_STAR_.call(null)), function() {
-    0 !== cljs.core.count.call(null, b) && (torrent_client.client.bitfield.fill_bitfield.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'bitfield"), cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'pieces-written", cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", d));
-    return waltz.state.set.call(null, c, "\ufdd0'ready")
-  });
-  waltz.state.add_state.call(null, c, "\ufdd0'has-files", e);
-  e = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'status", "\ufdd0'processed");
-    console.log("about to :add-torrent");
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'processed-torrent", d)
-  });
-  waltz.state.add_state.call(null, c, "\ufdd0'ready", e);
-  return waltz.state.set.call(null, c, "\ufdd0'has-metainfo")
-};
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-object"]), function(a, b) {
-  return torrent_client.client.torrent.torrent_machine.call(null, b, cljs.core.PersistentVector.fromArray([]))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file"]), function(a, b) {
-  return torrent_client.client.torrent.read_metainfo_file.call(null, b).call(null, function(a) {
-    return torrent_client.client.torrent.torrent_machine.call(null, a, cljs.core.PersistentVector.fromArray([]))
-  }, function(a) {
-    return console.error(a)
-  })
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-byte-array"]), function(a, b) {
-  var c = torrent_client.client.torrent.read_metainfo_byte_array.call(null, b);
-  return torrent_client.client.torrent.torrent_machine.call(null, c, cljs.core.PersistentVector.fromArray([]))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-and-files"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
-  return torrent_client.client.torrent.torrent_machine.call(null, c, d)
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file-and-files"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
-  return torrent_client.client.torrent.read_metainfo_file.call(null, c).call(null, function(a) {
-    return torrent_client.client.torrent.torrent_machine.call(null, a, d)
-  }, function(a) {
-    return console.error(a)
-  })
-});
-torrent_client.client.protocol.bittorrent = {};
-torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_ = function(a) {
-  return cljs.core.instance_QMARK_.call(null, Uint8Array, a)
-};
-torrent_client.client.protocol.bittorrent.Char = function(a) {
-  this.code = a;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 3145730
-};
-torrent_client.client.protocol.bittorrent.Char.cljs$lang$type = !0;
-torrent_client.client.protocol.bittorrent.Char.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.Char")
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$ = !0;
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$_count$arity$1 = function() {
-  return 1
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
-  return goog.string.hashCode.call(null, cljs.core.pr_str.call(null, a))
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$ = !0;
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$_equiv$arity$2 = function(a, b) {
-  if(torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_.call(null, b)) {
-    var c = cljs.core._EQ_.call(null, cljs.core.count.call(null, b), 1);
-    return c ? cljs.core._EQ_.call(null, cljs.core.first.call(null, b), this.code) : c
-  }
-  return cljs.core.string_QMARK_.call(null, b) ? cljs.core._EQ_.call(null, b, "" + cljs.core.str(this.code)) : cljs.core._EQ_.call(null, b, this.code)
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.toString = function() {
-  return String.fromCharCode(this.code)
-};
-torrent_client.client.protocol.bittorrent.Char;
-torrent_client.client.protocol.bittorrent.char$ = function(a) {
-  return new torrent_client.client.protocol.bittorrent.Char(a)
-};
-torrent_client.client.protocol.bittorrent.msg_choke = torrent_client.client.protocol.bittorrent.char$.call(null, 0);
-torrent_client.client.protocol.bittorrent.msg_unchoke = torrent_client.client.protocol.bittorrent.char$.call(null, 1);
-torrent_client.client.protocol.bittorrent.msg_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 2);
-torrent_client.client.protocol.bittorrent.msg_not_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 3);
-torrent_client.client.protocol.bittorrent.msg_have = torrent_client.client.protocol.bittorrent.char$.call(null, 4);
-torrent_client.client.protocol.bittorrent.msg_bitfield = torrent_client.client.protocol.bittorrent.char$.call(null, 5);
-torrent_client.client.protocol.bittorrent.msg_request = torrent_client.client.protocol.bittorrent.char$.call(null, 6);
-torrent_client.client.protocol.bittorrent.msg_piece = torrent_client.client.protocol.bittorrent.char$.call(null, 7);
-torrent_client.client.protocol.bittorrent.msg_cancel = torrent_client.client.protocol.bittorrent.char$.call(null, 8);
-torrent_client.client.protocol.bittorrent.msg_handshake = torrent_client.client.protocol.bittorrent.char$.call(null, 19);
-torrent_client.client.protocol.bittorrent.receive_data = function() {
-  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
-  return new cljs.core.MultiFn("receive-data", function(a, b) {
-    return torrent_client.client.protocol.bittorrent.char$.call(null, cljs.core.first.call(null, b))
-  }, "\ufdd0'default", e, a, b, c, d)
-}();
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_choke, function(a) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-choke")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_unchoke, function(a) {
-  console.log("msg-unchoke");
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-unchoke")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_interested, function(a) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-interested")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_not_interested, function(a) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-not-interested")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_have, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int"]), cljs.core.rest.call(null, b));
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-have", c)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_bitfield, function(a, b) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-bitfield", torrent_client.client.bitfield.bitfield.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 1)))
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_request, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-request", d, e, c)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_piece, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1, 9)), d = cljs.core.nth.call(null, c, 0, null), c = cljs.core.nth.call(null, c, 1, null), e = torrent_client.client.core.byte_array.subarray.call(null, b, 9);
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-block", d, c, e)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_cancel, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), cljs.core.rest.call(null, b)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-cancel", d, e, c)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, "\ufdd0'default", function(a, b) {
-  var c = cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 28, 48)), d = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 48, 68)));
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-handshake", c, d)
-});
-torrent_client.client.protocol.bittorrent.BittorrentProtocol = function(a, b, c) {
-  this.torrent = a;
-  this.channel = b;
-  this.peer = c
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$type = !0;
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.BittorrentProtocol")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$ = !0;
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_request$arity$4 = function(a, b, c, d) {
-  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_request, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$2 = function(a, b) {
-  return this.channel.send(b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$3 = function(a, b, c) {
-  if(null == c) {
-    return torrent_client.client.protocol.main.send_data.call(null, a, "" + cljs.core.str(b))
-  }
-  if(cljs.core.string_QMARK_.call(null, c)) {
-    return torrent_client.client.protocol.main.send_data.call(null, a, [cljs.core.str(b), cljs.core.str(c)].join(""))
-  }
-  c = cljs.core.vector_QMARK_.call(null, c) ? c : cljs.core.vector.call(null, c);
-  b = [cljs.core.str(b), cljs.core.str(cljs.core.apply.call(null, cljs.core.str, c))].join("");
-  return torrent_client.client.protocol.main.send_data.call(null, a, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1 = function(a) {
-  var b = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.PersistentVector.fromArray([0, 0, 0, 0, 0, 0, 0, 0])), c = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'info-hash")), b = [cljs.core.str("BitTorrent protocol"), cljs.core.str(b), cljs.core.str(c), cljs.core.str(cljs.core.deref.call(null, torrent_client.client.peer_id.peer_id))].join("");
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_handshake, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_choke$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_choke, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_interested$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_interested, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_unchoke, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4 = function(a, b, c, d) {
-  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_cancel, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_have$arity$2 = function(a, b) {
-  var c = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_have, c)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_block$arity$4 = function(a, b, c, d) {
-  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_piece, cljs.core.PersistentVector.fromArray([b, d]))
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1 = function(a) {
-  var b = cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'bitfield").byte_array;
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_bitfield, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_not_interested, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1 = function() {
-  var a = this;
-  return a.channel.onmessage = function(b) {
-    return cljs.core.string_QMARK_.call(null, b.data) ? torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, torrent_client.client.core.crypt.str__GT_byte_array.call(null, b.data)) : torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, b.data)
-  }
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol;
-torrent_client.client.protocol.bittorrent.generate_protocol = function(a, b, c) {
-  a = new torrent_client.client.protocol.bittorrent.BittorrentProtocol(a, b, c);
-  torrent_client.client.protocol.main.watch_channel.call(null, a);
-  return a
-};
-torrent_client.client.peer = {};
-torrent_client.client.peer.peer_machine = function(a, b, c, d) {
-  var e = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'peer-machine", "\ufdd0'current":"\ufdd0'init"})), f = torrent_client.client.protocol.bittorrent.generate_protocol.call(null, a, b, e), g = cljs.core.atom.call(null, cljs.core.merge.call(null, c, cljs.core.ObjMap.fromObject(["\ufdd0'choking", "\ufdd0'interested"], {"\ufdd0'choking":!0, "\ufdd0'interested":!1})));
-  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'choke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
-    return waltz.state.trigger.call(null, e, "\ufdd0'choke-peer")
-  });
-  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
-    console.log("dispatched");
-    return waltz.state.trigger.call(null, e, "\ufdd0'unchoke-peer")
-  });
-  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'dicks"]), function() {
-    return waltz.state.trigger.call(null, e, "\ufdd0'unchoke-peer")
-  });
-  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function() {
-    return waltz.state.trigger.call(null, e, "\ufdd0'written-piece")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-handshake", function(b, c) {
-    console.log("recieve handshake", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c);
-    var d;
-    d = (d = cljs.core._EQ_.call(null, cljs.core.vec.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'info-hash")), b)) ? cljs.core._EQ_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c) : d;
-    return d ? (torrent_client.client.waltz.transition.call(null, e, "\ufdd0'sent-handshake", "\ufdd0'sent-bitfield"), torrent_client.client.waltz.transition.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake")) : null
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-choke", function() {
-    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'choked-not-interested");
-    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-interested", "\ufdd0'choked-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-unchoke", function() {
-    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'not-choked-not-interested");
-    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-interested", "\ufdd0'not-choked-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-interested", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !0);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-interested", a)
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-not-interested", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !1);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-not-interested", a)
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-have", function(b) {
-    bitfield.set_BANG_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"), b, !0);
-    b = torrent_client.client.pieces.get_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
-    return cljs.core.truth_(b) ? torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'not-choked-interested") : torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'choked-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-bitfield", function(b) {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'bitfield", b);
-    cljs.core.not.call(null, waltz.state.in_QMARK_.call(null, e, "\ufdd0'sent-bitfield")) && waltz.state.set.call(null, e, "\ufdd0'sent-bitfield");
-    b = torrent_client.client.pieces.get_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
-    return cljs.core.truth_(b) ? waltz.state.set.call(null, e, "\ufdd0'choked-interested") : waltz.state.set.call(null, e, "\ufdd0'choked-not-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-request", function(b, c, d) {
-    return cljs.core.truth_(cljs.core.deref.call(null, g).call(null, "\ufdd0'choking")) ? null : cljs.core.not.call(null, 0 === cljs.core.nth.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), b)) ? torrent_client.client.pieces.get_block.call(null, a, b, c, d).call(null, function(a) {
-      return torrent_client.client.protocol.main.send_block.call(null, f, b, c, a)
-    }, function(a) {
-      return console.error(a)
-    }) : null
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-block", function(b, c, d) {
-    console.log("received block", b, c);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-block", cljs.core.PersistentVector.fromArray([a, b, c, d]))
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'written-piece", function() {
-    console.log("written-piece");
-    var b = torrent_client.client.pieces.work_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
-    if(cljs.core.truth_(b)) {
-      var c = cljs.core.seq.call(null, torrent_client.client.pieces.piece_blocks.call(null, a, b));
-      if(cljs.core.truth_(c)) {
-        var d = cljs.core.first.call(null, c);
-        cljs.core.nth.call(null, d, 0, null);
-        for(cljs.core.nth.call(null, d, 1, null);;) {
-          var e = d, d = cljs.core.nth.call(null, e, 0, null), e = cljs.core.nth.call(null, e, 1, null);
-          torrent_client.client.protocol.main.send_request.call(null, f, b, d, e);
-          c = cljs.core.next.call(null, c);
-          if(cljs.core.truth_(c)) {
-            d = c, c = cljs.core.first.call(null, d), e = d, d = c, c = e
-          }else {
-            return null
-          }
-        }
-      }else {
-        return null
-      }
-    }else {
-      return null
-    }
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-cancel", function() {
-    return null
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'add-block", function() {
-    return console.log("add block called")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'choke-peer", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !0);
-    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'unchoke-peer", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !1);
-    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
-  });
-  b = waltz.state.state_STAR_.call(null);
-  waltz.state.add_state.call(null, e, "\ufdd0'init", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_handshake.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'sent-handshake", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_bitfield.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'sent-bitfield", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'choked-not-interested", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_interested.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'choked-interested", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-not-interested", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    torrent_client.client.protocol.main.send_interested.call(null, f);
-    var b = torrent_client.client.pieces.work_next_piece.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"));
-    if(cljs.core.truth_(b)) {
-      var c = cljs.core.seq.call(null, torrent_client.client.pieces.piece_blocks.call(null, a, torrent_client.client.peer.block_index));
-      if(cljs.core.truth_(c)) {
-        var d = cljs.core.first.call(null, c);
-        cljs.core.nth.call(null, d, 0, null);
-        for(cljs.core.nth.call(null, d, 1, null);;) {
-          var k = d, d = cljs.core.nth.call(null, k, 0, null), k = cljs.core.nth.call(null, k, 1, null);
-          torrent_client.client.protocol.main.send_request.call(null, f, b, d, k);
-          c = cljs.core.next.call(null, c);
-          if(cljs.core.truth_(c)) {
-            d = c, c = cljs.core.first.call(null, d), k = d, d = c, c = k
-          }else {
-            return null
-          }
-        }
-      }else {
-        return null
-      }
-    }else {
-      return waltz.state.set.call(null, e, "\ufdd0'not-choked-not-interested")
-    }
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-interested", b);
-  cljs.core.truth_(d) && (console.log("INITIATE HANDSHAKE"), waltz.state.set_ex.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake"));
-  return g
-};
-torrent_client.client.peer.generate_peer = function(a, b, c, d) {
-  console.log("generate-peer", c, d);
-  return torrent_client.client.peer.peer_machine.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'peer-id"], {"\ufdd0'peer-id":c}), d)
-};
-console.log("loaded js");
-torrent_client.client.peers = {};
-torrent_client.client.peers.optimistic_unchoke_period = 1E4;
-torrent_client.client.peers.download_count = 4;
-torrent_client.client.peers.peers = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.peers.unchoked = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'started-torrent"]), function() {
-  return(new goog.Timer(torrent_client.client.peers.optimistic_unchoke_period)).start()
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'stopped-torrent"]), function(a, b) {
-  var c = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, b.call(null, "\ufdd0'info-hash")));
-  if(cljs.core.truth_(c)) {
-    for(var d = cljs.core.first.call(null, c);;) {
-      if(waltz.state.trigger.call(null, d, "\ufdd0'cancel"), d = cljs.core.next.call(null, c), cljs.core.truth_(d)) {
-        c = d, d = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.peers, cljs.core.dissoc, b.call(null, "\ufdd0'info-hash"))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'paused-torrent"]), function() {
-  return null
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-channel"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nthnext.call(null, b, 2), e = cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, e), "\ufdd0'handshake"), f = d.label, g = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, f), c = torrent_client.client.peer.generate_peer.call(null, g, d, c, e);
-  console.log("peer", c);
-  d.close = function() {
-    debugger;
-    return torrent_client.client.peers.create_data_channel.call(null, torrent_client.client.peers.connection, f)
-  };
-  return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.peers, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([f], [cljs.core.PersistentVector.fromArray([c])]))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, cljs.core.deref.call(null, c).call(null, "\ufdd0'info-hash")));
-  if(cljs.core.truth_(e)) {
-    for(c = cljs.core.first.call(null, e);;) {
-      if(waltz.state.trigger.call(null, c, "\ufdd0'add-block", d), c = cljs.core.next.call(null, e), cljs.core.truth_(c)) {
-        e = c, c = cljs.core.first.call(null, e)
-      }else {
-        return null
-      }
-    }
-  }else {
-    return null
-  }
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-not-interested", "\ufdd0'receive-interested"]), function(a, b) {
-  return torrent_client.client.peers.change_interested.call(null, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"))
-});
-torrent_client.client.peers.set_unchoked_BANG_ = function(a) {
-  var b = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
-  if(cljs.core.truth_(b)) {
-    var c = cljs.core.sort_by.call(null, cljs.core.comp.call(null, cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested", "\ufdd0'upload"), cljs.core.deref), b), b = cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested").call(null, cljs.core.deref.call(null, cljs.core.first.call(null, c)));
-    cljs.core._EQ_.call(null, cljs.core.PersistentVector.fromArray([!0, !1]), b);
-    var d = cljs.core.count.call(null, c) < (cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4) ? cljs.core.count.call(null, c) : cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4, b = cljs.core.subvec.call(null, c, 0, d);
-    d < cljs.core.count.call(null, c) && cljs.core.subvec.call(null, c, d);
-    c = cljs.core.seq.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), b));
-    if(cljs.core.truth_(c)) {
-      for(cljs.core.first.call(null, c);;) {
-        if(torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'dicks"), c = cljs.core.next.call(null, c), cljs.core.truth_(c)) {
-          cljs.core.first.call(null, c)
-        }else {
-          break
-        }
-      }
-    }
-    return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.unchoked, cljs.core.assoc, a, b)
-  }
-  return null
-};
-torrent_client.client.peers.unoptimistic = function() {
-  var a = cljs.core.first.call(null, cljs.core.filter.call(null, "\ufdd0'optimistic", torrent_client.client.peers.peers));
-  return waltz.state.trigger.call(null, a, "\ufdd0'unoptimistic")
-};
-torrent_client.client.peers.optimistic_unchoke = function(a) {
-  if(cljs.core.contains_QMARK_.call(null, cljs.core.deref.call(null, torrent_client.client.peers.peers), a)) {
-    var b = cljs.core.remove.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a))), b = cljs.core.rand_nth.call(null, b);
-    torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, b).call(null, "\ufdd0'peer-id")]));
-    return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
-  }
-  return null
-};
-torrent_client.client.peers.change_interested = function(a) {
-  return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
-};
-torrent_client.jayq.core = {};
-torrent_client.jayq.core.append = function append(b, c) {
-  if(cljs.core.sequential_QMARK_.call(null, c)) {
-    var d = cljs.core.seq.call(null, c);
-    if(cljs.core.truth_(d)) {
-      for(var e = cljs.core.first.call(null, d);;) {
-        if(append.call(null, b, e), e = cljs.core.next.call(null, d), cljs.core.truth_(e)) {
-          d = e, e = cljs.core.first.call(null, d)
-        }else {
-          return null
-        }
-      }
-    }else {
-      return null
-    }
-  }else {
-    return b.append(c)
-  }
-};
-torrent_client.jayq.core.input_files = function(a) {
-  return torrent_client.jayq.core.filelist_files.call(null, cljs.core.first.call(null, a))
-};
-torrent_client.jayq.core.event_files = function(a) {
-  return torrent_client.jayq.core.filelist_files.call(null, a.getBrowserEvent().dataTransfer)
-};
-torrent_client.jayq.core.filelist_files = function(a) {
-  var b = a.files;
-  return cljs.core.vec.call(null, function() {
-    return function d(a) {
-      return new cljs.core.LazySeq(null, !1, function() {
-        for(var f = a;;) {
-          if(cljs.core.truth_(cljs.core.seq.call(null, f))) {
-            var g = cljs.core.first.call(null, f), g = b[g];
-            if(cljs.core.type.call(null, g) === File) {
-              return cljs.core.cons.call(null, g, d.call(null, cljs.core.rest.call(null, f)))
-            }
-            f = cljs.core.rest.call(null, f)
-          }else {
-            return null
-          }
-        }
-      })
-    }.call(null, cljs.core.js_keys.call(null, b))
-  }())
-};
-torrent_client.jayq.core.param = function(a) {
-  console.log("PARAM YO");
-  return jQuery.param(jayq.util.clj__GT_js.call(null, a))
-};
-torrent_client.jayq.core.modal = function(a, b) {
-  return a.modal(b)
-};
-torrent_client.jayq.core.tab = function(a, b) {
-  return a.tab(b)
-};
-torrent_client.jayq.core.css = function() {
-  var a = null, b = function(a, b) {
-    return a.css(jayq.util.clj__GT_js.call(null, b))
-  }, c = function(a, b, c) {
-    return a.css(cljs.core.name.call(null, b), c)
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-goog.events.FileDropHandler = function(a, b) {
-  goog.events.EventTarget.call(this);
-  this.eventHandler_ = new goog.events.EventHandler(this);
-  var c = a;
-  b && (c = goog.dom.getOwnerDocument(a));
-  this.eventHandler_.listen(c, goog.events.EventType.DRAGENTER, this.onDocDragEnter_);
-  c != a && this.eventHandler_.listen(c, goog.events.EventType.DRAGOVER, this.onDocDragOver_);
-  this.eventHandler_.listen(a, goog.events.EventType.DRAGOVER, this.onElemDragOver_);
-  this.eventHandler_.listen(a, goog.events.EventType.DROP, this.onElemDrop_)
-};
-goog.inherits(goog.events.FileDropHandler, goog.events.EventTarget);
-goog.events.FileDropHandler.prototype.dndContainsFiles_ = !1;
-goog.events.FileDropHandler.prototype.logger_ = goog.debug.Logger.getLogger("goog.events.FileDropHandler");
-goog.events.FileDropHandler.EventType = {DROP:goog.events.EventType.DROP};
-goog.events.FileDropHandler.prototype.disposeInternal = function() {
-  goog.events.FileDropHandler.superClass_.disposeInternal.call(this);
-  this.eventHandler_.dispose()
-};
-goog.events.FileDropHandler.prototype.dispatch_ = function(a) {
-  this.logger_.fine("Firing DROP event...");
-  a = new goog.events.BrowserEvent(a.getBrowserEvent());
-  a.type = goog.events.FileDropHandler.EventType.DROP;
-  this.dispatchEvent(a)
-};
-goog.events.FileDropHandler.prototype.onDocDragEnter_ = function(a) {
-  this.logger_.finer('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
-  var b = a.getBrowserEvent().dataTransfer;
-  (this.dndContainsFiles_ = !(!b || !(b.types && (goog.array.contains(b.types, "Files") || goog.array.contains(b.types, "public.file-url")) || b.files && 0 < b.files.length))) && a.preventDefault();
-  this.logger_.finer("dndContainsFiles_: " + this.dndContainsFiles_)
-};
-goog.events.FileDropHandler.prototype.onDocDragOver_ = function(a) {
-  this.logger_.finest('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
-  this.dndContainsFiles_ && (a.preventDefault(), a.getBrowserEvent().dataTransfer.dropEffect = "none")
-};
-goog.events.FileDropHandler.prototype.onElemDragOver_ = function(a) {
-  this.logger_.finest('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
-  this.dndContainsFiles_ && (a.preventDefault(), a.stopPropagation(), a = a.getBrowserEvent().dataTransfer, a.effectAllowed = "all", a.dropEffect = "copy")
-};
-goog.events.FileDropHandler.prototype.onElemDrop_ = function(a) {
-  this.logger_.finer('"' + a.target.id + '" (' + a.target + ") dispatched: " + a.type);
-  this.dndContainsFiles_ && (a.preventDefault(), a.stopPropagation(), this.dispatch_(a))
-};
 torrent_client.client.main = {};
-noir.cljs.client.watcher.init.call(null);
 torrent_client.client.main.create_form_files = cljs.core.atom.call(null, cljs.core.PersistentVector.fromArray([]));
 torrent_client.client.main.$document = jayq.core.$.call(null, document);
 torrent_client.client.main.$window = jayq.core.$.call(null, window);
@@ -22315,8 +21053,8 @@ torrent_client.client.main.metainfo_file_QMARK_ = function(a) {
   var b = cljs.core._EQ_.call(null, a.type, "application/x-bittorrent");
   return b ? b : (b = cljs.core._EQ_.call(null, a.type, "")) ? goog.string.caseInsensitiveEndsWith.call(null, a.name, ".torrent") : b
 };
-var dropzone__13946 = document, handler__13947 = new goog.events.FileDropHandler(dropzone__13946, !0);
-goog.events.listen.call(null, handler__13947, goog.events.FileDropHandler.EventType.DROP, function(a) {
+var dropzone__73685 = document, handler__73686 = new goog.events.FileDropHandler(dropzone__73685, !0);
+goog.events.listen.call(null, handler__73686, goog.events.FileDropHandler.EventType.DROP, function(a) {
   var a = torrent_client.jayq.core.event_files.call(null, a), b = cljs.core.vec.call(null, cljs.core.filter.call(null, torrent_client.client.main.metainfo_file_QMARK_, a));
   if(cljs.core._EQ_.call(null, cljs.core.count.call(null, a), cljs.core.count.call(null, b))) {
     if(b = cljs.core.seq.call(null, a), cljs.core.truth_(b)) {
@@ -22396,13 +21134,13 @@ torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0's
   cljs.core.swap_BANG_.call(null, torrent_client.client.main.elements, cljs.core.assoc, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"), c);
   return torrent_client.jayq.core.append.call(null, torrent_client.client.main.$torrents, c)
 });
-var group__9224__auto____13974 = cljs.core.swap_BANG_.call(null, crate.core.group_id, cljs.core.inc);
+var group__7073__auto____73713 = cljs.core.swap_BANG_.call(null, crate.core.group_id, cljs.core.inc);
 torrent_client.client.main.torrent_file_badge = function(a) {
   a = crate.core.html.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'span.label", a.name]));
-  a.setAttribute("crateGroup", group__9224__auto____13974);
+  a.setAttribute("crateGroup", group__7073__auto____73713);
   return a
 };
-torrent_client.client.main.torrent_file_badge.prototype._crateGroup = group__9224__auto____13974;
+torrent_client.client.main.torrent_file_badge.prototype._crateGroup = group__7073__auto____73713;
 torrent_client.client.main.bound_class = function() {
   var a = function(a, b, e, f) {
     var g = cljs.core.nth.call(null, f, 0, null);
@@ -22435,22 +21173,22 @@ torrent_client.client.main.time_remaining_to_string = function() {
   return"\u221e"
 };
 torrent_client.client.main.torrent_speed_to_string = function() {
-  return"700kb/s"
+  return""
 };
 torrent_client.client.main.file_url = function(a) {
   return cljs.core.first.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"))).file.toURL()
 };
-var group__9224__auto____13988 = cljs.core.swap_BANG_.call(null, crate.core.group_id, cljs.core.inc);
+var group__7073__auto____73727 = cljs.core.swap_BANG_.call(null, crate.core.group_id, cljs.core.inc);
 torrent_client.client.main.torrent_row = function(a) {
   a = crate.core.html.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'tr", cljs.core.PersistentVector.fromArray(["\ufdd0'td.flex2.name", cljs.core.deref.call(null, a).call(null, "\ufdd0'name")]), cljs.core.PersistentVector.fromArray(["\ufdd0'td.flex1.size", torrent_client.client.main.total_length_to_string.call(null, cljs.core.deref.call(null, a))]), cljs.core.PersistentVector.fromArray(["\ufdd0'td.flex5.progress-td", cljs.core.PersistentVector.fromArray(["\ufdd0'div", cljs.core.ObjMap.fromObject(["\ufdd0'class"], 
-  {"\ufdd0'class":torrent_client.client.main.bound_class.call(null, a, torrent_client.client.main.active_QMARK_, "progress progress-striped active", "progress progress-striped")}), cljs.core.PersistentVector.fromArray(["\ufdd0'div.bar", cljs.core.ObjMap.fromObject(["\ufdd0'style"], {"\ufdd0'style":cljs.core.ObjMap.fromObject(["\ufdd0'width"], {"\ufdd0'width":crate.binding.bound.call(null, a, torrent_client.client.main.download_percent)})})]), cljs.core.PersistentVector.fromArray(["\ufdd0'label", 
-  cljs.core.ObjMap.fromObject(["\ufdd0'class"], {"\ufdd0'class":torrent_client.client.main.bound_class.call(null, a, torrent_client.client.main.active_QMARK_, "label", "label hide")}), crate.binding.bound.call(null, a, torrent_client.client.main.time_remaining_to_string)])])]), cljs.core.PersistentVector.fromArray(["\ufdd0'td.flex1.speed", crate.binding.bound.call(null, a, torrent_client.client.main.torrent_speed_to_string)]), cljs.core.PersistentVector.fromArray(["\ufdd0'td.actions", cljs.core.PersistentVector.fromArray(["\ufdd0'div.btn-group", 
-  cljs.core.PersistentVector.fromArray(["\ufdd0'button.btn", cljs.core.ObjMap.fromObject(["\ufdd0'disabled"], {"\ufdd0'disabled":!0}), cljs.core.PersistentVector.fromArray(["\ufdd0'i", cljs.core.ObjMap.fromObject(["\ufdd0'class"], {"\ufdd0'class":torrent_client.client.main.bound_class.call(null, a, torrent_client.client.main.active_QMARK_, "icon-pause", "icon-play")})])]), cljs.core.PersistentVector.fromArray(["\ufdd0'a", cljs.core.ObjMap.fromObject(["\ufdd0'href", "\ufdd0'target", "\ufdd0'class"], 
-  {"\ufdd0'href":torrent_client.client.main.file_url.call(null, a), "\ufdd0'target":"_blank", "\ufdd0'class":torrent_client.client.main.bound_class.call(null, a, torrent_client.client.main.completed_QMARK_, "btn", "btn hide")}), cljs.core.PersistentVector.fromArray(["\ufdd0'i.icon-folder-open"])]), cljs.core.PersistentVector.fromArray(["\ufdd0'button.btn", cljs.core.ObjMap.fromObject(["\ufdd0'disabled"], {"\ufdd0'disabled":!0}), cljs.core.PersistentVector.fromArray(["\ufdd0'i.icon-trash"])])])])]));
-  a.setAttribute("crateGroup", group__9224__auto____13988);
+  {"\ufdd0'class":torrent_client.client.main.bound_class.call(null, a, torrent_client.client.main.active_QMARK_, "progress progress-striped active", "progress progress-striped")}), cljs.core.PersistentVector.fromArray(["\ufdd0'div.bar", cljs.core.ObjMap.fromObject(["\ufdd0'style"], {"\ufdd0'style":cljs.core.ObjMap.fromObject(["\ufdd0'width"], {"\ufdd0'width":crate.binding.bound.call(null, a, torrent_client.client.main.download_percent)})})])])]), cljs.core.PersistentVector.fromArray(["\ufdd0'td.flex1.speed", 
+  crate.binding.bound.call(null, a, torrent_client.client.main.torrent_speed_to_string)]), cljs.core.PersistentVector.fromArray(["\ufdd0'td.actions", cljs.core.PersistentVector.fromArray(["\ufdd0'div.btn-group", cljs.core.PersistentVector.fromArray(["\ufdd0'button.btn", cljs.core.ObjMap.fromObject(["\ufdd0'disabled"], {"\ufdd0'disabled":!0}), cljs.core.PersistentVector.fromArray(["\ufdd0'i", cljs.core.ObjMap.fromObject(["\ufdd0'class"], {"\ufdd0'class":torrent_client.client.main.bound_class.call(null, 
+  a, torrent_client.client.main.active_QMARK_, "icon-pause", "icon-play")})])]), cljs.core.PersistentVector.fromArray(["\ufdd0'a", cljs.core.ObjMap.fromObject(["\ufdd0'href", "\ufdd0'target", "\ufdd0'class"], {"\ufdd0'href":torrent_client.client.main.file_url.call(null, a), "\ufdd0'target":"_blank", "\ufdd0'class":torrent_client.client.main.bound_class.call(null, a, torrent_client.client.main.completed_QMARK_, "btn", "btn hide")}), cljs.core.PersistentVector.fromArray(["\ufdd0'i.icon-folder-open"])]), 
+  cljs.core.PersistentVector.fromArray(["\ufdd0'button.btn", cljs.core.ObjMap.fromObject(["\ufdd0'disabled"], {"\ufdd0'disabled":!0}), cljs.core.PersistentVector.fromArray(["\ufdd0'i.icon-trash"])])])])]));
+  a.setAttribute("crateGroup", group__7073__auto____73727);
   return a
 };
-torrent_client.client.main.torrent_row.prototype._crateGroup = group__9224__auto____13988;
+torrent_client.client.main.torrent_row.prototype._crateGroup = group__7073__auto____73727;
 torrent_client.client.main.active_QMARK_ = function active_QMARK_(b) {
   return cljs.core.not.call(null, cljs.core.coll_QMARK_.call(null, b)) ? active_QMARK_.call(null, cljs.core.deref.call(null, b)) : !0
 };
@@ -22512,7 +21250,6 @@ jayq.core.document_ready.call(null, function() {
   return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'document-ready")
 });
 console.log("js loaded");
-torrent_client.client.files = {};
 torrent_client.client.connection = {};
 torrent_client.client.connection.peer_connection = function(a) {
   return new torrent_client.client.polyfills.prefix.RTCPeerConnection(jayq.util.clj__GT_js.call(null, a))
@@ -22533,8 +21270,9 @@ torrent_client.client.connection.set_remote_description = function(a, b) {
   return a.setRemoteDescription(b)
 };
 torrent_client.client.connection.add_ice_candidate = function(a, b) {
-  var c = cljs.core.ObjMap.fromObject(["\ufdd0'sdpMLineIndex", "\ufdd0'candidate"], {"\ufdd0'sdpMLineIndex":b.label, "\ufdd0'candidate":b.candidate}), c = jayq.util.clj__GT_js.call(null, c).RTCIceCandidate();
-  return a.addIceCandidate(c)
+  var c = cljs.core.ObjMap.fromObject(["\ufdd0'sdpMLineIndex", "\ufdd0'candidate"], {"\ufdd0'sdpMLineIndex":b.label, "\ufdd0'candidate":b.candidate});
+  new RTCIceCandidate(jayq.util.clj__GT_js.call(null, c));
+  return a.addIceCandidate(b.candidate)
 };
 torrent_client.client.connection.session_description = function(a, b) {
   var c = jayq.util.clj__GT_js.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'type", "\ufdd0'sdp"], {"\ufdd0'type":a, "\ufdd0'sdp":b}));
@@ -22715,3 +21453,7 @@ torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'a
   }
 });
 console.log("not last in tracker");
+torrent_client.client.protocols = {};
+torrent_client.client.protocols.dht = {};
+torrent_client.client.speed = {};
+console.log("not-last");
