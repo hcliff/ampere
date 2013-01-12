@@ -60,8 +60,9 @@
   "Update the list of trackers for this torrent
    and send out the start event to the trackers"
   (doseq [tracker-url (@torrent :announce-list)]
+    (.info js/console "trying tracker" tracker-url)
     (let-async [socket (tracker-socket tracker-url)]
-      (.info js/console "trying tracker" tracker-url)
+      (.info js/console "connected to tracker" tracker-url)
       (swap! trackers assoc tracker socket)
       (emit socket :started {
         :peer_id @peer-id

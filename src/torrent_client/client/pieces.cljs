@@ -6,10 +6,12 @@
     [filesystem.filesystem :as filesystem]
     [filesystem.entry :as entry]
     [clojure.set :as set])
-  (:use 
+  (:use
     [async.helpers :only [map-async]]
     [torrent-client.client.core.byte-array :only [uint8-array subarray]]
-    [torrent-client.client.torrents :only [torrents]])
+    [torrent-client.client.torrents :only [torrents]]
+    [torrent-client.client.core.crypt :only [sha1 byte-array->str]]
+    )
   (:use-macros 
     [async.macros :only [async let-async]])
   )
@@ -109,12 +111,11 @@
   (async [success-callback _]
     (let-async [:let offset (max offset ((meta file) :pos-start))
                 :let end (min (+ offset length) ((meta file) :pos-end))
-                ; :let length (- end offset)
                 :let length (- end offset)
                 ; Get a filereader on the piece-files underlying file
-                file (entry/file (.-file file))
-                data (filesystem/filereader file)]
-      (.log js/console "get-file-block" offset length)
+                fileb (entry/file (.-file file))
+                data (filesystem/filereader fileb)]
+      (.log js/console "get-file-block" offset length ((meta file) :pos-end) (.-byteLength data))
       (success-callback (uint8-array data offset length))
       )))
 
@@ -131,8 +132,11 @@
           files (filter #(contains? % piece-index) (@files info-hash))]
       ; Retrieve the pieces from the files
       (.log js/console "get-block" piece-index offset length)
+      ; (js* "debugger;")
       ; TODO: support stradling files
       (let-async [data (get-file-block block-offset length (first files))]
+        (.log js/console data)
+        (.log js/console "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
         (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))

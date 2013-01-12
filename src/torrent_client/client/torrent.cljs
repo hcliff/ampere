@@ -78,6 +78,7 @@
       ; If the remainder is 0 then the last piece must be a complete block
       last-piece-length (if (zero? last-piece-length) 
                           piece-length last-piece-length)]
+  (.info js/console "adding torrent" pretty-info-hash)
   {:info-hash info-hash
    :pretty-info-hash pretty-info-hash
    :encoding (metadata "encoding")
