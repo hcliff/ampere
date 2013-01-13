@@ -72,7 +72,7 @@
 
 (dispatch/react-to #{:completed-torrent} (fn [_ torrent]
   "When a torrent is finished send the complete event to the trackers"
-  (doseq [socket @trackers]
+  (doseq [socket (@trackers (@torrent :pretty-info-hash))]
     (emit socket :completed {
       :peer_id @peer-id
       :info_hash (@torrent :pretty-info-hash)

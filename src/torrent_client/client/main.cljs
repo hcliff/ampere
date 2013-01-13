@@ -325,4 +325,8 @@
 (document-ready (fn [e]
   (dispatch/fire :document-ready)))
 
+(on $window :beforeunload (fn [_]
+  (if-not (zero? (count (filter active? @torrents)))
+    "You still have active torrents")))
+
 (.log js/console "js loaded")

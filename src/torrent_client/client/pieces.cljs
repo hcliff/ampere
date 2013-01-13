@@ -44,28 +44,26 @@
    :block-end   (Math/ceil  (/ (file :pos-end)   (@torrent :piece-length)))})
 
 ; TODO: switch this over to rarity based search
-(defn get-next-piece
-  "Given a torrent and a peers bitfield, return the index of 
-  the first needed piece"
+(defn wanted-pieces
+  "Given a torrent and a peers bitfield, return a list of pieces we want 
+  from this peer
+  note: not lazy!"
   [torrent peer-bitfield]
-  ; TODO: make working a bitfield
   (let [info-hash (@torrent :pretty-info-hash)
         ; Get a bitfield of the blocks we want from the peer
         wanted-bitfield (bitfield/difference peer-bitfield (@torrent :bitfield))
-        wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)]
-    ; Remove pieces currently working from the candidates
-    (doseq [piece-index (@working info-hash)] 
-      (assoc wanted-bitfield piece-index false))
-    ; Get the first wanted block
-    (if-not (empty? wanted) (first wanted))))
+        wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)
+        working (set (@working info-hash))]
+    ; (js* "debugger;")
+    ; (.log js/console working)
+    (remove #(contains? working %) wanted)))
 
-(defn work-next-piece
+(defn work-piece!
   "Marks that we have started fetching a piece"
-  [torrent peer-bitfield]
-  (let [info-hash (@torrent :pretty-info-hash)
-        piece-index (get-next-piece torrent peer-bitfield)]
-    ; Add this block to the works in progress
+  [torrent piece-index]
+  (let [info-hash (@torrent :pretty-info-hash)]
     (.log js/console "work-next-piece" piece-index)
+    ; Add this block to the works in progress
     (swap! working (partial merge-with concat) {info-hash [piece-index]})
     piece-index))
 

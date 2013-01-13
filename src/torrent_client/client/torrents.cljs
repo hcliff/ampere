@@ -17,5 +17,5 @@
   (let [pieces-written (inc (or (@torrent :pieces-written) 0))]
     (swap! torrent assoc :pieces-written pieces-written)
     ; If this torrent has all it's pieces mark as such
-    (if (= pieces-written pieces-length)
+    (if (= pieces-written (@torrent :pieces-length))
       (dispatch/fire :completed-torrent torrent)))))

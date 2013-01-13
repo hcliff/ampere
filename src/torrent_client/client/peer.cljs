@@ -3,7 +3,7 @@
     [torrent-client.client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.client.waltz :only [machine transition]]
     [torrent-client.client.bitfield :only [bitfield-unique]]
-    [torrent-client.client.pieces :only [get-next-piece piece-blocks get-block work-next-piece]]
+    [torrent-client.client.pieces :only [wanted-pieces work-piece! piece-blocks get-block]]
     [torrent-client.client.peer-id :only [peer-id]]
     )
   (:require
@@ -13,6 +13,11 @@
   (:use-macros 
     [waltz.macros :only [in out defstate defevent]]
     [async.macros :only [async let-async]]))
+
+; How many outstanding requests can a peer have at any given time
+; http://wiki.theory.org/BitTorrentSpecification#Queuing
+; TODO: this number has been pulled out of my ass
+(def max-outstanding 20)
 
 (defn peer-machine
   "A state machine for managing the channel with the peer
@@ -27,7 +32,9 @@
                          ; Is this client choking the peer,
                          :choking true 
                          ; Is peer interested in this client
-                         :interested false}))]
+                         :interested false
+                         ; How many outstanding requests does this peer have
+                         :outstanding 0}))]
 
     ; the peers management has determined choking/unchoking
     ; of this peer
@@ -35,12 +42,7 @@
     (dispatch/react-to #{[:choke-peer (@peer-data :peer-id)]} 
       #(state/trigger me :choke-peer))
     (dispatch/react-to #{[:unchoke-peer (@peer-data :peer-id)]}
-      (fn [_]
-        (.log js/console "dispatched")
-        (state/trigger me :unchoke-peer)))
-
-    (dispatch/react-to #{:written-piece :invalid-piece} 
-      #(state/trigger me :request-piece))
+      #(state/trigger me :unchoke-peer))
 
     (defevent me :receive-handshake [info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
@@ -71,7 +73,7 @@
       "Update the bitfield to mark we have the correct piece"
       (bitfield/set! (@peer-data :bitfield) index true)
       ; Check the peer has pieces that we need
-      (if-let [block-index (get-next-piece torrent (@peer-data :bitfield))]
+      (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
         (transition me :not-choked-not-interested :not-choked-interested)
         (transition me :choked-not-interested :choked-interested)))
 
@@ -83,10 +85,9 @@
       (if-not (state/in? me :sent-bitfield)
         (state/set me :sent-bitfield))
       ; If the client has allready sent their bitfield then send interested
-      (if-let [block-index (get-next-piece torrent (@peer-data :bitfield))]
+      (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
         (state/set me :choked-interested)
-        (state/set me :choked-not-interested))
-      )
+        (state/set me :choked-not-interested)))
 
     (defevent me :receive-request [piece-index offset length]
       "If we have a given piece send it to the peer 
@@ -101,15 +102,10 @@
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
       (.log js/console "received block" piece-index begin)
+      ; Regardless of the blocks validity reduce the queue
+      (swap! peer-data #(update-in % [:outstanding] dec))
+      (update-queue)
       (dispatch/fire :receive-block [torrent piece-index begin data]))
-
-    ; H.C crude, and introduces latancy between writing and requesting
-    ; swap this out for a queue
-    (defevent me :request-piece []
-      (.log js/console "written-piece")
-      (if-let [piece-index (work-next-piece torrent (@peer-data :bitfield))]
-        (doseq [[begin length] (piece-blocks torrent piece-index)]   
-          (protocol/send-request bittorrent-client piece-index begin length))))
 
     ; TODO: impliment
     (defevent me :receive-cancel [index begin length]
@@ -123,6 +119,21 @@
     (defevent me :unchoke-peer []
       (swap! peer-data assoc :choking false)
       (protocol/send-unchoke bittorrent-client))
+
+    (defn update-queue []
+      "Saturate the peers queue with block requests"
+      (if (< (@peer-data :outstanding) max-outstanding)
+        (when-let [piece-index (first (wanted-pieces torrent (@peer-data :bitfield)))]
+          (request-piece piece-index)
+          (update-queue))))
+
+    (defn request-piece [piece-index]
+      "Given a piece index request its component blocks"
+      (work-piece! torrent piece-index)
+      (doseq [[begin length] (piece-blocks torrent piece-index)]
+        ; Add to the outstanding queue
+        (swap! peer-data #(update-in % [:outstanding] inc))
+        (protocol/send-request bittorrent-client piece-index begin length)))
 
     (defstate me :init)
 
@@ -145,10 +156,9 @@
     (defstate me :not-choked-interested 
       (in []
         (protocol/send-interested bittorrent-client)
-        ; TODO switch this over to a queue/task system
-        (if-let [piece-index (work-next-piece torrent (@peer-data :bitfield))]
-          (doseq [[begin length] (piece-blocks torrent block-index)]
-            (protocol/send-request bittorrent-client piece-index begin length))
+        ; If the peer has pieces we want then start fetching
+        (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
+          (update-queue)
           (state/set me :not-choked-not-interested))))
 
     ; Handshake if this is the first client
