@@ -54,8 +54,6 @@
         wanted-bitfield (bitfield/difference peer-bitfield (@torrent :bitfield))
         wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)
         working (set (@working info-hash))]
-    ; (js* "debugger;")
-    ; (.log js/console working)
     (remove #(contains? working %) wanted)))
 
 (defn work-piece!
@@ -133,8 +131,8 @@
       ; (js* "debugger;")
       ; TODO: support stradling files
       (let-async [data (get-file-block block-offset length (first files))]
-        (.log js/console data)
-        (.log js/console "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
+        ; (.log js/console data)
+        ; (.log js/console "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
         (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))

@@ -16789,93 +16789,23 @@ torrent_client.client.core.url.ws_scheme_QMARK_ = function(a) {
   var a = goog.Uri.parse.call(null, a).getScheme(), b = cljs.core._EQ_.call(null, "ws", a);
   return b ? b : cljs.core._EQ_.call(null, "wss", a)
 };
-var filesystem = {prefix:{}};
-filesystem.prefix.prefix = function() {
-  var a = function(a, b) {
-    var e = cljs.core.PersistentVector.fromArray(["webkit", "moz", "ms"]), e = cljs.core.into.call(null, cljs.core.ObjMap.fromObject([], {}), cljs.core.map.call(null, cljs.core.juxt.call(null, cljs.core.identity, function(b) {
-      return[cljs.core.str(b), cljs.core.str(clojure.string.capitalize.call(null, a))].join("")
-    }), e)), e = cljs.core.assoc.call(null, e, "", a), e = cljs.core.vals.call(null, cljs.core.merge.call(null, e, b)), e = cljs.core.map.call(null, function(a) {
-      return window[a]
-    }, e);
-    return cljs.core.some.call(null, function(a) {
-      return cljs.core.not.call(null, null == a) ? a : null
-    }, e)
-  }, b = function(b, d) {
-    var e = null;
-    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
-    return a.call(this, b, e)
-  };
-  b.cljs$lang$maxFixedArity = 1;
-  b.cljs$lang$applyTo = function(b) {
-    var d = cljs.core.first(b), b = cljs.core.rest(b);
-    return a(d, b)
-  };
-  b.cljs$lang$arity$variadic = a;
-  return b
-}();
-filesystem.prefix.requestFileSystem = filesystem.prefix.prefix.call(null, "requestFileSystem");
-filesystem.filesystem = {};
-filesystem.filesystem.request_file_system = function(a, b) {
-  return function(c, d) {
-    return window.webkitRequestFileSystem(window[cljs.core.name.call(null, a)], b, c, d)
-  }
-};
-filesystem.filesystem.request_quota = function(a, b) {
-  return function(c, d) {
-    return window.webkitStorageInfo.requestQuota(window[cljs.core.name.call(null, a)], b, c, d)
-  }
-};
-filesystem.filesystem.request_quota_then_filesystem = function(a, b) {
-  return filesystem.filesystem.request_quota.call(null, a, b).call(null, function(b) {
-    return filesystem.filesystem.request_file_system.call(null, a, b)
-  }, function(a) {
-    return console.error(a)
-  })
-};
-filesystem.filesystem.filereader = function(a) {
-  return function(b, c) {
-    var d = new FileReader;
-    d.onerror = c;
-    d.onloadend = function(a) {
-      return b.call(null, a.currentTarget.result)
-    };
-    return d.readAsArrayBuffer(a)
-  }
-};
-filesystem.entry = {};
-filesystem.entry.create_writer = function(a) {
-  return function(b) {
-    return a.createWriter(b, function(a) {
-      debugger;
-      return console.error(a)
-    })
-  }
-};
-filesystem.entry.get_entry = function() {
-  var a = null, b = function(a, b) {
-    return a.entry.get_file.call(null, a, b, cljs.core.ObjMap.fromObject([], {}))
-  }, c = function(a, b, c) {
-    return function(g, h) {
-      return a.root.getFile(b, jayq.util.clj__GT_js.call(null, c), g, h)
-    }
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 2:
-        return b.call(this, a, e);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$2 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-filesystem.entry.file = function(a) {
-  return function(b) {
-    return a.file(b)
-  }
-};
+torrent_client.client.torrents = {};
+torrent_client.client.torrents.torrents = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'processed-torrent"]), function(a, b) {
+  console.log("Adding to torrents atom", b);
+  cljs.core.swap_BANG_.call(null, torrent_client.client.torrents.torrents, cljs.core.assoc, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"), b);
+  return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'started-torrent", b)
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null);
+  cljs.core.nth.call(null, b, 1, null);
+  var d;
+  d = cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-written");
+  d = cljs.core.truth_(d) ? d : 0;
+  d += 1;
+  cljs.core.swap_BANG_.call(null, c, cljs.core.assoc, "\ufdd0'pieces-written", d);
+  return cljs.core._EQ_.call(null, d, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-length")) ? torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", c) : null
+});
 var async = {helpers:{}};
 async.helpers.map_async = function(a, b) {
   return function(c) {
@@ -16898,6 +16828,112 @@ async.helpers.map_async = function(a, b) {
     return d
   }
 };
+torrent_client.client.core.pieces = {};
+torrent_client.client.core.pieces.PieceFile = function(a, b) {
+  this.meta = a;
+  this.file = b;
+  this.cljs$lang$protocol_mask$partition1$ = 0;
+  this.cljs$lang$protocol_mask$partition0$ = 2294145
+};
+torrent_client.client.core.pieces.PieceFile.cljs$lang$type = !0;
+torrent_client.client.core.pieces.PieceFile.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.core.pieces.PieceFile")
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
+  return goog.getUid.call(null, a)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$_contains_key_QMARK_$arity$2 = function(a, b) {
+  if(cljs.core.not.call(null, null == this.meta)) {
+    var c = this.meta.call(null, "\ufdd0'block-start") <= b;
+    return c ? b <= this.meta.call(null, "\ufdd0'piece-end") : c
+  }
+  return null
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IFn$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.call = function() {
+  var a = null;
+  return a = function(a, c, d) {
+    switch(arguments.length) {
+      case 1:
+        return this.file;
+      case 2:
+        return cljs.core._lookup.call(null, this, c);
+      case 3:
+        return cljs.core._lookup.call(null, this, c, d)
+    }
+    throw"Invalid arity: " + arguments.length;
+  }
+}();
+torrent_client.client.core.pieces.PieceFile.prototype.apply = function(a, b) {
+  return a.call.apply(a, [a].concat(cljs.core.aclone.call(null, b)))
+};
+torrent_client.client.core.pieces.PieceFile.prototype.torrent_client$client$core$pieces$Fn$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
+  return cljs.core._lookup.call(null, a, b, null)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b) {
+  return cljs.core._contains_key_QMARK_.call(null, a, b)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
+  return this.meta
+};
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$ = !0;
+torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
+  return new torrent_client.client.core.pieces.PieceFile(b, this.file)
+};
+torrent_client.client.core.pieces.PieceFile.prototype.toString = function() {
+  return cljs.core.pr_str.call(null, this)
+};
+torrent_client.client.core.pieces.PieceFile;
+torrent_client.client.core.pieces.piece_file = function(a) {
+  return new torrent_client.client.core.pieces.PieceFile(null, a)
+};
+torrent_client.client.core.pieces.Piece = function(a, b, c) {
+  this.meta = a;
+  this.byte_array = b;
+  this.__hash = c;
+  this.cljs$lang$protocol_mask$partition1$ = 0;
+  this.cljs$lang$protocol_mask$partition0$ = 2293762
+};
+torrent_client.client.core.pieces.Piece.cljs$lang$type = !0;
+torrent_client.client.core.pieces.Piece.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.core.pieces.Piece")
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
+  return this.meta
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
+  return new torrent_client.client.core.pieces.Piece(b, this.byte_array, this.__hash)
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$_hash$arity$1 = function() {
+  return cljs.core.not.call(null, null == this.__hash) ? this.__hash : torrent_client.client.core.crypt.byte_array__GT_str.call(null, torrent_client.client.core.crypt.sha1.call(null, this.byte_array))
+};
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$ = !0;
+torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$_count$arity$1 = function() {
+  return cljs.core.count.call(null, this.byte_array)
+};
+torrent_client.client.core.pieces.Piece;
+torrent_client.client.core.pieces.piece = function(a) {
+  var b = cljs.core.sort.call(null, "\ufdd0'begin", a), a = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, cljs.core.comp.call(null, cljs.core.count, "\ufdd0'data"), b)), a = torrent_client.client.core.byte_array.uint8_array.call(null, a), c = cljs.core.seq.call(null, b);
+  if(cljs.core.truth_(c)) {
+    for(b = cljs.core.first.call(null, c);;) {
+      if(a.set(b.call(null, "\ufdd0'data"), b.call(null, "\ufdd0'begin")), b = cljs.core.next.call(null, c), cljs.core.truth_(b)) {
+        c = b, b = cljs.core.first.call(null, c)
+      }else {
+        break
+      }
+    }
+  }
+  return new torrent_client.client.core.pieces.Piece(null, a, null)
+};
+console.log("hi");
 torrent_client.client.bitfield = {};
 torrent_client.client.bitfield.Bitfield = function(a, b) {
   this.byte_array = a;
@@ -17020,6 +17056,93 @@ torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'w
   var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), c = cljs.core.deref.call(null, c).call(null, "\ufdd0'bitfield");
   return cljs.core.assoc.call(null, c, d, !0)
 });
+var filesystem = {prefix:{}};
+filesystem.prefix.prefix = function() {
+  var a = function(a, b) {
+    var e = cljs.core.PersistentVector.fromArray(["webkit", "moz", "ms"]), e = cljs.core.into.call(null, cljs.core.ObjMap.fromObject([], {}), cljs.core.map.call(null, cljs.core.juxt.call(null, cljs.core.identity, function(b) {
+      return[cljs.core.str(b), cljs.core.str(clojure.string.capitalize.call(null, a))].join("")
+    }), e)), e = cljs.core.assoc.call(null, e, "", a), e = cljs.core.vals.call(null, cljs.core.merge.call(null, e, b)), e = cljs.core.map.call(null, function(a) {
+      return window[a]
+    }, e);
+    return cljs.core.some.call(null, function(a) {
+      return cljs.core.not.call(null, null == a) ? a : null
+    }, e)
+  }, b = function(b, d) {
+    var e = null;
+    goog.isDef(d) && (e = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0));
+    return a.call(this, b, e)
+  };
+  b.cljs$lang$maxFixedArity = 1;
+  b.cljs$lang$applyTo = function(b) {
+    var d = cljs.core.first(b), b = cljs.core.rest(b);
+    return a(d, b)
+  };
+  b.cljs$lang$arity$variadic = a;
+  return b
+}();
+filesystem.prefix.requestFileSystem = filesystem.prefix.prefix.call(null, "requestFileSystem");
+filesystem.filesystem = {};
+filesystem.filesystem.request_file_system = function(a, b) {
+  return function(c, d) {
+    return window.webkitRequestFileSystem(window[cljs.core.name.call(null, a)], b, c, d)
+  }
+};
+filesystem.filesystem.request_quota = function(a, b) {
+  return function(c, d) {
+    return window.webkitStorageInfo.requestQuota(window[cljs.core.name.call(null, a)], b, c, d)
+  }
+};
+filesystem.filesystem.request_quota_then_filesystem = function(a, b) {
+  return filesystem.filesystem.request_quota.call(null, a, b).call(null, function(b) {
+    return filesystem.filesystem.request_file_system.call(null, a, b)
+  }, function(a) {
+    return console.error(a)
+  })
+};
+filesystem.filesystem.filereader = function(a) {
+  return function(b, c) {
+    var d = new FileReader;
+    d.onerror = c;
+    d.onloadend = function(a) {
+      return b.call(null, a.currentTarget.result)
+    };
+    return d.readAsArrayBuffer(a)
+  }
+};
+filesystem.entry = {};
+filesystem.entry.create_writer = function(a) {
+  return function(b) {
+    return a.createWriter(b, function(a) {
+      debugger;
+      return console.error(a)
+    })
+  }
+};
+filesystem.entry.get_entry = function() {
+  var a = null, b = function(a, b) {
+    return a.entry.get_file.call(null, a, b, cljs.core.ObjMap.fromObject([], {}))
+  }, c = function(a, b, c) {
+    return function(g, h) {
+      return a.root.getFile(b, jayq.util.clj__GT_js.call(null, c), g, h)
+    }
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 2:
+        return b.call(this, a, e);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$2 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+filesystem.entry.file = function(a) {
+  return function(b) {
+    return a.file(b)
+  }
+};
 clojure.set = {};
 clojure.set.bubble_max_key = function(a, b) {
   var c = cljs.core.apply.call(null, cljs.core.max_key, a, b);
@@ -17245,23 +17368,625 @@ clojure.set.superset_QMARK_ = function(a, b) {
     return cljs.core.contains_QMARK_.call(null, a, b)
   }, b) : c
 };
-torrent_client.client.torrents = {};
-torrent_client.client.torrents.torrents = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'processed-torrent"]), function(a, b) {
-  console.log("Adding to torrents atom", b);
-  cljs.core.swap_BANG_.call(null, torrent_client.client.torrents.torrents, cljs.core.assoc, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"), b);
-  return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'started-torrent", b)
+torrent_client.client.pieces = {};
+torrent_client.client.pieces.block_length = 16384;
+torrent_client.client.pieces.files = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.pieces.working = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-file"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), d = torrent_client.client.pieces.generate_file.call(null, c, d, e);
+  return cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.files, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([cljs.core.deref.call(null, c).call(null, "\ufdd0'pretty-info-hash")], [cljs.core.PersistentVector.fromArray([d])]))
 });
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'written-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null);
-  cljs.core.nth.call(null, b, 1, null);
-  var d;
-  d = cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-written");
-  d = cljs.core.truth_(d) ? d : 0;
-  d += 1;
-  cljs.core.swap_BANG_.call(null, c, cljs.core.assoc, "\ufdd0'pieces-written", d);
-  return cljs.core._EQ_.call(null, d, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-length")) ? torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", c) : null
+torrent_client.client.pieces.generate_file = function(a, b, c) {
+  a = torrent_client.client.pieces.generate_block_boundaries.call(null, a, c);
+  return cljs.core.with_meta.call(null, torrent_client.client.core.pieces.piece_file.call(null, b), cljs.core.merge.call(null, c, a))
+};
+torrent_client.client.pieces.generate_block_boundaries = function(a, b) {
+  return cljs.core.ObjMap.fromObject(["\ufdd0'block-start", "\ufdd0'block-end"], {"\ufdd0'block-start":Math.floor.call(null, b.call(null, "\ufdd0'pos-start") / cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")), "\ufdd0'block-end":Math.ceil.call(null, b.call(null, "\ufdd0'pos-end") / cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length"))})
+};
+torrent_client.client.pieces.wanted_pieces = function(a, b) {
+  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), d = torrent_client.client.bitfield.difference.call(null, b, cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield")), d = cljs.core.keep_indexed.call(null, function(a, b) {
+    return cljs.core.not.call(null, 0 === b) ? a : null
+  }, d), e = cljs.core.set.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, c));
+  return cljs.core.remove.call(null, function(a) {
+    return cljs.core.contains_QMARK_.call(null, e, a)
+  }, d)
+};
+torrent_client.client.pieces.work_piece_BANG_ = function(a, b) {
+  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash");
+  console.log("work-next-piece", b);
+  cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.working, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([c], [cljs.core.PersistentVector.fromArray([b])]));
+  return b
+};
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'invalid-piece", "\ufdd0'written-piece"]), function(a, b, c) {
+  a = cljs.core.remove.call(null, function(a) {
+    return cljs.core._EQ_.call(null, c, a)
+  }, cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, "\ufdd0'info-hash"));
+  return cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.working, cljs.core.assoc, torrent_client.client.pieces.info_hash, a)
 });
+torrent_client.client.pieces.piece_length = function(a, b) {
+  console.log("piece-length", b);
+  return cljs.core._EQ_.call(null, b, cljs.core.deref.call(null, a).call(null, "\ufdd0'pieces-length") - 1) ? cljs.core.deref.call(null, a).call(null, "\ufdd0'last-piece-length") : cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")
+};
+torrent_client.client.pieces.piece_offset = function(a, b) {
+  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), c = cljs.core.take.call(null, b, c);
+  return cljs.core.count.call(null, cljs.core.remove.call(null, cljs.core.zero_QMARK_, c)) * cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")
+};
+torrent_client.client.pieces.piece_blocks = function(a, b) {
+  var c = torrent_client.client.pieces.piece_length.call(null, a, b);
+  console.log("calculating piece-length", c);
+  for(var d = 0, e = cljs.core.PersistentVector.fromArray([]);;) {
+    if(cljs.core.not.call(null, cljs.core._EQ_.call(null, d, c))) {
+      var f = torrent_client.client.pieces.block_length < c - d ? torrent_client.client.pieces.block_length : c - d, g = d + f, e = cljs.core.conj.call(null, e, cljs.core.PersistentVector.fromArray([d, f])), d = g
+    }else {
+      return e
+    }
+  }
+};
+torrent_client.client.pieces.get_file_block = function(a, b, c) {
+  return function(d) {
+    var e = a > cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-start") ? a : cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-start"), f = (e + b < cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-end") ? e + b : cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-end")) - e;
+    return filesystem.entry.file.call(null, c.file).call(null, function(a) {
+      return filesystem.filesystem.filereader.call(null, a).call(null, function(a) {
+        console.log("get-file-block", e, f, cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-end"), a.byteLength);
+        return d.call(null, torrent_client.client.core.byte_array.uint8_array.call(null, a, e, f))
+      }, function(a) {
+        return console.error(a)
+      })
+    }, function(a) {
+      return console.error(a)
+    })
+  }
+};
+torrent_client.client.pieces.get_block = function(a, b, c, d) {
+  return function(e) {
+    var f = torrent_client.client.pieces.piece_offset.call(null, a, b), g = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), f = f + c, g = cljs.core.filter.call(null, function(a) {
+      return cljs.core.contains_QMARK_.call(null, a, b)
+    }, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, g));
+    console.log("get-block", b, c, d);
+    return torrent_client.client.pieces.get_file_block.call(null, f, d, cljs.core.first.call(null, g)).call(null, function(a) {
+      return e.call(null, a)
+    }, function(a) {
+      return console.error(a)
+    })
+  }
+};
+torrent_client.client.pieces.pieces_to_write = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.pieces.file_write_queue = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.pieces.queue_BANG_ = function(a, b, c) {
+  return cljs.core.swap_BANG_.call(null, a, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([cljs.core.hash.call(null, b)], [cljs.core.PersistentVector.fromArray([c])]))
+};
+torrent_client.client.pieces.consume_BANG_ = function(a, b) {
+  return cljs.core.swap_BANG_.call(null, a, cljs.core.assoc, cljs.core.hash.call(null, b), cljs.core.rest.call(null, cljs.core.deref.call(null, a).call(null, cljs.core.hash.call(null, b))))
+};
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-block"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), f = cljs.core.nth.call(null, b, 3, null), g = cljs.core.deref.call(null, c).call(null, "\ufdd0'pretty-info-hash"), h = [cljs.core.str(g), cljs.core.str(d)].join(""), i = cljs.core.get.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.pieces_to_write), h), f = cljs.core.ObjMap.fromObject(["\ufdd0'begin", "\ufdd0'data"], {"\ufdd0'begin":e, "\ufdd0'data":f}), 
+  j = cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, g);
+  e = (j = cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, j), d)) ? cljs.core.not.call(null, cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, cljs.core.map.call(null, "\ufdd0'begin", i)), e)) : j;
+  e && cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.pieces_to_write, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([h], [cljs.core.PersistentVector.fromArray([f])]));
+  h = cljs.core.get.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.pieces_to_write), h);
+  if(cljs.core._EQ_.call(null, cljs.core.count.call(null, h), cljs.core.count.call(null, torrent_client.client.pieces.piece_blocks.call(null, c, d)))) {
+    h = torrent_client.client.core.pieces.piece.call(null, h);
+    e = cljs.core.hash.call(null, h);
+    console.log("piece hash", e, cljs.core.nth.call(null, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-hash"), d));
+    if(cljs.core._EQ_.call(null, cljs.core.hash.call(null, h), cljs.core.nth.call(null, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-hash"), d))) {
+      return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-piece", cljs.core.PersistentVector.fromArray([g, d, h]))
+    }
+    console.error("invalid hash", d);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'invalid-piece", cljs.core.PersistentVector.fromArray([c, d]))
+  }
+  return null
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-piece"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), f = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, c), g = torrent_client.client.pieces.piece_offset.call(null, f, d), c = cljs.core.filter.call(null, function(a) {
+    return cljs.core.contains_QMARK_.call(null, a, d)
+  }, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, c)), h = cljs.core.seq.call(null, c);
+  if(cljs.core.truth_(h)) {
+    for(c = cljs.core.first.call(null, h);;) {
+      var i = cljs.core.meta.call(null, c), i = cljs.core.seq_QMARK_.call(null, i) ? cljs.core.apply.call(null, cljs.core.hash_map, i) : i, j = cljs.core.get.call(null, i, "\ufdd0'pos-end"), k = cljs.core.get.call(null, i, "\ufdd0'pos-start"), i = 0 > g - k ? 0 : g - k, l = 0 > k - g ? 0 : k - g, j = (cljs.core.count.call(null, e) < j - k ? cljs.core.count.call(null, e) : j - k) - l, j = torrent_client.client.core.byte_array.subarray.call(null, e.byte_array, l, j);
+      torrent_client.client.pieces.queue_BANG_.call(null, torrent_client.client.pieces.file_write_queue, c, cljs.core.PersistentVector.fromArray([d, i, j]));
+      console.log("we should now be writing");
+      torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'write-file", cljs.core.PersistentVector.fromArray([f, c]));
+      c = cljs.core.next.call(null, h);
+      if(cljs.core.truth_(c)) {
+        h = c, c = cljs.core.first.call(null, h)
+      }else {
+        return null
+      }
+    }
+  }else {
+    return null
+  }
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'write-file"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
+  return filesystem.entry.create_writer.call(null, d.file).call(null, function(a) {
+    return torrent_client.client.pieces.seek_then_write.call(null, c, d, a)
+  }, function(a) {
+    return console.error(a)
+  })
+});
+torrent_client.client.pieces.seek_then_write = function seek_then_write(b, c, d) {
+  var e = cljs.core.first.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.file_write_queue).call(null, cljs.core.hash.call(null, c)));
+  if(cljs.core.truth_(e)) {
+    var f = cljs.core.nth.call(null, e, 0, null), g = cljs.core.nth.call(null, e, 1, null), h = cljs.core.nth.call(null, e, 2, null);
+    console.log("about to write", e);
+    d.onwriteend = function() {
+      torrent_client.client.pieces.consume_BANG_.call(null, torrent_client.client.pieces.file_write_queue, c);
+      console.log("finished writing!");
+      torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'written-piece", cljs.core.PersistentVector.fromArray([b, f]));
+      return seek_then_write.call(null, b, c, d)
+    };
+    d.seek(g);
+    return d.write(new Blob(Array(h)))
+  }
+  return null
+};
+torrent_client.client.torrent = {};
+torrent_client.client.torrent.set_file_data = function() {
+  var a = null, b = function(b) {
+    return a.call(null, b, 0, cljs.core.PersistentVector.fromArray([]))
+  }, c = function(a, b, c) {
+    for(;;) {
+      if(cljs.core.empty_QMARK_.call(null, a)) {
+        return c
+      }
+      var g = b + cljs.core.get.call(null, cljs.core.first.call(null, a), "\ufdd0'length"), b = cljs.core.ObjMap.fromObject(["\ufdd0'pos-start", "\ufdd0'pos-end"], {"\ufdd0'pos-start":b, "\ufdd0'pos-end":g}), b = cljs.core.merge.call(null, cljs.core.first.call(null, a), b), a = cljs.core.rest.call(null, a), c = cljs.core.conj.call(null, c, b), b = g
+    }
+  }, a = function(a, e, f) {
+    switch(arguments.length) {
+      case 1:
+        return b.call(this, a);
+      case 3:
+        return c.call(this, a, e, f)
+    }
+    throw"Invalid arity: " + arguments.length;
+  };
+  a.cljs$lang$arity$1 = b;
+  a.cljs$lang$arity$3 = c;
+  return a
+}();
+torrent_client.client.torrent.read_metainfo_byte_array = function(a) {
+  var a = torrent_client.client.core.reader.push_back_reader.call(null, torrent_client.client.core.bencode.uint8_array.call(null, a, 0)), a = torrent_client.client.core.bencode.decode.call(null, a), b = a.call(null, "info"), c = torrent_client.client.core.crypt.sha1.call(null, torrent_client.client.core.bencode.encode.call(null, b)), d = torrent_client.client.core.string.pad_string_left.call(null, goog.crypt.byteArrayToHex.call(null, c), "0", 40), e = torrent_client.client.core.string.partition_string.call(null, 
+  20, b.call(null, "pieces")), f = cljs.core.count.call(null, e), g = b.call(null, "piece length"), h = torrent_client.client.bitfield.bitfield.call(null, f), i = cljs.core.PersistentVector.fromArray([a.call(null, "announce")]), i = cljs.core.reduce.call(null, cljs.core.conj, i, cljs.core.flatten.call(null, a.call(null, "announce-list"))), j;
+  j = cljs.core.js__GT_clj.call(null, b.call(null, "files"), "\ufdd0'keywordize", !0);
+  j = cljs.core.truth_(j) ? j : cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'path", "\ufdd0'length"], {"\ufdd0'path":b.call(null, "name"), "\ufdd0'length":b.call(null, "length")})]);
+  j = torrent_client.client.torrent.set_file_data.call(null, j);
+  var k = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, "\ufdd0'length", j)), l = cljs.core.rem.call(null, k, g), l = 0 === l ? g : l;
+  console.info("adding torrent", d);
+  return cljs.core.ObjMap.fromObject("\ufdd0'piece-length \ufdd0'pieces-hash \ufdd0'comment \ufdd0'pretty-info-hash \ufdd0'name \ufdd0'bitfield \ufdd0'total-length \ufdd0'pieces-length \ufdd0'announce-list \ufdd0'current-length \ufdd0'encoding \ufdd0'files \ufdd0'info-hash \ufdd0'last-piece-length".split(" "), {"\ufdd0'piece-length":g, "\ufdd0'pieces-hash":e, "\ufdd0'comment":b.call(null, "comment"), "\ufdd0'pretty-info-hash":d, "\ufdd0'name":b.call(null, "name"), "\ufdd0'bitfield":h, "\ufdd0'total-length":k, 
+  "\ufdd0'pieces-length":f, "\ufdd0'announce-list":cljs.core.filter.call(null, torrent_client.client.core.url.http_scheme_QMARK_, i), "\ufdd0'current-length":0, "\ufdd0'encoding":a.call(null, "encoding"), "\ufdd0'files":j, "\ufdd0'info-hash":c, "\ufdd0'last-piece-length":l})
+};
+torrent_client.client.torrent.read_metainfo_file = function(a) {
+  return function(b) {
+    return filesystem.filesystem.filereader.call(null, a).call(null, function(a) {
+      return b.call(null, torrent_client.client.torrent.read_metainfo_byte_array.call(null, a))
+    }, function(a) {
+      return console.error(a)
+    })
+  }
+};
+torrent_client.client.torrent.write_input_to_file = function(a, b, c) {
+  console.log("write-input-to-file", b, c);
+  return function(d, e) {
+    return filesystem.entry.get_entry.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'create"], {"\ufdd0'create":!0})).call(null, function(a) {
+      return filesystem.entry.create_writer.call(null, a).call(null, function(b) {
+        b.onerror = e;
+        b.onwriteend = function() {
+          return d.call(null, a)
+        };
+        return null == c ? d.call(null, a) : b.write(c)
+      }, function(a) {
+        return console.error(a)
+      })
+    }, function(a) {
+      return console.error(a)
+    })
+  }
+};
+torrent_client.client.torrent.write_metainfo_to_db = function(a) {
+  var b = torrent_client.client.core.db.create_transaction.call(null, cljs.core.deref.call(null, torrent_client.client.storage.connection), cljs.core.PersistentVector.fromArray(["metainfo"]), "readwrite").objectStore("metainfo");
+  return cljs.core.assoc_BANG_.call(null, b, a.call(null, "\ufdd0'pretty-info-hash"), a)
+};
+torrent_client.client.torrent.build_files = function(a, b, c) {
+  var d = cljs.core.deref.call(null, a).call(null, "\ufdd0'total-length");
+  return filesystem.filesystem.request_quota.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
+    return filesystem.filesystem.request_file_system.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
+      var e = cljs.core.seq.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'files"));
+      if(cljs.core.truth_(e)) {
+        for(var h = cljs.core.first.call(null, e);;) {
+          var i = cljs.core.first.call(null, cljs.core.filter.call(null, function(a) {
+            return function(b) {
+              return cljs.core._EQ_.call(null, b.name, "\ufdd0'path".call(null, a))
+            }
+          }(h, e), b));
+          torrent_client.client.torrent.write_input_to_file.call(null, d, "\ufdd0'path".call(null, h), i).call(null, function(b) {
+            return function(d) {
+              torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'add-file", cljs.core.PersistentVector.fromArray([a, d, b]));
+              return c.call(null, d)
+            }
+          }(h, e, i), function() {
+            return function(a) {
+              return console.error(a)
+            }
+          }(h, e, i));
+          h = cljs.core.next.call(null, e);
+          if(cljs.core.truth_(h)) {
+            e = h, h = cljs.core.first.call(null, e)
+          }else {
+            return null
+          }
+        }
+      }else {
+        return null
+      }
+    }, function(a) {
+      return console.error(a)
+    })
+  }, function(a) {
+    return console.error(a)
+  })
+};
+torrent_client.client.torrent.torrent_machine = function(a, b) {
+  var c = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'torrent-machine", "\ufdd0'current":"\ufdd0'init"})), d = cljs.core.atom.call(null, a);
+  waltz.state.add_event.call(null, c, "\ufdd0'add-files", function(a) {
+    console.log(":add-files");
+    return torrent_client.client.torrent.build_files.call(null, d, a, function(a) {
+      return waltz.state.trigger.call(null, c, "\ufdd0'file", a)
+    })
+  });
+  waltz.state.add_event.call(null, c, "\ufdd0'file", function() {
+    return cljs.core._EQ_.call(null, cljs.core.count.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'files")), cljs.core.count.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'pretty-info-hash")))) ? waltz.state.set.call(null, c, "\ufdd0'has-files") : null
+  });
+  var e = waltz.state.state_STAR_.call(null);
+  waltz.state.add_state.call(null, c, "\ufdd0'init", e);
+  e = waltz.state.in_STAR_.call(null, "Once the metainfo is generated check the files".call(null, waltz.state.state_STAR_.call(null)), function() {
+    return waltz.state.trigger.call(null, c, "\ufdd0'add-files", b)
+  });
+  waltz.state.add_state.call(null, c, "\ufdd0'has-metainfo", e);
+  e = waltz.state.in_STAR_.call(null, "Once the files are checked/created move to ready".call(null, waltz.state.state_STAR_.call(null)), function() {
+    0 !== cljs.core.count.call(null, b) && (torrent_client.client.bitfield.fill_bitfield.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'bitfield"), cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'pieces-written", cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", d));
+    return waltz.state.set.call(null, c, "\ufdd0'ready")
+  });
+  waltz.state.add_state.call(null, c, "\ufdd0'has-files", e);
+  e = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'status", "\ufdd0'processed");
+    console.log("about to :add-torrent");
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'processed-torrent", d)
+  });
+  waltz.state.add_state.call(null, c, "\ufdd0'ready", e);
+  return waltz.state.set.call(null, c, "\ufdd0'has-metainfo")
+};
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-object"]), function(a, b) {
+  return torrent_client.client.torrent.torrent_machine.call(null, b, cljs.core.PersistentVector.fromArray([]))
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file"]), function(a, b) {
+  return torrent_client.client.torrent.read_metainfo_file.call(null, b).call(null, function(a) {
+    return torrent_client.client.torrent.torrent_machine.call(null, a, cljs.core.PersistentVector.fromArray([]))
+  }, function(a) {
+    return console.error(a)
+  })
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-byte-array"]), function(a, b) {
+  var c = torrent_client.client.torrent.read_metainfo_byte_array.call(null, b);
+  return torrent_client.client.torrent.torrent_machine.call(null, c, cljs.core.PersistentVector.fromArray([]))
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-and-files"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
+  return torrent_client.client.torrent.torrent_machine.call(null, c, d)
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file-and-files"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
+  return torrent_client.client.torrent.read_metainfo_file.call(null, c).call(null, function(a) {
+    return torrent_client.client.torrent.torrent_machine.call(null, a, d)
+  }, function(a) {
+    return console.error(a)
+  })
+});
+torrent_client.client.peer_id = {};
+torrent_client.client.peer_id.peer_id = cljs.core.atom.call(null, null);
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'document-ready"]), function() {
+  return cljs.core.reset_BANG_.call(null, torrent_client.client.peer_id.peer_id, torrent_client.client.peer_id.generate_peer_id.call(null))
+});
+torrent_client.client.peer_id.generate_peer_id = function() {
+  var a = goog.string.getRandomString.call(null), a = goog.crypt.byteArrayToHex.call(null, torrent_client.client.core.crypt.sha1.call(null, a));
+  return[cljs.core.str("AM1-0-0--"), cljs.core.str(cljs.core.subs.call(null, a, 0, 20 - cljs.core.count.call(null, "AM1-0-0--")))].join("")
+};
+torrent_client.client.protocol.bittorrent = {};
+torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_ = function(a) {
+  return cljs.core.instance_QMARK_.call(null, Uint8Array, a)
+};
+torrent_client.client.protocol.bittorrent.Char = function(a) {
+  this.code = a;
+  this.cljs$lang$protocol_mask$partition1$ = 0;
+  this.cljs$lang$protocol_mask$partition0$ = 3145730
+};
+torrent_client.client.protocol.bittorrent.Char.cljs$lang$type = !0;
+torrent_client.client.protocol.bittorrent.Char.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.Char")
+};
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$ = !0;
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$_count$arity$1 = function() {
+  return 1
+};
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$ = !0;
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
+  return goog.string.hashCode.call(null, cljs.core.pr_str.call(null, a))
+};
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$ = !0;
+torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$_equiv$arity$2 = function(a, b) {
+  if(torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_.call(null, b)) {
+    var c = cljs.core._EQ_.call(null, cljs.core.count.call(null, b), 1);
+    return c ? cljs.core._EQ_.call(null, cljs.core.first.call(null, b), this.code) : c
+  }
+  return cljs.core.string_QMARK_.call(null, b) ? cljs.core._EQ_.call(null, b, "" + cljs.core.str(this.code)) : cljs.core._EQ_.call(null, b, this.code)
+};
+torrent_client.client.protocol.bittorrent.Char.prototype.toString = function() {
+  return String.fromCharCode(this.code)
+};
+torrent_client.client.protocol.bittorrent.Char;
+torrent_client.client.protocol.bittorrent.char$ = function(a) {
+  return new torrent_client.client.protocol.bittorrent.Char(a)
+};
+torrent_client.client.protocol.bittorrent.msg_choke = torrent_client.client.protocol.bittorrent.char$.call(null, 0);
+torrent_client.client.protocol.bittorrent.msg_unchoke = torrent_client.client.protocol.bittorrent.char$.call(null, 1);
+torrent_client.client.protocol.bittorrent.msg_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 2);
+torrent_client.client.protocol.bittorrent.msg_not_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 3);
+torrent_client.client.protocol.bittorrent.msg_have = torrent_client.client.protocol.bittorrent.char$.call(null, 4);
+torrent_client.client.protocol.bittorrent.msg_bitfield = torrent_client.client.protocol.bittorrent.char$.call(null, 5);
+torrent_client.client.protocol.bittorrent.msg_request = torrent_client.client.protocol.bittorrent.char$.call(null, 6);
+torrent_client.client.protocol.bittorrent.msg_piece = torrent_client.client.protocol.bittorrent.char$.call(null, 7);
+torrent_client.client.protocol.bittorrent.msg_cancel = torrent_client.client.protocol.bittorrent.char$.call(null, 8);
+torrent_client.client.protocol.bittorrent.msg_handshake = torrent_client.client.protocol.bittorrent.char$.call(null, 19);
+torrent_client.client.protocol.bittorrent.receive_data = function() {
+  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
+  return new cljs.core.MultiFn("receive-data", function(a, b) {
+    return torrent_client.client.protocol.bittorrent.char$.call(null, cljs.core.first.call(null, b))
+  }, "\ufdd0'default", e, a, b, c, d)
+}();
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_choke, function(a) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-choke")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_unchoke, function(a) {
+  console.log("msg-unchoke");
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-unchoke")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_interested, function(a) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-interested")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_not_interested, function(a) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-not-interested")
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_have, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int"]), cljs.core.rest.call(null, b));
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-have", c)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_bitfield, function(a, b) {
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-bitfield", torrent_client.client.bitfield.bitfield.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 1)))
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_request, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-request", d, e, c)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_piece, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1, 9)), d = cljs.core.nth.call(null, c, 0, null), c = cljs.core.nth.call(null, c, 1, null), e = torrent_client.client.core.byte_array.subarray.call(null, b, 9);
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-block", d, c, e)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_cancel, function(a, b) {
+  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), cljs.core.rest.call(null, b)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-cancel", d, e, c)
+});
+cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, "\ufdd0'default", function(a, b) {
+  var c = cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 28, 48)), d = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 48, 68)));
+  return waltz.state.trigger.call(null, a, "\ufdd0'receive-handshake", c, d)
+});
+torrent_client.client.protocol.bittorrent.BittorrentProtocol = function(a, b, c) {
+  this.torrent = a;
+  this.channel = b;
+  this.peer = c
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$type = !0;
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$ctorPrSeq = function() {
+  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.BittorrentProtocol")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$ = !0;
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_request$arity$4 = function(a, b, c, d) {
+  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_request, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$2 = function(a, b) {
+  return this.channel.send(b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$3 = function(a, b, c) {
+  if(null == c) {
+    return torrent_client.client.protocol.main.send_data.call(null, a, "" + cljs.core.str(b))
+  }
+  if(cljs.core.string_QMARK_.call(null, c)) {
+    return torrent_client.client.protocol.main.send_data.call(null, a, [cljs.core.str(b), cljs.core.str(c)].join(""))
+  }
+  c = cljs.core.vector_QMARK_.call(null, c) ? c : cljs.core.vector.call(null, c);
+  b = [cljs.core.str(b), cljs.core.str(cljs.core.apply.call(null, cljs.core.str, c))].join("");
+  return torrent_client.client.protocol.main.send_data.call(null, a, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1 = function(a) {
+  var b = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.PersistentVector.fromArray([0, 0, 0, 0, 0, 0, 0, 0])), c = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'info-hash")), b = [cljs.core.str("BitTorrent protocol"), cljs.core.str(b), cljs.core.str(c), cljs.core.str(cljs.core.deref.call(null, torrent_client.client.peer_id.peer_id))].join("");
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_handshake, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_choke$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_choke, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_interested$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_interested, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_unchoke, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4 = function(a, b, c, d) {
+  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_cancel, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_have$arity$2 = function(a, b) {
+  var c = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_have, c)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_block$arity$4 = function(a, b, c, d) {
+  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c);
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_piece, cljs.core.PersistentVector.fromArray([b, d]))
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1 = function(a) {
+  var b = cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'bitfield").byte_array;
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_bitfield, b)
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1 = function(a) {
+  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_not_interested, "")
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1 = function() {
+  var a = this;
+  return a.channel.onmessage = function(b) {
+    return cljs.core.string_QMARK_.call(null, b.data) ? torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, torrent_client.client.core.crypt.str__GT_byte_array.call(null, b.data)) : torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, b.data)
+  }
+};
+torrent_client.client.protocol.bittorrent.BittorrentProtocol;
+torrent_client.client.protocol.bittorrent.generate_protocol = function(a, b, c) {
+  a = new torrent_client.client.protocol.bittorrent.BittorrentProtocol(a, b, c);
+  torrent_client.client.protocol.main.watch_channel.call(null, a);
+  return a
+};
+torrent_client.client.peer = {};
+torrent_client.client.peer.max_outstanding = 20;
+torrent_client.client.peer.peer_machine = function(a, b, c, d) {
+  var e = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'peer-machine", "\ufdd0'current":"\ufdd0'init"})), f = torrent_client.client.protocol.bittorrent.generate_protocol.call(null, a, b, e), g = cljs.core.atom.call(null, cljs.core.merge.call(null, c, cljs.core.ObjMap.fromObject(["\ufdd0'choking", "\ufdd0'interested", "\ufdd0'outstanding"], {"\ufdd0'choking":!0, "\ufdd0'interested":!1, "\ufdd0'outstanding":0})));
+  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'choke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
+    return waltz.state.trigger.call(null, e, "\ufdd0'choke-peer")
+  });
+  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
+    return waltz.state.trigger.call(null, e, "\ufdd0'unchoke-peer")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-handshake", function(b, c) {
+    console.log("recieve handshake", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c);
+    var d;
+    d = (d = cljs.core._EQ_.call(null, cljs.core.vec.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'info-hash")), b)) ? cljs.core._EQ_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c) : d;
+    return d ? (torrent_client.client.waltz.transition.call(null, e, "\ufdd0'sent-handshake", "\ufdd0'sent-bitfield"), torrent_client.client.waltz.transition.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake")) : null
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-choke", function() {
+    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'choked-not-interested");
+    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-interested", "\ufdd0'choked-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-unchoke", function() {
+    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'not-choked-not-interested");
+    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-interested", "\ufdd0'not-choked-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-interested", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !0);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-interested", a)
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-not-interested", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !1);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-not-interested", a)
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-have", function(b) {
+    bitfield.set_BANG_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"), b, !0);
+    return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")))) ? torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'not-choked-interested") : torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'choked-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-bitfield", function(b) {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'bitfield", b);
+    cljs.core.not.call(null, waltz.state.in_QMARK_.call(null, e, "\ufdd0'sent-bitfield")) && waltz.state.set.call(null, e, "\ufdd0'sent-bitfield");
+    return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")))) ? waltz.state.set.call(null, e, "\ufdd0'choked-interested") : waltz.state.set.call(null, e, "\ufdd0'choked-not-interested")
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-request", function(b, c, d) {
+    return cljs.core.truth_(cljs.core.deref.call(null, g).call(null, "\ufdd0'choking")) ? null : cljs.core.not.call(null, 0 === cljs.core.nth.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), b)) ? torrent_client.client.pieces.get_block.call(null, a, b, c, d).call(null, function(a) {
+      return torrent_client.client.protocol.main.send_block.call(null, f, b, c, a)
+    }, function(a) {
+      return console.error(a)
+    }) : null
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-block", function(b, c, d) {
+    console.log("received block", b, c);
+    cljs.core.swap_BANG_.call(null, g, function(a) {
+      return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'outstanding"]), cljs.core.dec)
+    });
+    torrent_client.client.peer.update_queue.call(null);
+    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-block", cljs.core.PersistentVector.fromArray([a, b, c, d]))
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'receive-cancel", function() {
+    return null
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'choke-peer", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !0);
+    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
+  });
+  waltz.state.add_event.call(null, e, "\ufdd0'unchoke-peer", function() {
+    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !1);
+    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
+  });
+  torrent_client.client.peer.update_queue = function i() {
+    if(cljs.core.deref.call(null, g).call(null, "\ufdd0'outstanding") < torrent_client.client.peer.max_outstanding) {
+      var b = cljs.core.first.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")));
+      if(cljs.core.truth_(b)) {
+        return torrent_client.client.peer.request_piece.call(null, b), i.call(null)
+      }
+    }
+    return null
+  };
+  torrent_client.client.peer.request_piece = function(b) {
+    torrent_client.client.pieces.work_piece_BANG_.call(null, a, b);
+    var c = cljs.core.seq.call(null, torrent_client.client.pieces.piece_blocks.call(null, a, b));
+    if(cljs.core.truth_(c)) {
+      var d = cljs.core.first.call(null, c);
+      cljs.core.nth.call(null, d, 0, null);
+      for(cljs.core.nth.call(null, d, 1, null);;) {
+        var e = d, m = cljs.core.nth.call(null, e, 0, null), n = cljs.core.nth.call(null, e, 1, null), o = c;
+        cljs.core.swap_BANG_.call(null, g, function() {
+          return function(a) {
+            return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'outstanding"]), cljs.core.inc)
+          }
+        }(d, c, e, m, n, o));
+        torrent_client.client.protocol.main.send_request.call(null, f, b, m, n);
+        d = cljs.core.next.call(null, o);
+        if(cljs.core.truth_(d)) {
+          c = d, d = cljs.core.first.call(null, c)
+        }else {
+          return null
+        }
+      }
+    }else {
+      return null
+    }
+  };
+  b = waltz.state.state_STAR_.call(null);
+  waltz.state.add_state.call(null, e, "\ufdd0'init", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_handshake.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'sent-handshake", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_bitfield.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'sent-bitfield", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'choked-not-interested", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_interested.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'choked-interested", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-not-interested", b);
+  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
+    torrent_client.client.protocol.main.send_interested.call(null, f);
+    return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")))) ? torrent_client.client.peer.update_queue.call(null) : waltz.state.set.call(null, e, "\ufdd0'not-choked-not-interested")
+  });
+  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-interested", b);
+  cljs.core.truth_(d) && (console.log("INITIATE HANDSHAKE"), waltz.state.set_ex.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake"));
+  return g
+};
+torrent_client.client.peer.generate_peer = function(a, b, c, d) {
+  console.log("generate-peer", c, d);
+  return torrent_client.client.peer.peer_machine.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'peer-id"], {"\ufdd0'peer-id":c}), d)
+};
+console.log("loaded js");
 goog.Timer = function(a, b) {
   goog.events.EventTarget.call(this);
   this.interval_ = a || 1;
@@ -17319,6 +18044,75 @@ goog.Timer.callOnce = function(a, b, c) {
 };
 goog.Timer.clear = function(a) {
   goog.Timer.defaultTimerObject.clearTimeout(a)
+};
+torrent_client.client.peers = {};
+torrent_client.client.peers.optimistic_unchoke_period = 1E4;
+torrent_client.client.peers.download_count = 4;
+torrent_client.client.peers.peers = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.peers.unchoked = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'started-torrent"]), function() {
+  return(new goog.Timer(torrent_client.client.peers.optimistic_unchoke_period)).start()
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'paused-torrent"]), function() {
+  return null
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-channel"]), function(a, b) {
+  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nthnext.call(null, b, 2), e = cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, e), "\ufdd0'handshake"), f = d.label, g = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, f), c = torrent_client.client.peer.generate_peer.call(null, g, d, c, e);
+  console.log("peer", c);
+  d.close = function() {
+    debugger;
+    return torrent_client.client.peers.create_data_channel.call(null, torrent_client.client.peers.connection, f)
+  };
+  return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.peers, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([f], [cljs.core.PersistentVector.fromArray([c])]))
+});
+torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-not-interested", "\ufdd0'receive-interested"]), function(a, b) {
+  return torrent_client.client.peers.change_interested.call(null, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"))
+});
+torrent_client.client.peers.set_unchoked_BANG_ = function(a) {
+  var b = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
+  if(cljs.core.truth_(b)) {
+    var c = cljs.core.sort_by.call(null, cljs.core.comp.call(null, cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested", "\ufdd0'upload"), cljs.core.deref), b), b = cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested").call(null, cljs.core.deref.call(null, cljs.core.first.call(null, c)));
+    cljs.core._EQ_.call(null, cljs.core.PersistentVector.fromArray([!0, !1]), b);
+    var d = cljs.core.count.call(null, c) < (cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4) ? cljs.core.count.call(null, c) : cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4, b = cljs.core.subvec.call(null, c, 0, d), c = d < cljs.core.count.call(null, c) ? cljs.core.subvec.call(null, c, d) : null, e = cljs.core.seq.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), b));
+    if(cljs.core.truth_(e)) {
+      for(d = cljs.core.first.call(null, e);;) {
+        if(torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, d).call(null, "\ufdd0'peer-id")])), d = cljs.core.next.call(null, e), cljs.core.truth_(d)) {
+          e = d, d = cljs.core.first.call(null, e)
+        }else {
+          break
+        }
+      }
+    }
+    d = cljs.core.seq.call(null, cljs.core.remove.call(null, "\ufdd0'choking", cljs.core.map.call(null, function(a) {
+      return cljs.core.deref.call(null, a)
+    }, c)));
+    if(cljs.core.truth_(d)) {
+      for(c = cljs.core.first.call(null, d);;) {
+        if(torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'choke", cljs.core.deref.call(null, c).call(null, "\ufdd0'peer-id")])), c = cljs.core.next.call(null, d), cljs.core.truth_(c)) {
+          d = c, c = cljs.core.first.call(null, d)
+        }else {
+          break
+        }
+      }
+    }
+    return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.unchoked, cljs.core.assoc, a, b)
+  }
+  return null
+};
+torrent_client.client.peers.unoptimistic = function(a) {
+  a = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
+  return cljs.core.truth_(a) ? (a = cljs.core.first.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), a)), torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unoptimistic", cljs.core.deref.call(null, a).call(null, "\ufdd0'peer-id")]))) : null
+};
+torrent_client.client.peers.optimistic_unchoke = function(a) {
+  if(cljs.core.contains_QMARK_.call(null, cljs.core.deref.call(null, torrent_client.client.peers.peers), a)) {
+    var b = cljs.core.remove.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a))), b = cljs.core.rand_nth.call(null, b);
+    torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, b).call(null, "\ufdd0'peer-id")]));
+    return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
+  }
+  return null
+};
+torrent_client.client.peers.change_interested = function(a) {
+  return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
 };
 goog.dom = {};
 goog.dom.BrowserFeature = {CAN_ADD_NAME_OR_TYPE_ATTRIBUTES:!goog.userAgent.IE || goog.userAgent.isDocumentMode(9), CAN_USE_CHILDREN_ATTRIBUTE:!goog.userAgent.GECKO && !goog.userAgent.IE || goog.userAgent.IE && goog.userAgent.isDocumentMode(9) || goog.userAgent.GECKO && goog.userAgent.isVersion("1.9.1"), CAN_USE_INNER_TEXT:goog.userAgent.IE && !goog.userAgent.isVersion("9"), CAN_USE_PARENT_ELEMENT_PROPERTY:goog.userAgent.IE || goog.userAgent.OPERA || goog.userAgent.WEBKIT, INNER_HTML_NEEDS_SCOPED_ELEMENT:goog.userAgent.IE};
@@ -19070,428 +19864,6 @@ goog.format.insertWordBreaksBasic = function(a, b) {
 goog.format.IS_IE8_OR_ABOVE_ = goog.userAgent.IE && goog.userAgent.isVersion(8);
 goog.format.WORD_BREAK_HTML = goog.userAgent.WEBKIT ? "<wbr></wbr>" : goog.userAgent.OPERA ? "&shy;" : goog.format.IS_IE8_OR_ABOVE_ ? "&#8203;" : "<wbr>";
 goog.format.WbrToken_ = {LT:60, GT:62, AMP:38, SEMI_COLON:59, SPACE:32};
-torrent_client.client.core.pieces = {};
-torrent_client.client.core.pieces.PieceFile = function(a, b) {
-  this.meta = a;
-  this.file = b;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 2294145
-};
-torrent_client.client.core.pieces.PieceFile.cljs$lang$type = !0;
-torrent_client.client.core.pieces.PieceFile.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.core.pieces.PieceFile")
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
-  return goog.getUid.call(null, a)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IAssociative$_contains_key_QMARK_$arity$2 = function(a, b) {
-  if(cljs.core.not.call(null, null == this.meta)) {
-    var c = this.meta.call(null, "\ufdd0'block-start") <= b;
-    return c ? b <= this.meta.call(null, "\ufdd0'piece-end") : c
-  }
-  return null
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IFn$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.call = function() {
-  var a = null;
-  return a = function(a, c, d) {
-    switch(arguments.length) {
-      case 1:
-        return this.file;
-      case 2:
-        return cljs.core._lookup.call(null, this, c);
-      case 3:
-        return cljs.core._lookup.call(null, this, c, d)
-    }
-    throw"Invalid arity: " + arguments.length;
-  }
-}();
-torrent_client.client.core.pieces.PieceFile.prototype.apply = function(a, b) {
-  return a.call.apply(a, [a].concat(cljs.core.aclone.call(null, b)))
-};
-torrent_client.client.core.pieces.PieceFile.prototype.torrent_client$client$core$pieces$Fn$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$2 = function(a, b) {
-  return cljs.core._lookup.call(null, a, b, null)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$ILookup$_lookup$arity$3 = function(a, b) {
-  return cljs.core._contains_key_QMARK_.call(null, a, b)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$ = !0;
-torrent_client.client.core.pieces.PieceFile.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new torrent_client.client.core.pieces.PieceFile(b, this.file)
-};
-torrent_client.client.core.pieces.PieceFile.prototype.toString = function() {
-  return cljs.core.pr_str.call(null, this)
-};
-torrent_client.client.core.pieces.PieceFile;
-torrent_client.client.core.pieces.piece_file = function(a) {
-  return new torrent_client.client.core.pieces.PieceFile(null, a)
-};
-torrent_client.client.core.pieces.Piece = function(a, b, c) {
-  this.meta = a;
-  this.byte_array = b;
-  this.__hash = c;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 2293762
-};
-torrent_client.client.core.pieces.Piece.cljs$lang$type = !0;
-torrent_client.client.core.pieces.Piece.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.core.pieces.Piece")
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IMeta$_meta$arity$1 = function() {
-  return this.meta
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IWithMeta$_with_meta$arity$2 = function(a, b) {
-  return new torrent_client.client.core.pieces.Piece(b, this.byte_array, this.__hash)
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$IHash$_hash$arity$1 = function() {
-  return cljs.core.not.call(null, null == this.__hash) ? this.__hash : torrent_client.client.core.crypt.byte_array__GT_str.call(null, torrent_client.client.core.crypt.sha1.call(null, this.byte_array))
-};
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$ = !0;
-torrent_client.client.core.pieces.Piece.prototype.cljs$core$ICounted$_count$arity$1 = function() {
-  return cljs.core.count.call(null, this.byte_array)
-};
-torrent_client.client.core.pieces.Piece;
-torrent_client.client.core.pieces.piece = function(a) {
-  var b = cljs.core.sort.call(null, "\ufdd0'begin", a), a = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, cljs.core.comp.call(null, cljs.core.count, "\ufdd0'data"), b)), a = torrent_client.client.core.byte_array.uint8_array.call(null, a), c = cljs.core.seq.call(null, b);
-  if(cljs.core.truth_(c)) {
-    for(b = cljs.core.first.call(null, c);;) {
-      if(a.set(b.call(null, "\ufdd0'data"), b.call(null, "\ufdd0'begin")), b = cljs.core.next.call(null, c), cljs.core.truth_(b)) {
-        c = b, b = cljs.core.first.call(null, c)
-      }else {
-        break
-      }
-    }
-  }
-  return new torrent_client.client.core.pieces.Piece(null, a, null)
-};
-console.log("hi");
-torrent_client.client.pieces = {};
-torrent_client.client.pieces.block_length = 16384;
-torrent_client.client.pieces.files = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.pieces.working = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-file"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), d = torrent_client.client.pieces.generate_file.call(null, c, d, e);
-  return cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.files, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([cljs.core.deref.call(null, c).call(null, "\ufdd0'pretty-info-hash")], [cljs.core.PersistentVector.fromArray([d])]))
-});
-torrent_client.client.pieces.generate_file = function(a, b, c) {
-  a = torrent_client.client.pieces.generate_block_boundaries.call(null, a, c);
-  return cljs.core.with_meta.call(null, torrent_client.client.core.pieces.piece_file.call(null, b), cljs.core.merge.call(null, c, a))
-};
-torrent_client.client.pieces.generate_block_boundaries = function(a, b) {
-  return cljs.core.ObjMap.fromObject(["\ufdd0'block-start", "\ufdd0'block-end"], {"\ufdd0'block-start":Math.floor.call(null, b.call(null, "\ufdd0'pos-start") / cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")), "\ufdd0'block-end":Math.ceil.call(null, b.call(null, "\ufdd0'pos-end") / cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length"))})
-};
-torrent_client.client.pieces.wanted_pieces = function(a, b) {
-  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), d = torrent_client.client.bitfield.difference.call(null, b, cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield")), d = cljs.core.keep_indexed.call(null, function(a, b) {
-    return cljs.core.not.call(null, 0 === b) ? a : null
-  }, d), e = cljs.core.set.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, c));
-  return cljs.core.remove.call(null, function(a) {
-    return cljs.core.contains_QMARK_.call(null, e, a)
-  }, d)
-};
-torrent_client.client.pieces.work_piece_BANG_ = function(a, b) {
-  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash");
-  console.log("work-next-piece", b);
-  cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.working, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([c], [cljs.core.PersistentVector.fromArray([b])]));
-  return b
-};
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'invalid-piece", "\ufdd0'written-piece"]), function(a, b, c) {
-  a = cljs.core.remove.call(null, function(a) {
-    return cljs.core._EQ_.call(null, c, a)
-  }, cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, "\ufdd0'info-hash"));
-  return cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.working, cljs.core.assoc, torrent_client.client.pieces.info_hash, a)
-});
-torrent_client.client.pieces.piece_length = function(a, b) {
-  console.log("piece-length", b);
-  return cljs.core._EQ_.call(null, b, cljs.core.deref.call(null, a).call(null, "\ufdd0'pieces-length") - 1) ? cljs.core.deref.call(null, a).call(null, "\ufdd0'last-piece-length") : cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")
-};
-torrent_client.client.pieces.piece_offset = function(a, b) {
-  var c = cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), c = cljs.core.take.call(null, b, c);
-  return cljs.core.count.call(null, cljs.core.remove.call(null, cljs.core.zero_QMARK_, c)) * cljs.core.deref.call(null, a).call(null, "\ufdd0'piece-length")
-};
-torrent_client.client.pieces.piece_blocks = function(a, b) {
-  var c = torrent_client.client.pieces.piece_length.call(null, a, b);
-  console.log("calculating piece-length", c);
-  for(var d = 0, e = cljs.core.PersistentVector.fromArray([]);;) {
-    if(cljs.core.not.call(null, cljs.core._EQ_.call(null, d, c))) {
-      var f = torrent_client.client.pieces.block_length < c - d ? torrent_client.client.pieces.block_length : c - d, g = d + f, e = cljs.core.conj.call(null, e, cljs.core.PersistentVector.fromArray([d, f])), d = g
-    }else {
-      return e
-    }
-  }
-};
-torrent_client.client.pieces.get_file_block = function(a, b, c) {
-  return function(d) {
-    var e = a > cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-start") ? a : cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-start"), f = (e + b < cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-end") ? e + b : cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-end")) - e;
-    return filesystem.entry.file.call(null, c.file).call(null, function(a) {
-      return filesystem.filesystem.filereader.call(null, a).call(null, function(a) {
-        console.log("get-file-block", e, f, cljs.core.meta.call(null, c).call(null, "\ufdd0'pos-end"), a.byteLength);
-        return d.call(null, torrent_client.client.core.byte_array.uint8_array.call(null, a, e, f))
-      }, function(a) {
-        return console.error(a)
-      })
-    }, function(a) {
-      return console.error(a)
-    })
-  }
-};
-torrent_client.client.pieces.get_block = function(a, b, c, d) {
-  return function(e) {
-    var f = torrent_client.client.pieces.piece_offset.call(null, a, b), g = cljs.core.deref.call(null, a).call(null, "\ufdd0'pretty-info-hash"), f = f + c, g = cljs.core.filter.call(null, function(a) {
-      return cljs.core.contains_QMARK_.call(null, a, b)
-    }, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, g));
-    console.log("get-block", b, c, d);
-    return torrent_client.client.pieces.get_file_block.call(null, f, d, cljs.core.first.call(null, g)).call(null, function(c) {
-      console.log(c);
-      console.log("hash", b, torrent_client.client.core.crypt.byte_array__GT_str.call(null, torrent_client.client.core.crypt.sha1.call(null, c)), cljs.core.nth.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'pieces-hash"), b));
-      return e.call(null, c)
-    }, function(a) {
-      return console.error(a)
-    })
-  }
-};
-torrent_client.client.pieces.pieces_to_write = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.pieces.file_write_queue = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.pieces.queue_BANG_ = function(a, b, c) {
-  return cljs.core.swap_BANG_.call(null, a, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([cljs.core.hash.call(null, b)], [cljs.core.PersistentVector.fromArray([c])]))
-};
-torrent_client.client.pieces.consume_BANG_ = function(a, b) {
-  return cljs.core.swap_BANG_.call(null, a, cljs.core.assoc, cljs.core.hash.call(null, b), cljs.core.rest.call(null, cljs.core.deref.call(null, a).call(null, cljs.core.hash.call(null, b))))
-};
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-block"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), f = cljs.core.nth.call(null, b, 3, null), g = cljs.core.deref.call(null, c).call(null, "\ufdd0'pretty-info-hash"), h = [cljs.core.str(g), cljs.core.str(d)].join(""), i = cljs.core.get.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.pieces_to_write), h), f = cljs.core.ObjMap.fromObject(["\ufdd0'begin", "\ufdd0'data"], {"\ufdd0'begin":e, "\ufdd0'data":f}), 
-  j = cljs.core.deref.call(null, torrent_client.client.pieces.working).call(null, g);
-  e = (j = cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, j), d)) ? cljs.core.not.call(null, cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, cljs.core.map.call(null, "\ufdd0'begin", i)), e)) : j;
-  e && cljs.core.swap_BANG_.call(null, torrent_client.client.pieces.pieces_to_write, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([h], [cljs.core.PersistentVector.fromArray([f])]));
-  h = cljs.core.get.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.pieces_to_write), h);
-  if(cljs.core._EQ_.call(null, cljs.core.count.call(null, h), cljs.core.count.call(null, torrent_client.client.pieces.piece_blocks.call(null, c, d)))) {
-    h = torrent_client.client.core.pieces.piece.call(null, h);
-    e = cljs.core.hash.call(null, h);
-    console.log("piece hash", e, cljs.core.nth.call(null, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-hash"), d));
-    if(cljs.core._EQ_.call(null, cljs.core.hash.call(null, h), cljs.core.nth.call(null, cljs.core.deref.call(null, c).call(null, "\ufdd0'pieces-hash"), d))) {
-      return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-piece", cljs.core.PersistentVector.fromArray([g, d, h]))
-    }
-    console.error("invalid hash", d);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'invalid-piece", cljs.core.PersistentVector.fromArray([c, d]))
-  }
-  return null
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-piece"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nth.call(null, b, 2, null), f = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, c), g = torrent_client.client.pieces.piece_offset.call(null, f, d), c = cljs.core.filter.call(null, function(a) {
-    return cljs.core.contains_QMARK_.call(null, a, d)
-  }, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, c)), h = cljs.core.seq.call(null, c);
-  if(cljs.core.truth_(h)) {
-    for(c = cljs.core.first.call(null, h);;) {
-      var i = cljs.core.meta.call(null, c), i = cljs.core.seq_QMARK_.call(null, i) ? cljs.core.apply.call(null, cljs.core.hash_map, i) : i, j = cljs.core.get.call(null, i, "\ufdd0'pos-end"), k = cljs.core.get.call(null, i, "\ufdd0'pos-start"), i = 0 > g - k ? 0 : g - k, l = 0 > k - g ? 0 : k - g, j = (cljs.core.count.call(null, e) < j - k ? cljs.core.count.call(null, e) : j - k) - l, j = torrent_client.client.core.byte_array.subarray.call(null, e.byte_array, l, j);
-      torrent_client.client.pieces.queue_BANG_.call(null, torrent_client.client.pieces.file_write_queue, c, cljs.core.PersistentVector.fromArray([d, i, j]));
-      console.log("we should now be writing");
-      torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'write-file", cljs.core.PersistentVector.fromArray([f, c]));
-      c = cljs.core.next.call(null, h);
-      if(cljs.core.truth_(c)) {
-        h = c, c = cljs.core.first.call(null, h)
-      }else {
-        return null
-      }
-    }
-  }else {
-    return null
-  }
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'write-file"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
-  return filesystem.entry.create_writer.call(null, d.file).call(null, function(a) {
-    return torrent_client.client.pieces.seek_then_write.call(null, c, d, a)
-  }, function(a) {
-    return console.error(a)
-  })
-});
-torrent_client.client.pieces.seek_then_write = function seek_then_write(b, c, d) {
-  var e = cljs.core.first.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.file_write_queue).call(null, cljs.core.hash.call(null, c)));
-  if(cljs.core.truth_(e)) {
-    var f = cljs.core.nth.call(null, e, 0, null), g = cljs.core.nth.call(null, e, 1, null), h = cljs.core.nth.call(null, e, 2, null);
-    console.log("about to write", e);
-    d.onwriteend = function() {
-      torrent_client.client.pieces.consume_BANG_.call(null, torrent_client.client.pieces.file_write_queue, c);
-      console.log("finished writing!");
-      torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'written-piece", cljs.core.PersistentVector.fromArray([b, f]));
-      return seek_then_write.call(null, b, c, d)
-    };
-    d.seek(g);
-    return d.write(new Blob(Array(h)))
-  }
-  return null
-};
-torrent_client.client.torrent = {};
-torrent_client.client.torrent.set_file_data = function() {
-  var a = null, b = function(b) {
-    return a.call(null, b, 0, cljs.core.PersistentVector.fromArray([]))
-  }, c = function(a, b, c) {
-    for(;;) {
-      if(cljs.core.empty_QMARK_.call(null, a)) {
-        return c
-      }
-      var g = b + cljs.core.get.call(null, cljs.core.first.call(null, a), "\ufdd0'length"), b = cljs.core.ObjMap.fromObject(["\ufdd0'pos-start", "\ufdd0'pos-end"], {"\ufdd0'pos-start":b, "\ufdd0'pos-end":g}), b = cljs.core.merge.call(null, cljs.core.first.call(null, a), b), a = cljs.core.rest.call(null, a), c = cljs.core.conj.call(null, c, b), b = g
-    }
-  }, a = function(a, e, f) {
-    switch(arguments.length) {
-      case 1:
-        return b.call(this, a);
-      case 3:
-        return c.call(this, a, e, f)
-    }
-    throw"Invalid arity: " + arguments.length;
-  };
-  a.cljs$lang$arity$1 = b;
-  a.cljs$lang$arity$3 = c;
-  return a
-}();
-torrent_client.client.torrent.read_metainfo_byte_array = function(a) {
-  var a = torrent_client.client.core.reader.push_back_reader.call(null, torrent_client.client.core.bencode.uint8_array.call(null, a, 0)), a = torrent_client.client.core.bencode.decode.call(null, a), b = a.call(null, "info"), c = torrent_client.client.core.crypt.sha1.call(null, torrent_client.client.core.bencode.encode.call(null, b)), d = torrent_client.client.core.string.pad_string_left.call(null, goog.crypt.byteArrayToHex.call(null, c), "0", 40), e = torrent_client.client.core.string.partition_string.call(null, 
-  20, b.call(null, "pieces")), f = cljs.core.count.call(null, e), g = b.call(null, "piece length"), h = torrent_client.client.bitfield.bitfield.call(null, f), i = cljs.core.PersistentVector.fromArray([a.call(null, "announce")]), i = cljs.core.reduce.call(null, cljs.core.conj, i, cljs.core.flatten.call(null, a.call(null, "announce-list"))), j;
-  j = cljs.core.js__GT_clj.call(null, b.call(null, "files"), "\ufdd0'keywordize", !0);
-  j = cljs.core.truth_(j) ? j : cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'path", "\ufdd0'length"], {"\ufdd0'path":b.call(null, "name"), "\ufdd0'length":b.call(null, "length")})]);
-  j = torrent_client.client.torrent.set_file_data.call(null, j);
-  var k = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, "\ufdd0'length", j)), l = cljs.core.rem.call(null, k, g), l = 0 === l ? g : l;
-  console.info("adding torrent", d);
-  return cljs.core.ObjMap.fromObject("\ufdd0'piece-length \ufdd0'pieces-hash \ufdd0'comment \ufdd0'pretty-info-hash \ufdd0'name \ufdd0'bitfield \ufdd0'total-length \ufdd0'pieces-length \ufdd0'announce-list \ufdd0'current-length \ufdd0'encoding \ufdd0'files \ufdd0'info-hash \ufdd0'last-piece-length".split(" "), {"\ufdd0'piece-length":g, "\ufdd0'pieces-hash":e, "\ufdd0'comment":b.call(null, "comment"), "\ufdd0'pretty-info-hash":d, "\ufdd0'name":b.call(null, "name"), "\ufdd0'bitfield":h, "\ufdd0'total-length":k, 
-  "\ufdd0'pieces-length":f, "\ufdd0'announce-list":cljs.core.filter.call(null, torrent_client.client.core.url.http_scheme_QMARK_, i), "\ufdd0'current-length":0, "\ufdd0'encoding":a.call(null, "encoding"), "\ufdd0'files":j, "\ufdd0'info-hash":c, "\ufdd0'last-piece-length":l})
-};
-torrent_client.client.torrent.read_metainfo_file = function(a) {
-  return function(b) {
-    return filesystem.filesystem.filereader.call(null, a).call(null, function(a) {
-      return b.call(null, torrent_client.client.torrent.read_metainfo_byte_array.call(null, a))
-    }, function(a) {
-      return console.error(a)
-    })
-  }
-};
-torrent_client.client.torrent.write_input_to_file = function(a, b, c) {
-  console.log("write-input-to-file", b, c);
-  return function(d, e) {
-    return filesystem.entry.get_entry.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'create"], {"\ufdd0'create":!0})).call(null, function(a) {
-      return filesystem.entry.create_writer.call(null, a).call(null, function(b) {
-        b.onerror = e;
-        b.onwriteend = function() {
-          return d.call(null, a)
-        };
-        return null == c ? d.call(null, a) : b.write(c)
-      }, function(a) {
-        return console.error(a)
-      })
-    }, function(a) {
-      return console.error(a)
-    })
-  }
-};
-torrent_client.client.torrent.write_metainfo_to_db = function(a) {
-  var b = torrent_client.client.core.db.create_transaction.call(null, cljs.core.deref.call(null, torrent_client.client.storage.connection), cljs.core.PersistentVector.fromArray(["metainfo"]), "readwrite").objectStore("metainfo");
-  return cljs.core.assoc_BANG_.call(null, b, a.call(null, "\ufdd0'pretty-info-hash"), a)
-};
-torrent_client.client.torrent.build_files = function(a, b, c) {
-  var d = cljs.core.deref.call(null, a).call(null, "\ufdd0'total-length");
-  return filesystem.filesystem.request_quota.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
-    return filesystem.filesystem.request_file_system.call(null, "\ufdd0'PERSISTENT", d).call(null, function(d) {
-      var e = cljs.core.seq.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'files"));
-      if(cljs.core.truth_(e)) {
-        for(var h = cljs.core.first.call(null, e);;) {
-          var i = cljs.core.first.call(null, cljs.core.filter.call(null, function(a) {
-            return function(b) {
-              return cljs.core._EQ_.call(null, b.name, "\ufdd0'path".call(null, a))
-            }
-          }(h, e), b));
-          torrent_client.client.torrent.write_input_to_file.call(null, d, "\ufdd0'path".call(null, h), i).call(null, function(b) {
-            return function(d) {
-              torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'add-file", cljs.core.PersistentVector.fromArray([a, d, b]));
-              return c.call(null, d)
-            }
-          }(h, e, i), function() {
-            return function(a) {
-              return console.error(a)
-            }
-          }(h, e, i));
-          h = cljs.core.next.call(null, e);
-          if(cljs.core.truth_(h)) {
-            e = h, h = cljs.core.first.call(null, e)
-          }else {
-            return null
-          }
-        }
-      }else {
-        return null
-      }
-    }, function(a) {
-      return console.error(a)
-    })
-  }, function(a) {
-    return console.error(a)
-  })
-};
-torrent_client.client.torrent.torrent_machine = function(a, b) {
-  var c = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'torrent-machine", "\ufdd0'current":"\ufdd0'init"})), d = cljs.core.atom.call(null, a);
-  waltz.state.add_event.call(null, c, "\ufdd0'add-files", function(a) {
-    console.log(":add-files");
-    return torrent_client.client.torrent.build_files.call(null, d, a, function(a) {
-      return waltz.state.trigger.call(null, c, "\ufdd0'file", a)
-    })
-  });
-  waltz.state.add_event.call(null, c, "\ufdd0'file", function() {
-    return cljs.core._EQ_.call(null, cljs.core.count.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'files")), cljs.core.count.call(null, cljs.core.deref.call(null, torrent_client.client.pieces.files).call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'pretty-info-hash")))) ? waltz.state.set.call(null, c, "\ufdd0'has-files") : null
-  });
-  var e = waltz.state.state_STAR_.call(null);
-  waltz.state.add_state.call(null, c, "\ufdd0'init", e);
-  e = waltz.state.in_STAR_.call(null, "Once the metainfo is generated check the files".call(null, waltz.state.state_STAR_.call(null)), function() {
-    return waltz.state.trigger.call(null, c, "\ufdd0'add-files", b)
-  });
-  waltz.state.add_state.call(null, c, "\ufdd0'has-metainfo", e);
-  e = waltz.state.in_STAR_.call(null, "Once the files are checked/created move to ready".call(null, waltz.state.state_STAR_.call(null)), function() {
-    0 !== cljs.core.count.call(null, b) && (torrent_client.client.bitfield.fill_bitfield.call(null, cljs.core.deref.call(null, d).call(null, "\ufdd0'bitfield"), cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'pieces-written", cljs.core.deref.call(null, d).call(null, "\ufdd0'pieces-length")), torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'completed-torrent", d));
-    return waltz.state.set.call(null, c, "\ufdd0'ready")
-  });
-  waltz.state.add_state.call(null, c, "\ufdd0'has-files", e);
-  e = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    cljs.core.swap_BANG_.call(null, d, cljs.core.assoc, "\ufdd0'status", "\ufdd0'processed");
-    console.log("about to :add-torrent");
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'processed-torrent", d)
-  });
-  waltz.state.add_state.call(null, c, "\ufdd0'ready", e);
-  return waltz.state.set.call(null, c, "\ufdd0'has-metainfo")
-};
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-object"]), function(a, b) {
-  return torrent_client.client.torrent.torrent_machine.call(null, b, cljs.core.PersistentVector.fromArray([]))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file"]), function(a, b) {
-  return torrent_client.client.torrent.read_metainfo_file.call(null, b).call(null, function(a) {
-    return torrent_client.client.torrent.torrent_machine.call(null, a, cljs.core.PersistentVector.fromArray([]))
-  }, function(a) {
-    return console.error(a)
-  })
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-byte-array"]), function(a, b) {
-  var c = torrent_client.client.torrent.read_metainfo_byte_array.call(null, b);
-  return torrent_client.client.torrent.torrent_machine.call(null, c, cljs.core.PersistentVector.fromArray([]))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-and-files"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
-  return torrent_client.client.torrent.torrent_machine.call(null, c, d)
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-metainfo-file-and-files"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null);
-  return torrent_client.client.torrent.read_metainfo_file.call(null, c).call(null, function(a) {
-    return torrent_client.client.torrent.torrent_machine.call(null, a, d)
-  }, function(a) {
-    return console.error(a)
-  })
-});
 torrent_client.client.files = {};
 var crate = {binding:{}};
 crate.binding.SubAtom = function(a, b, c, d) {
@@ -20862,15 +21234,6 @@ jayq.core.on.call(null, torrent_client.client.main.$window, "\ufdd0'beforeunload
   return cljs.core.not.call(null, 0 === cljs.core.count.call(null, cljs.core.filter.call(null, torrent_client.client.main.active_QMARK_, cljs.core.deref.call(null, torrent_client.client.torrents.torrents)))) ? "You still have active torrents" : null
 });
 console.log("js loaded");
-torrent_client.client.peer_id = {};
-torrent_client.client.peer_id.peer_id = cljs.core.atom.call(null, null);
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'document-ready"]), function() {
-  return cljs.core.reset_BANG_.call(null, torrent_client.client.peer_id.peer_id, torrent_client.client.peer_id.generate_peer_id.call(null))
-});
-torrent_client.client.peer_id.generate_peer_id = function() {
-  var a = goog.string.getRandomString.call(null), a = goog.crypt.byteArrayToHex.call(null, torrent_client.client.core.crypt.sha1.call(null, a));
-  return[cljs.core.str("AM1-0-0--"), cljs.core.str(cljs.core.subs.call(null, a, 0, 20 - cljs.core.count.call(null, "AM1-0-0--")))].join("")
-};
 torrent_client.client.connection = {};
 torrent_client.client.connection.peer_connection = function(a) {
   return new torrent_client.client.polyfills.prefix.RTCPeerConnection(jayq.util.clj__GT_js.call(null, a))
@@ -21074,372 +21437,7 @@ torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'a
   }
 });
 console.log("not last in tracker");
-torrent_client.client.protocol.bittorrent = {};
-torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_ = function(a) {
-  return cljs.core.instance_QMARK_.call(null, Uint8Array, a)
-};
-torrent_client.client.protocol.bittorrent.Char = function(a) {
-  this.code = a;
-  this.cljs$lang$protocol_mask$partition1$ = 0;
-  this.cljs$lang$protocol_mask$partition0$ = 3145730
-};
-torrent_client.client.protocol.bittorrent.Char.cljs$lang$type = !0;
-torrent_client.client.protocol.bittorrent.Char.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.Char")
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$ = !0;
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$ICounted$_count$arity$1 = function() {
-  return 1
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$ = !0;
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IHash$_hash$arity$1 = function(a) {
-  return goog.string.hashCode.call(null, cljs.core.pr_str.call(null, a))
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$ = !0;
-torrent_client.client.protocol.bittorrent.Char.prototype.cljs$core$IEquiv$_equiv$arity$2 = function(a, b) {
-  if(torrent_client.client.protocol.bittorrent.array_buffer_view_QMARK_.call(null, b)) {
-    var c = cljs.core._EQ_.call(null, cljs.core.count.call(null, b), 1);
-    return c ? cljs.core._EQ_.call(null, cljs.core.first.call(null, b), this.code) : c
-  }
-  return cljs.core.string_QMARK_.call(null, b) ? cljs.core._EQ_.call(null, b, "" + cljs.core.str(this.code)) : cljs.core._EQ_.call(null, b, this.code)
-};
-torrent_client.client.protocol.bittorrent.Char.prototype.toString = function() {
-  return String.fromCharCode(this.code)
-};
-torrent_client.client.protocol.bittorrent.Char;
-torrent_client.client.protocol.bittorrent.char$ = function(a) {
-  return new torrent_client.client.protocol.bittorrent.Char(a)
-};
-torrent_client.client.protocol.bittorrent.msg_choke = torrent_client.client.protocol.bittorrent.char$.call(null, 0);
-torrent_client.client.protocol.bittorrent.msg_unchoke = torrent_client.client.protocol.bittorrent.char$.call(null, 1);
-torrent_client.client.protocol.bittorrent.msg_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 2);
-torrent_client.client.protocol.bittorrent.msg_not_interested = torrent_client.client.protocol.bittorrent.char$.call(null, 3);
-torrent_client.client.protocol.bittorrent.msg_have = torrent_client.client.protocol.bittorrent.char$.call(null, 4);
-torrent_client.client.protocol.bittorrent.msg_bitfield = torrent_client.client.protocol.bittorrent.char$.call(null, 5);
-torrent_client.client.protocol.bittorrent.msg_request = torrent_client.client.protocol.bittorrent.char$.call(null, 6);
-torrent_client.client.protocol.bittorrent.msg_piece = torrent_client.client.protocol.bittorrent.char$.call(null, 7);
-torrent_client.client.protocol.bittorrent.msg_cancel = torrent_client.client.protocol.bittorrent.char$.call(null, 8);
-torrent_client.client.protocol.bittorrent.msg_handshake = torrent_client.client.protocol.bittorrent.char$.call(null, 19);
-torrent_client.client.protocol.bittorrent.receive_data = function() {
-  var a = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), b = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), c = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), d = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {})), e = cljs.core.get.call(null, cljs.core.ObjMap.fromObject([], {}), "\ufdd0'hierarchy", cljs.core.global_hierarchy);
-  return new cljs.core.MultiFn("receive-data", function(a, b) {
-    return torrent_client.client.protocol.bittorrent.char$.call(null, cljs.core.first.call(null, b))
-  }, "\ufdd0'default", e, a, b, c, d)
-}();
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_choke, function(a) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-choke")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_unchoke, function(a) {
-  console.log("msg-unchoke");
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-unchoke")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_interested, function(a) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-interested")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_not_interested, function(a) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-not-interested")
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_have, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int"]), cljs.core.rest.call(null, b));
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-have", c)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_bitfield, function(a, b) {
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-bitfield", torrent_client.client.bitfield.bitfield.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 1)))
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_request, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-request", d, e, c)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_piece, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int"]), torrent_client.client.core.byte_array.subarray.call(null, b, 1, 9)), d = cljs.core.nth.call(null, c, 0, null), c = cljs.core.nth.call(null, c, 1, null), e = torrent_client.client.core.byte_array.subarray.call(null, b, 9);
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-block", d, c, e)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, torrent_client.client.protocol.bittorrent.msg_cancel, function(a, b) {
-  var c = torrent_client.client.core.crypt.unpack.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'int", "\ufdd0'int", "\ufdd0'int"]), cljs.core.rest.call(null, b)), d = cljs.core.nth.call(null, c, 0, null), e = cljs.core.nth.call(null, c, 1, null), c = cljs.core.nth.call(null, c, 2, null);
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-cancel", d, e, c)
-});
-cljs.core._add_method.call(null, torrent_client.client.protocol.bittorrent.receive_data, "\ufdd0'default", function(a, b) {
-  var c = cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 28, 48)), d = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.vec.call(null, torrent_client.client.core.byte_array.subarray.call(null, b, 48, 68)));
-  return waltz.state.trigger.call(null, a, "\ufdd0'receive-handshake", c, d)
-});
-torrent_client.client.protocol.bittorrent.BittorrentProtocol = function(a, b, c) {
-  this.torrent = a;
-  this.channel = b;
-  this.peer = c
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$type = !0;
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.cljs$lang$ctorPrSeq = function() {
-  return cljs.core.list.call(null, "torrent_client.client.protocol.bittorrent.BittorrentProtocol")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$ = !0;
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_request$arity$4 = function(a, b, c, d) {
-  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_request, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$2 = function(a, b) {
-  return this.channel.send(b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_data$arity$3 = function(a, b, c) {
-  if(null == c) {
-    return torrent_client.client.protocol.main.send_data.call(null, a, "" + cljs.core.str(b))
-  }
-  if(cljs.core.string_QMARK_.call(null, c)) {
-    return torrent_client.client.protocol.main.send_data.call(null, a, [cljs.core.str(b), cljs.core.str(c)].join(""))
-  }
-  c = cljs.core.vector_QMARK_.call(null, c) ? c : cljs.core.vector.call(null, c);
-  b = [cljs.core.str(b), cljs.core.str(cljs.core.apply.call(null, cljs.core.str, c))].join("");
-  return torrent_client.client.protocol.main.send_data.call(null, a, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_handshake$arity$1 = function(a) {
-  var b = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.PersistentVector.fromArray([0, 0, 0, 0, 0, 0, 0, 0])), c = torrent_client.client.core.crypt.byte_array__GT_str.call(null, cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'info-hash")), b = [cljs.core.str("BitTorrent protocol"), cljs.core.str(b), cljs.core.str(c), cljs.core.str(cljs.core.deref.call(null, torrent_client.client.peer_id.peer_id))].join("");
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_handshake, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_choke$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_choke, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_interested$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_interested, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_unchoke$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_unchoke, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_cancel$arity$4 = function(a, b, c, d) {
-  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c, "\ufdd0'int", d);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_cancel, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_have$arity$2 = function(a, b) {
-  var c = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_have, c)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_block$arity$4 = function(a, b, c, d) {
-  b = torrent_client.client.core.crypt.pack.call(null, "\ufdd0'int", b, "\ufdd0'int", c);
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_piece, cljs.core.PersistentVector.fromArray([b, d]))
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_bitfield$arity$1 = function(a) {
-  var b = cljs.core.deref.call(null, this.torrent).call(null, "\ufdd0'bitfield").byte_array;
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_bitfield, b)
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$send_not_interested$arity$1 = function(a) {
-  return torrent_client.client.protocol.main.send_data.call(null, a, torrent_client.client.protocol.bittorrent.msg_not_interested, "")
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol.prototype.torrent_client$client$protocol$main$Protocol$watch_channel$arity$1 = function() {
-  var a = this;
-  return a.channel.onmessage = function(b) {
-    return cljs.core.string_QMARK_.call(null, b.data) ? torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, torrent_client.client.core.crypt.str__GT_byte_array.call(null, b.data)) : torrent_client.client.protocol.bittorrent.receive_data.call(null, a.peer, b.data)
-  }
-};
-torrent_client.client.protocol.bittorrent.BittorrentProtocol;
-torrent_client.client.protocol.bittorrent.generate_protocol = function(a, b, c) {
-  a = new torrent_client.client.protocol.bittorrent.BittorrentProtocol(a, b, c);
-  torrent_client.client.protocol.main.watch_channel.call(null, a);
-  return a
-};
 torrent_client.client.protocols = {};
 torrent_client.client.protocols.dht = {};
 torrent_client.client.speed = {};
 console.log("not-last");
-torrent_client.client.peer = {};
-torrent_client.client.peer.max_outstanding = 20;
-torrent_client.client.peer.peer_machine = function(a, b, c, d) {
-  var e = torrent_client.client.waltz.machine.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'label", "\ufdd0'current"], {"\ufdd0'label":"\ufdd0'peer-machine", "\ufdd0'current":"\ufdd0'init"})), f = torrent_client.client.protocol.bittorrent.generate_protocol.call(null, a, b, e), g = cljs.core.atom.call(null, cljs.core.merge.call(null, c, cljs.core.ObjMap.fromObject(["\ufdd0'choking", "\ufdd0'interested", "\ufdd0'outstanding"], {"\ufdd0'choking":!0, "\ufdd0'interested":!1, "\ufdd0'outstanding":0})));
-  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'choke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
-    return waltz.state.trigger.call(null, e, "\ufdd0'choke-peer")
-  });
-  torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set([cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id")])]), function() {
-    return waltz.state.trigger.call(null, e, "\ufdd0'unchoke-peer")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-handshake", function(b, c) {
-    console.log("recieve handshake", cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c);
-    var d;
-    d = (d = cljs.core._EQ_.call(null, cljs.core.vec.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'info-hash")), b)) ? cljs.core._EQ_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'peer-id"), c) : d;
-    return d ? (torrent_client.client.waltz.transition.call(null, e, "\ufdd0'sent-handshake", "\ufdd0'sent-bitfield"), torrent_client.client.waltz.transition.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake")) : null
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-choke", function() {
-    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'choked-not-interested");
-    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-interested", "\ufdd0'choked-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-unchoke", function() {
-    torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'not-choked-not-interested");
-    return torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-interested", "\ufdd0'not-choked-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-interested", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !0);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-interested", a)
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-not-interested", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'interested", !1);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-not-interested", a)
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-have", function(b) {
-    bitfield.set_BANG_.call(null, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"), b, !0);
-    return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")))) ? torrent_client.client.waltz.transition.call(null, e, "\ufdd0'not-choked-not-interested", "\ufdd0'not-choked-interested") : torrent_client.client.waltz.transition.call(null, e, "\ufdd0'choked-not-interested", "\ufdd0'choked-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-bitfield", function(b) {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'bitfield", b);
-    cljs.core.not.call(null, waltz.state.in_QMARK_.call(null, e, "\ufdd0'sent-bitfield")) && waltz.state.set.call(null, e, "\ufdd0'sent-bitfield");
-    return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")))) ? waltz.state.set.call(null, e, "\ufdd0'choked-interested") : waltz.state.set.call(null, e, "\ufdd0'choked-not-interested")
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-request", function(b, c, d) {
-    return cljs.core.truth_(cljs.core.deref.call(null, g).call(null, "\ufdd0'choking")) ? null : cljs.core.not.call(null, 0 === cljs.core.nth.call(null, cljs.core.deref.call(null, a).call(null, "\ufdd0'bitfield"), b)) ? torrent_client.client.pieces.get_block.call(null, a, b, c, d).call(null, function(a) {
-      return torrent_client.client.protocol.main.send_block.call(null, f, b, c, a)
-    }, function(a) {
-      return console.error(a)
-    }) : null
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-block", function(b, c, d) {
-    console.log("received block", b, c);
-    cljs.core.swap_BANG_.call(null, g, function(a) {
-      return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'outstanding"]), cljs.core.dec)
-    });
-    torrent_client.client.peer.update_queue.call(null);
-    return torrent_client.client.core.dispatch.fire.call(null, "\ufdd0'receive-block", cljs.core.PersistentVector.fromArray([a, b, c, d]))
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'receive-cancel", function() {
-    return null
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'choke-peer", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !0);
-    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
-  });
-  waltz.state.add_event.call(null, e, "\ufdd0'unchoke-peer", function() {
-    cljs.core.swap_BANG_.call(null, g, cljs.core.assoc, "\ufdd0'choking", !1);
-    return torrent_client.client.protocol.main.send_unchoke.call(null, f)
-  });
-  torrent_client.client.peer.update_queue = function i() {
-    if(cljs.core.deref.call(null, g).call(null, "\ufdd0'outstanding") < torrent_client.client.peer.max_outstanding) {
-      var b = cljs.core.first.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")));
-      if(cljs.core.truth_(b)) {
-        return torrent_client.client.peer.request_piece.call(null, b), i.call(null)
-      }
-    }
-    return null
-  };
-  torrent_client.client.peer.request_piece = function(b) {
-    torrent_client.client.pieces.work_piece_BANG_.call(null, a, b);
-    var c = cljs.core.seq.call(null, torrent_client.client.pieces.piece_blocks.call(null, a, b));
-    if(cljs.core.truth_(c)) {
-      var d = cljs.core.first.call(null, c);
-      cljs.core.nth.call(null, d, 0, null);
-      for(cljs.core.nth.call(null, d, 1, null);;) {
-        var e = d, m = cljs.core.nth.call(null, e, 0, null), n = cljs.core.nth.call(null, e, 1, null), o = c;
-        cljs.core.swap_BANG_.call(null, g, function() {
-          return function(a) {
-            return cljs.core.update_in.call(null, a, cljs.core.PersistentVector.fromArray(["\ufdd0'outstanding"]), cljs.core.inc)
-          }
-        }(d, c, e, m, n, o));
-        torrent_client.client.protocol.main.send_request.call(null, f, b, m, n);
-        d = cljs.core.next.call(null, o);
-        if(cljs.core.truth_(d)) {
-          c = d, d = cljs.core.first.call(null, c)
-        }else {
-          return null
-        }
-      }
-    }else {
-      return null
-    }
-  };
-  b = waltz.state.state_STAR_.call(null);
-  waltz.state.add_state.call(null, e, "\ufdd0'init", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_handshake.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'sent-handshake", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_bitfield.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'sent-bitfield", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'choked-not-interested", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_interested.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'choked-interested", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    return torrent_client.client.protocol.main.send_not_interested.call(null, f)
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-not-interested", b);
-  b = waltz.state.in_STAR_.call(null, waltz.state.state_STAR_.call(null), function() {
-    torrent_client.client.protocol.main.send_interested.call(null, f);
-    return cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield")))) ? torrent_client.client.peer.update_queue.call(null) : waltz.state.set.call(null, e, "\ufdd0'not-choked-not-interested")
-  });
-  waltz.state.add_state.call(null, e, "\ufdd0'not-choked-interested", b);
-  cljs.core.truth_(d) && (console.log("INITIATE HANDSHAKE"), waltz.state.set_ex.call(null, e, "\ufdd0'init", "\ufdd0'sent-handshake"));
-  return g
-};
-torrent_client.client.peer.generate_peer = function(a, b, c, d) {
-  console.log("generate-peer", c, d);
-  return torrent_client.client.peer.peer_machine.call(null, a, b, cljs.core.ObjMap.fromObject(["\ufdd0'peer-id"], {"\ufdd0'peer-id":c}), d)
-};
-console.log("loaded js");
-torrent_client.client.peers = {};
-torrent_client.client.peers.optimistic_unchoke_period = 1E4;
-torrent_client.client.peers.download_count = 4;
-torrent_client.client.peers.peers = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.peers.unchoked = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject([], {}));
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'started-torrent"]), function() {
-  return(new goog.Timer(torrent_client.client.peers.optimistic_unchoke_period)).start()
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'paused-torrent"]), function() {
-  return null
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'add-channel"]), function(a, b) {
-  var c = cljs.core.nth.call(null, b, 0, null), d = cljs.core.nth.call(null, b, 1, null), e = cljs.core.nthnext.call(null, b, 2), e = cljs.core.contains_QMARK_.call(null, cljs.core.set.call(null, e), "\ufdd0'handshake"), f = d.label, g = cljs.core.deref.call(null, torrent_client.client.torrents.torrents).call(null, f), c = torrent_client.client.peer.generate_peer.call(null, g, d, c, e);
-  console.log("peer", c);
-  d.close = function() {
-    debugger;
-    return torrent_client.client.peers.create_data_channel.call(null, torrent_client.client.peers.connection, f)
-  };
-  return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.peers, cljs.core.partial.call(null, cljs.core.merge_with, cljs.core.concat), cljs.core.PersistentArrayMap.fromArrays([f], [cljs.core.PersistentVector.fromArray([c])]))
-});
-torrent_client.client.core.dispatch.react_to.call(null, cljs.core.set(["\ufdd0'receive-not-interested", "\ufdd0'receive-interested"]), function(a, b) {
-  return torrent_client.client.peers.change_interested.call(null, cljs.core.deref.call(null, b).call(null, "\ufdd0'pretty-info-hash"))
-});
-torrent_client.client.peers.set_unchoked_BANG_ = function(a) {
-  var b = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
-  if(cljs.core.truth_(b)) {
-    var c = cljs.core.sort_by.call(null, cljs.core.comp.call(null, cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested", "\ufdd0'upload"), cljs.core.deref), b), b = cljs.core.juxt.call(null, "\ufdd0'optimistic", "\ufdd0'interested").call(null, cljs.core.deref.call(null, cljs.core.first.call(null, c)));
-    cljs.core._EQ_.call(null, cljs.core.PersistentVector.fromArray([!0, !1]), b);
-    var d = cljs.core.count.call(null, c) < (cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4) ? cljs.core.count.call(null, c) : cljs.core.truth_(torrent_client.client.peers.first_peer_unop) ? 5 : 4, b = cljs.core.subvec.call(null, c, 0, d), c = d < cljs.core.count.call(null, c) ? cljs.core.subvec.call(null, c, d) : null, e = cljs.core.seq.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), b));
-    if(cljs.core.truth_(e)) {
-      for(d = cljs.core.first.call(null, e);;) {
-        if(torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, d).call(null, "\ufdd0'peer-id")])), d = cljs.core.next.call(null, e), cljs.core.truth_(d)) {
-          e = d, d = cljs.core.first.call(null, e)
-        }else {
-          break
-        }
-      }
-    }
-    d = cljs.core.seq.call(null, cljs.core.remove.call(null, "\ufdd0'choking", cljs.core.map.call(null, function(a) {
-      return cljs.core.deref.call(null, a)
-    }, c)));
-    if(cljs.core.truth_(d)) {
-      for(c = cljs.core.first.call(null, d);;) {
-        if(torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'choke", cljs.core.deref.call(null, c).call(null, "\ufdd0'peer-id")])), c = cljs.core.next.call(null, d), cljs.core.truth_(c)) {
-          d = c, c = cljs.core.first.call(null, d)
-        }else {
-          break
-        }
-      }
-    }
-    return cljs.core.swap_BANG_.call(null, torrent_client.client.peers.unchoked, cljs.core.assoc, a, b)
-  }
-  return null
-};
-torrent_client.client.peers.unoptimistic = function(a) {
-  a = cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a);
-  return cljs.core.truth_(a) ? (a = cljs.core.first.call(null, cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), a)), torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unoptimistic", cljs.core.deref.call(null, a).call(null, "\ufdd0'peer-id")]))) : null
-};
-torrent_client.client.peers.optimistic_unchoke = function(a) {
-  if(cljs.core.contains_QMARK_.call(null, cljs.core.deref.call(null, torrent_client.client.peers.peers), a)) {
-    var b = cljs.core.remove.call(null, cljs.core.comp.call(null, "\ufdd0'optimistic", cljs.core.deref), cljs.core.filter.call(null, cljs.core.comp.call(null, "\ufdd0'choking", cljs.core.deref), cljs.core.deref.call(null, torrent_client.client.peers.peers).call(null, a))), b = cljs.core.rand_nth.call(null, b);
-    torrent_client.client.core.dispatch.fire.call(null, cljs.core.PersistentVector.fromArray(["\ufdd0'unchoke-peer", cljs.core.deref.call(null, b).call(null, "\ufdd0'peer-id")]));
-    return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
-  }
-  return null
-};
-torrent_client.client.peers.change_interested = function(a) {
-  return torrent_client.client.peers.set_unchoked_BANG_.call(null, a)
-};

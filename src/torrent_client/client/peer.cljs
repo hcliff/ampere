@@ -153,6 +153,7 @@
       (in [] (protocol/send-not-interested bittorrent-client)))
 
     ; This is when downloading actually occurs
+    ; TODO: this can be optimised
     (defstate me :not-choked-interested 
       (in []
         (protocol/send-interested bittorrent-client)

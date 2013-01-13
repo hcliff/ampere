@@ -77,6 +77,28 @@
             (submit-button {:class "btn btn-primary" :form "seed-form"} "create")]
           ]
 
+        [:div#about-modal.modal.hide
+          [:div.modal-header
+            [:h3 "Ampere"]
+            [:button.close {:type "button" :data-dismiss "modal"}]]
+          [:div.modal-body
+            [:pre 
+              "Ampere was built by " 
+              [:a {:href "http://github.com/hcliff" :target "_blank"} "Henry Clifford"]]
+            [:pre 
+              "Building on the efforts of others"
+              [:ul
+                [:li
+                  [:a {:href "https://github.com/piranna" :target "_blank"} "Piranna"]]
+                [:li
+                  [:a {:href "http://nakkaya.com" :target "_blank"} "Nakkaya"]]
+              ]]
+            [:pre "Ampere is licensed under the MIT license"]
+            [:pre 
+              "You can contribute or fork ampere "
+              [:a {:href "http://github.com/hcliff/ampere" :target "_blank"} "on github"]]
+            ]]
+
         [:div.navbar.navbar-fixed-top
           [:div.navbar-inner
             [:div.container-fluid
@@ -91,7 +113,10 @@
                       "Create Torrent")]
                   [:li
                     (link-to {:role "button" :data-toggle "modal"} "#seed-modal" 
-                      "Seed Torrent")]]]
+                      "Seed Torrent")]
+                  [:li
+                    (link-to {:role "button" :data-toggle "modal"} "#about-modal" 
+                      "About")]]]
           ]]]
         [:div.container-fluid
           (link-to {:id "demo-torrent"} "/Rescue%20You.mp3.torrent"
