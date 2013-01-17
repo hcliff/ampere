@@ -21309,10 +21309,12 @@ torrent_client.client.peer.peer_machine = function(a, b, c, d) {
     return torrent_client.client.protocol.main.send_unchoke.call(null, f)
   });
   torrent_client.client.peer.update_queue = function i() {
-    cljs.core.truth_(function() {
-      var b = cljs.core.deref.call(null, g).call(null, "\ufdd0'outstanding") < torrent_client.client.peer.max_outstanding;
-      return b && (b = cljs.core.not.call(null, cljs.core.empty_QMARK_.call(null))) ? (b = torrent_client.client.peer.shuffle.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"))), b = cljs.core.first.call(null, b), cljs.core.truth_(b) ? (torrent_client.client.peer.request_piece.call(null, b), i.call(null)) : null) : b
-    }());
+    if(cljs.core.deref.call(null, g).call(null, "\ufdd0'outstanding") < torrent_client.client.peer.max_outstanding) {
+      var b = torrent_client.client.peer.shuffle.call(null, torrent_client.client.pieces.wanted_pieces.call(null, a, cljs.core.deref.call(null, g).call(null, "\ufdd0'bitfield"))), b = cljs.core.first.call(null, b);
+      if(cljs.core.truth_(b)) {
+        return torrent_client.client.peer.request_piece.call(null, b), i.call(null)
+      }
+    }
     return null
   };
   torrent_client.client.peer.request_piece = function(b) {
