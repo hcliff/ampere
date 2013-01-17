@@ -122,11 +122,11 @@
 
     (defn update-queue []
       "Saturate the peers queue with block requests"
-      (if (< (@peer-data :outstanding) max-outstanding)
-        (let [pieces (shuffle (wanted-pieces torrent (@peer-data :bitfield)))]
-          (when-let [piece-index (first pieces)]
-            (request-piece piece-index)
-            (update-queue)))))
+      (let [pieces (wanted-pieces torrent (@peer-data :bitfield))]
+        (if (and (< (@peer-data :outstanding) max-outstanding)
+                 (not-empty pieces))
+          (request-piece (first pieces))
+          (update-queue))))
 
     (defn request-piece [piece-index]
       "Given a piece index request its component blocks"
