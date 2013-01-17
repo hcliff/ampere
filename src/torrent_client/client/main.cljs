@@ -325,6 +325,7 @@
 (document-ready (fn [e]
   (dispatch/fire :document-ready)))
 
+; TODO: A/B test this to minimise leechers
 (on $window :beforeunload (fn [_]
   (if-not (zero? (count (filter active? @torrents)))
     "You still have active torrents")))

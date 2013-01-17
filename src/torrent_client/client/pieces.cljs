@@ -85,6 +85,7 @@
   (let [bitfield (@torrent :bitfield)
         pieces-prior (take piece-index bitfield)
         pieces-written (count (remove zero? pieces-prior))]
+    (.log js/console "calc piece-offset" piece-index pieces-prior pieces-written)
     (* pieces-written (@torrent :piece-length))))
 
 (defn piece-blocks
@@ -153,8 +154,7 @@
   (swap! queue (partial merge-with concat) {(hash queue-key) [queue-data]}))
 
 (defn consume! [queue queue-key]
-  (swap! queue assoc (hash queue-key) (rest (@queue (hash queue-key)))))
-
+  (swap! queue #(update-in % [(hash queue-key)] rest)))
 
 (dispatch/react-to #{:receive-block} (fn [_ [torrent piece-index begin data]]
   ; Add this piece to the queue of pieces to write
@@ -189,46 +189,48 @@
 (dispatch/react-to #{:receive-piece} (fn [_ [info-hash piece-index piece]]
   ; Grab their meta info
   (let [torrent (@torrents info-hash)
-        ; TODO: change to pieces prior
-        piece-offset (piece-offset torrent piece-index)
         files (filter #(contains? % piece-index) (@files info-hash))]
     ; For every file that needs this piece
     (doseq [file files]
-      (let [; Get the data stored in the meta about this files pieces
-            {:keys [pos-start pos-end]} (meta file)
-            ; where in this file should we seek too
-            seek-position (max 0 (- piece-offset pos-start))
-            ; trim the start of the piece (inverse of seek)
-            piece-start (max 0 (- pos-start piece-offset))
-            ; trim the end of the piece
-            piece-end (- (min (count piece) (- pos-end pos-start))
-                         piece-start)
-            piece-data (subarray (.-byte-array piece) piece-start piece-end)]
-        ; Add this to list of pieces to write for this file
-        (queue! file-write-queue file [piece-index seek-position piece-data])
-        ; And potentially initiate a writer
-        (.log js/console "we should now be writing")
-        (dispatch/fire :write-file [torrent file])
-  )))))
+      ; Add this to list of pieces to write for this file
+      (queue! file-write-queue file [piece-index file piece])
+      ; And potentially initiate a writer
+      (.log js/console "we should now be writing")
+      (dispatch/fire :write-file [torrent file])))))
 
 (dispatch/react-to #{:write-file} (fn [_ [torrent file]]
-  ; This will simply fail if a writer exists
-  (let-async [writer (entry/create-writer (.-file file))]
-    (seek-then-write torrent file writer))))
+  ; Only kick off the writing if it's not allready running
+  (if (= 1 (count (@file-write-queue (hash file))))
+    (let-async [writer (entry/create-writer (.-file file))]
+      (seek-then-write torrent file writer)))))
+
+(defn- truncate-piece [torrent piece-index file piece]
+  (let [piece-offset (piece-offset torrent piece-index)
+        ; Get the data stored in the meta about this files pieces
+        {:keys [pos-start pos-end]} (meta file)
+        ; where in this file should we seek too
+        seek-position (max 0 (- piece-offset pos-start))
+        ; trim the start of the piece (inverse of seek)
+        piece-start (max 0 (- pos-start piece-offset))
+        ; trim the end of the piece
+        piece-end (- (min (count piece) (- pos-end pos-start))
+                     piece-start)
+        piece-data (subarray (.-byte-array piece) piece-start piece-end)]
+    [seek-position piece-data]))
 
 (defn- seek-then-write [torrent file writer]
   ; Grab the next piece when possible
   (if-let [next-piece (first (@file-write-queue (hash file)))]
     ; Destructure seperate to the if-let
     ; (otherwise when clause allways executes)
-    (let [[piece-index seek-position piece-data] next-piece]
-      (.log js/console "about to write" next-piece)
+    (let [[piece-index _ _] next-piece
+          [seek-position piece-data] (apply truncate-piece torrent next-piece)]
       ; When the piece finishes writing
       (set! (.-onwriteend writer) (fn [_]
         ; Consume this piece from the queue
         (consume! file-write-queue file)
         ; And inform that it has been written
-        (.log js/console "finished writing!")
+        (.log js/console "finished writing!" seek-position piece-index)
         (dispatch/fire :written-piece [torrent piece-index])
         ; grab the next one if applicable
         (seek-then-write torrent file writer)))
