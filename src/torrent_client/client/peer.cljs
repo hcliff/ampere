@@ -125,7 +125,7 @@
       (let [pieces (wanted-pieces torrent (@peer-data :bitfield))]
         (if (and (< (@peer-data :outstanding) max-outstanding)
                  (not-empty pieces))
-          (request-piece (first pieces))
+          (request-piece (rand-nth pieces))
           (update-queue))))
 
     (defn request-piece [piece-index]

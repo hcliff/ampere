@@ -27,8 +27,7 @@
 (dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
   "A file has been added to this torrent"
   (let [file (generate-file torrent file-entry file-data)]
-    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]})
-  )))
+    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]}))))
 
 (defn generate-file [torrent file-entry file-data]
   (let [boundaries (generate-block-boundaries torrent file-data)]
@@ -113,8 +112,10 @@
                 fileb (entry/file (.-file file))
                 data (filesystem/filereader fileb)]
       (.log js/console "get-file-block" offset length ((meta file) :pos-end) (.-byteLength data))
-      (success-callback (uint8-array data offset length))
-      )))
+      ; H.C: introduced when in testing ubuntu started trimming the file end for some reason
+      (try
+        (success-callback (uint8-array data offset length))
+        (catch js/Exception _ (.error js/console "file may be corrupt"))))))
 
 ; TODO rewrite to grab piece and hold it until all
 ; the blocks have been requested
@@ -156,6 +157,7 @@
 (defn consume! [queue queue-key]
   (swap! queue #(update-in % [(hash queue-key)] rest)))
 
+; TODO: refactor this, far too long and complex
 (dispatch/react-to #{:receive-block} (fn [_ [torrent piece-index begin data]]
   ; Add this piece to the queue of pieces to write
   (let [info-hash (@torrent :pretty-info-hash)
@@ -179,12 +181,12 @@
           ; If the hash of the piece we have is correct, use the piece
           (if (= (hash piece) (nth (@torrent :pieces-hash) piece-index))
             (dispatch/fire :receive-piece [info-hash piece-index piece])
-            ; Otherwise destroy it and announce the invalidity
-            (do
-              (.error js/console "invalid hash" piece-index)
-              (dispatch/fire :invalid-piece [torrent piece-index]))
+            (dispatch/fire :invalid-piece [torrent piece-index]))
       ))))
   )))
+
+(dispatch/react-to #{:invalid-piece} (fn [_ [_ piece-index]]
+  (.error js/console "invalid hash" piece-index)))
 
 (dispatch/react-to #{:receive-piece} (fn [_ [info-hash piece-index piece]]
   ; Grab their meta info

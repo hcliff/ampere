@@ -64,8 +64,7 @@
 
     :else
     (let [byte-array (js/Uint8Array. (clj->js bits))]
-      (Bitfield. byte-array 0))
-  ))
+      (Bitfield. byte-array 0))))
 
 (defn fill-bitfield 
   "Given a bitfield mark that we have all the pieces"

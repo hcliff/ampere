@@ -12,8 +12,7 @@
 (def peer-id (atom nil))
 
 (dispatch/react-to #{:document-ready} (fn [_]
-  (reset! peer-id (generate-peer-id))
-  ))
+  (reset! peer-id (generate-peer-id))))
 
 (defn generate-peer-id []
   "Generate a unique 20 byte peer-id"

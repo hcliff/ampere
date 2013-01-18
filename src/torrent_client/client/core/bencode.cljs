@@ -71,8 +71,7 @@
   (write [stream bytes]
     (if (number? bytes)
       (.push array bytes)
-      (.apply (.-push array) array bytes)))
-  )
+      (.apply (.-push array) array bytes))))
 
 (defn byte-array-output-stream []
   "Generate a new ByteArrayOutputStream with a native

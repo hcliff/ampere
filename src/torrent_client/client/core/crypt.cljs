@@ -49,8 +49,7 @@
                  ; Execute this formatter add the result to the data
                  (conj data (unpack-data formatter bytes))))
         ; And return the data when we're done
-        data)
-      )))
+        data))))
 
 (defmulti unpack-data (fn [format data] format))
 

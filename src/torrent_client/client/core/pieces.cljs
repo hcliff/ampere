@@ -83,5 +83,3 @@
     (doseq [block blocks]
       (.set byte-array (block :data) (block :begin)))
     (Piece. nil byte-array nil)))
-
-(.log js/console "hi")

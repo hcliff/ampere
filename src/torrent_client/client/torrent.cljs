@@ -37,8 +37,7 @@
       (let [new-total (+ total (get (first elements) :length))
             pos {:pos-start total :pos-end new-total}
             new-element (merge (first elements) pos)]
-        (recur (rest elements) new-total (conj new-elements new-element))
-      ))))
+        (recur (rest elements) new-total (conj new-elements new-element))))))
 
 (defn read-metainfo-byte-array 
   "Given a byte array of a torrent file, decode it then
@@ -141,8 +140,7 @@
             :let [entry (first (filter #(= (.-name %) (:path file)) files))]]
       (let-async [file-entry (write-input-to-file fs (:path file) entry)]
         (dispatch/fire :add-file [torrent file-entry file])
-        (success-callback file-entry)))
-  ))
+        (success-callback file-entry)))))
 
 (defn torrent-machine
   ; A hash of torrent information

@@ -11,7 +11,6 @@
   (:use
     [jayq.core :only [$ on attr document-ready empty text]]
     [torrent-client.jayq.core :only [append input-files event-files modal tab css]]
-    [torrent-client.jayq.async :only [ajax ajax-binary]]
     [torrent-client.client.waltz :only [machine]]
     [torrent-client.client.pieces :only [files]]
     [torrent-client.client.torrents :only [torrents]]
@@ -73,19 +72,18 @@
     (let [files (event-files e)
           ; check out how many .torrent files we have here
           metainfo (vec (filter metainfo-file? files))]
-    (cond
-      ; If just given torrents, download them
-      (and (= (count files) (count metainfo)))
-      (doseq [file files]
-        (dispatch/fire :add-metainfo-file file))
+      (cond
+        ; If just given torrents, download them
+        (and (= (count files) (count metainfo)))
+        (doseq [file files]
+          (dispatch/fire :add-metainfo-file file))
 
-      ; Given no .torrents, just files to create a torrent
-      (= (count metainfo) 0)
-      (dispatch/fire :add-torrent-files files)
+        ; Given no .torrents, just files to create a torrent
+        (= (count metainfo) 0)
+        (dispatch/fire :add-torrent-files files)
 
-      :else
-      (dispatch/fire :error "To load an existing .torrent use \"add torrent\""))
-    ))))
+        :else
+        (dispatch/fire :error "To load an existing .torrent use \"add torrent\""))))))
 
 (dispatch/react-to #{:add-torrent-files} (fn [_ files]
   (.modal $add-modal "hide")
@@ -131,8 +129,7 @@
   (.log js/console "fired submit")
   (let [metainfo (first (input-files ($ "[name=metainfo]" $seed-form)))
         file-entries [(first (input-files ($ "[name=files]" $seed-form)))]]
-    (dispatch/fire :add-metainfo-file-and-files [metainfo file-entries])
-  )))
+    (dispatch/fire :add-metainfo-file-and-files [metainfo file-entries]))))
 
 (on $demo-torrent :click (fn [e]
   "When the user clicks the demo, download the .torrent and use it"
@@ -143,8 +140,19 @@
       (css $demo-torrent :display "none")
       ; Given a .torrent URL, download it then use it
       (let-async [file (ajax-binary url options)]
-        (dispatch/fire :add-metainfo-byte-array file)
-  ))))
+        (dispatch/fire :add-metainfo-byte-array file)))))
+
+; jQuery doesn't support binary requests
+(defn ajax-binary [url settings]
+  (async [success-callback]
+    (let [xhr (js/XMLHttpRequest.)]
+      (set! (.-responseType xhr) "arraybuffer")
+      (set! (.-onload xhr) (fn [e]
+        (this-as self
+          (if (= 200 (.-status self))
+            (success-callback (.-response self))))))
+      (.open xhr "GET" url true)
+      (.send xhr))))
 
 ;;************************************************
 ;; Templating
@@ -319,8 +327,7 @@
   (if (and (false? old-val) new-val)
     (.log js/console "gone online"))
   (if (and old-val (false? new-val))
-    (.log js/console "gone offline!"))
-  ))
+    (.log js/console "gone offline!"))))
 
 (document-ready (fn [e]
   (dispatch/fire :document-ready)))

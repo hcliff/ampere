@@ -131,7 +131,6 @@
       ; Otherwise connect first
       (let [peer-connection (peer-connection-ice)
             offer-description (session-description "offer" offer-description)]
-        
         ; When we create a new peer connection listen for any channels
         ; allow multiple channels to one peer by sniffing the channel label
         (set! (.-ondatachannel peer-connection) (fn [event]
@@ -147,6 +146,5 @@
             (swap! connections assoc peer-id peer-connection)
             (.log js/console "about to success")
             (success-callback peer-connection)) 
-          error-callback)
-      ))))
+          error-callback)))))
 

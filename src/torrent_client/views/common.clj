@@ -1,12 +1,17 @@
 (ns torrent-client.views.common
   (:require [noir.cljs.core :as cljs])
   (:use [noir.core :only [defpartial]]
-        [torrent-client.hiccup.page :only [include-less]]
         [hiccup.page :only [html5 include-css include-js]]
         [hiccup.form :only [label file-upload submit-button text-field]]
         [hiccup.element :only [link-to]]
         [hiccup.util]
         [environ.core]))
+
+(defn include-less
+  "Include a list of external stylesheet files."
+  [& styles]
+  (for [style styles]
+    [:link {:type "text/less", :href (to-uri style), :rel "stylesheet"}]))
 
 (defpartial layout [& content]
   (with-base-url (env :base-url)

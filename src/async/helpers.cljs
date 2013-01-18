@@ -1,6 +1,6 @@
 (ns async.helpers
-  (:use-macros 
-    [async.macros :only [async let-async]]))
+  (:use [jayq.util :only [clj->js]])
+  (:use-macros [async.macros :only [async let-async]]))
 
 ; NOTES
 ; use of futures would be nice, this would be ideal
@@ -30,7 +30,5 @@
           ; If every item has finished its async function
           (.log js/console "hurrarh!" data (count results) (count collection))
           (if (= (count results) (count collection))
-            (success-callback @results))
-        )))
-      results
-      )))
+            (success-callback @results)))))
+      results)))

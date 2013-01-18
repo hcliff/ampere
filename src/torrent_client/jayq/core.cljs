@@ -1,12 +1,33 @@
 (ns torrent-client.jayq.core
   (:use [jayq.util :only [clj->js]]))
 
+; Wrappers around jquery methods
+
 (defn append [$elem content]
   (if (sequential? content)
     ; TODO: Should be able to apply .append?
     (doseq [string content]
       (append $elem string))
     (.append $elem content)))
+
+(defn param [obj]
+  (.param js/jQuery (clj->js obj)))
+
+(defn css
+  ([$elem opts]
+     (.css $elem (clj->js opts)))
+  ([$elem p v]
+     (.css $elem (name p) v)))
+
+; Bootstrap methods
+
+(defn modal [$elem params]
+  (.modal $elem params))
+
+(defn tab [$elem params]
+  (.tab $elem params))
+
+; helpers with file objects
 
 (defn input-files [$elem]
   "Returns a vector of files for a given input"
@@ -24,19 +45,3 @@
                :let [value (aget filelist k)]
                :when (identical? (type value) js/File)] 
       value))))
-
-(defn param [obj]
-  (.log js/console "PARAM YO")
-  (.param js/jQuery (clj->js obj)))
-
-(defn modal [$elem params]
-  (.modal $elem params))
-
-(defn tab [$elem params]
-  (.tab $elem params))
-
-(defn css
-  ([$elem opts]
-     (.css $elem (clj->js opts)))
-  ([$elem p v]
-     (.css $elem (name p) v)))

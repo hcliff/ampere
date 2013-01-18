@@ -20,16 +20,13 @@
 
 (dispatch/react-to #{:document-ready} (fn []
   (let-async [database (db/open-database "ampere" "3.0" object-stores)]
-
     (let [transaction (db/create-transaction database ["metainfo"] "readonly")
           object-store (.objectStore transaction "metainfo")
           ; And finally fetch all our data from the metainfo objectStore
           objects (.getAll object-store)]
       ; Swap out the atom with our db connection
       (reset! connection database)
-
       ; When the entries are loaded from the db add them
       (.addCallback objects (fn [torrents]
         (doseq [torrent torrents]
-          (dispatch/trigger :add-metainfo-object torrent))))
-      ))))
+          (dispatch/trigger :add-metainfo-object torrent))))))))

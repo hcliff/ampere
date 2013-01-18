@@ -43,8 +43,7 @@
         ; Listen for socket events
         (on socket :need_offer #(dispatch/fire :need-offer [socket %]))
         (on socket :offer #(dispatch/fire :offer [socket %]))
-        (on socket :answer #(dispatch/fire :answer [socket %]))
-      ))))
+        (on socket :answer #(dispatch/fire :answer [socket %]))))))
 
 ;;************************************************
 ;; Reactions to changes in torrent state
@@ -98,12 +97,12 @@
     ; Check the peer requested a torrent we have
     (if-let [torrent (@torrents info_hash)]
       ; TODO: also check numwant
-      (emit tracker-socket :offer 
-        {:sdp sdp 
-         :info_hash info_hash 
-         :to_peer_id peer_id 
-         :peer_id @peer-id})
-  ))))
+      (emit tracker-socket :offer {
+        :sdp sdp 
+        :info_hash info_hash 
+        :to_peer_id peer_id 
+        :peer_id @peer-id
+        })))))
 
 (dispatch/react-to #{:offer} (fn [_ [tracker-socket {:keys [peer_id info_hash sdp]}]]
   "When the tracker sends an offer for a torrent connection
@@ -114,12 +113,12 @@
     (if-let [torrent (@torrents info_hash)]
       ; The client that sent the offer will create the datachannel after it
       ; gets this clients offer
-      (emit tracker-socket :answer
-        {:sdp sdp 
-         :info_hash info_hash 
-         :to_peer_id peer_id 
-         :peer_id @peer-id})
-    ))))
+      (emit tracker-socket :answer {
+        :sdp sdp 
+        :info_hash info_hash 
+        :to_peer_id peer_id 
+        :peer_id @peer-id
+        })))))
 
 (dispatch/react-to #{:answer} (fn [_ [tracker-socket {:keys [peer_id info_hash sdp]}]]
   "When the tracker sends an answer for an offer we send"
@@ -130,8 +129,7 @@
     ; When the channel we opened is successful announce it
     (set! (.-onopen channel) (fn [event]
       (.log js/console "datachannel onopen from peer" peer_id)
-      (dispatch/fire :add-channel [peer_id channel :handshake])))
-  )))
+      (dispatch/fire :add-channel [peer_id channel :handshake]))))))
 
 ;;************************************************
 ;; Statistics

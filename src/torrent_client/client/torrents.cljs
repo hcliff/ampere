@@ -10,8 +10,7 @@
 (dispatch/react-to #{:processed-torrent} (fn [_ torrent]
   (.log js/console "Adding to torrents atom" torrent)
   (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
-  (dispatch/fire :started-torrent torrent)
-  ))
+  (dispatch/fire :started-torrent torrent)))
 
 (dispatch/react-to #{:written-piece} (fn [_ [torrent _]]
   (let [pieces-written (inc (or (@torrent :pieces-written) 0))]
