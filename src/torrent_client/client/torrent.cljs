@@ -16,7 +16,8 @@
     [torrent-client.client.core.bencode :only [encode decode uint8-array]]
     [torrent-client.client.core.crypt :only [sha1 str->byte-array]]
     [torrent-client.client.storage :only [connection]]
-    [torrent-client.client.pieces :only [files]]
+    [torrent-client.client.pieces :only [files generate-file get-file-piece]]
+    [async.helpers :only [map-async]]
     )
   (:use-macros 
     [waltz.macros :only [in out defstate defevent]]
@@ -38,6 +39,40 @@
             pos {:pos-start total :pos-end new-total}
             new-element (merge (first elements) pos)]
         (recur (rest elements) new-total (conj new-elements new-element))))))
+
+(defn build-file-meta
+  "Given a list of files return their name and length"
+  [file]
+  {:name (.-name file) :length (.-size file)})
+
+(defn hashes
+  ([files] (hashes files 0 []))
+  ([files i output]
+    (async [success-callback _]
+      (hashes files i output success-callback)))
+  ([files i output success-callback]
+    (let-async [piece (get-file-piece files 16384 i)]
+      (if piece
+        (hashes files (inc i) (conj output (hash piece)) success-callback)
+        (success-callback output)))))
+
+(defn create-torrent [torrent-name tracker files]
+  (let [piece-length 16384
+        data {:name torrent-name :announce tracker :piece-length piece-length}
+        files-meta (set-file-data (map build-file-meta files))
+        files (map #(generate-file (atom data) % %2) files files-meta)
+        length (reduce + (map :length files-meta))
+        pieces 300]
+    (.log js/console "create-torrent")
+    (let-async [hashes (hashes files)
+                :let metainfo {
+                  :name torrent-name
+                  :announce tracker
+                  :pieces (apply str hashes)
+                  }]
+      ; Since the bulk of this is done async, fire a seperate event
+      ; for a seperate UI interaction
+      (dispatch/fire :torrent-built [metainfo (encode metainfo)]))))
 
 (defn read-metainfo-byte-array 
   "Given a byte array of a torrent file, decode it then
@@ -227,3 +262,8 @@
 (dispatch/react-to #{:add-metainfo-file-and-files} (fn [_ [metainfo-file files]]
   (let-async [metainfo (read-metainfo-file metainfo-file)]
     (torrent-machine metainfo files))))
+
+(dispatch/react-to #{:create-torrent} (fn [_ {:keys [name tracker files]}]
+  (create-torrent name tracker files)))
+
+(.log js/console "EOF")

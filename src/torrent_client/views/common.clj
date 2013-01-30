@@ -39,13 +39,12 @@
             [:div.control-group
               (label {:class "control-label"} "tracker" "tracker")
               [:div.controls
-                (text-field {:type "url" :placeholder "http://"} "tracker")]]
+                (text-field {:type "url" :value "http://ec2-184-73-103-94.compute-1.amazonaws.com:8010"} "tracker")]]
             [:div.control-group
               (label {:class "control-label"} "files" "files")
               [:div.controls
                 [:div.files]
-                [:span.help-inline "Drag files from your computer to add them"]]
-              ]]
+                [:span.help-inline "Drag files from your computer to add them"]]]]
           [:div.modal-footer
             [:a.btn {:data-dismiss "modal"} "close"]
             (submit-button {:class "btn btn-primary" :form "create-form"} "create")]
@@ -124,6 +123,7 @@
                       "About")]]]
           ]]]
         [:div.container-fluid
+          [:div#alerts.row-fluid]
           (link-to {:id "demo-torrent"} "/Rescue%20You.mp3.torrent"
             [:div.row-fluid
               [:div.info

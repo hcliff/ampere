@@ -43,7 +43,7 @@
 
   ICounted
   ; Return the number of bits in the bitfield
-  (-count [_] (* 8 (count byte-array)))
+  (-count [_] (- (* 8 (count byte-array)) i))
 
   )
 

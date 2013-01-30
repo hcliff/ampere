@@ -4,12 +4,16 @@
     [torrent-client.client.bitfield :as bitfield]
     [goog.events :as events]
     [goog.events.FileDropHandler :as FileDropHandler]
+    [goog.Uri :as Uri]
+    [goog.Uri.QueryData :as QueryData]
     [goog.string :as gstring]
     [clojure.string :as string]
     [waltz.state :as state]
-    [crate.core :as crate])
+    [crate.core :as crate]
+    [crate.form :as form])
   (:use
-    [jayq.core :only [$ on attr document-ready empty text]]
+    [jayq.core :only [$ on attr document-ready empty text val prepend]]
+    [jayq.util :only [clj->js]]
     [torrent-client.jayq.core :only [append input-files event-files modal tab css]]
     [torrent-client.client.waltz :only [machine]]
     [torrent-client.client.pieces :only [files]]
@@ -17,7 +21,7 @@
     [crate.binding :only [bound]]
     [goog.format :only [numBytesToString]])
   (:use-macros
-    [async.macros :only [let-async]]
+    [async.macros :only [async let-async]]
     [waltz.macros :only [in out defstate defevent]]
     [crate.def-macros :only [defpartial]]))
 
@@ -42,12 +46,14 @@
 
 (def $document ($ js/document))
 (def $window ($ js/window))
+(def $body ($ "body"))
 (def $add-modal ($ "#add-modal"))
 (def $add-form ($ "#add-form"))
 (def $create-modal ($ "#create-modal"))
 (def $create-form ($ "#create-form"))
 (def $seed-modal ($ "#seed-modal"))
 (def $seed-form ($ "#seed-form"))
+(def $alerts ($ "#alerts"))
 (def $torrents ($ "tbody"))
 (def $demo-torrent ($ "#demo-torrent"))
 
@@ -99,13 +105,43 @@
   (.modal $create-modal "hide")
   (.modal $add-modal "hide")))
 
+(dispatch/react-to #{:torrent-built} (fn [_ [metainfo data]]
+  (.modal $add-modal "hide")
+  (.modal $create-modal "hide")
+  ; See the magnet spec for an explanation of these values
+  ; http://en.wikipedia.org/wiki/Magnet_URI_scheme
+  (let [base-url "http://hcliff.github.com/ampere"
+        querystring {
+          :tr (metainfo :announce)
+          :xt (str "urn:btih" (hash metainfo))
+          :dn (metainfo :name)}
+        querydata (QueryData/createFromMap (clj->js querystring))
+
+        ; Build the .torrent for the user to download
+        torrent-file (js/Blob. data)
+
+        ; Render the modal dialog
+        modal-content {
+          :magnet-url (str (.setQueryData (Uri/parse base-url) querydata))
+          :torrent-file-url (.createObjectURL (.-URL js/window) torrent-file)
+          :torrent-file-name (str (metainfo :name) ".torrent")
+          :name (metainfo :name)}
+        $built-modal ($ (built-modal modal-content))]
+    ; Unlike other modals there can be multiple built modals
+    ; so it must be created as a partial
+    (prepend $body $built-modal)
+    (.modal $built-modal "show"))))
+
 (on $create-form :submit (fn [e]
   (.preventDefault e)
+  (.log js/console "tracker" (val ($ "[name=tracker]" $create-form)))
   (dispatch/fire :create-torrent {
     :name (val ($ "[name=name]" $create-form))
     :tracker (val ($ "[name=tracker]" $create-form))
     :files @create-form-files})
-  (modal $create-modal "hide")))
+  (modal $create-modal "hide")
+  (let [building-alert (alert "Building your file...")]
+    (append $alerts building-alert))))
 
 (on $create-modal :hide (fn [e]
   ; Clear input values
@@ -155,19 +191,37 @@
       (.send xhr))))
 
 ;;************************************************
-;; Templating
+;; Templates
 ;;************************************************
 
-(def elements (atom {}))
-
-(dispatch/react-to #{:started-torrent} (fn [_ torrent]
-  (let [element (torrent-row torrent)]
-    ; Render the torrent row and add it to the atom
-    (swap! elements assoc (@torrent :pretty-info-hash) element)
-    (append $torrents element))))
+(defpartial alert [content]
+  [:div.alert
+    [:button.close {:type "button" :data-dismiss "alert"} "×"]
+    content])
 
 (defpartial torrent-file-badge [content]
   [:span.label (.-name content)])
+
+
+(defpartial built-modal [content]
+  [:div.modal
+    [:div.modal-header
+      [:h3 (str (content :name) " is ready to share!")]
+      [:button.close {:type "button" :data-dismiss "modal"}]]
+    [:form#create-form.modal-body.form-horizontal
+      [:div.control-group
+        (form/label {:class "control-label"} "link" "download link")
+        [:div.controls
+          (form/text-field {:value (content :magnet-url) :class "input-xlarge"} "link")]]
+      [:div.control-group
+        [:div.controls
+          [:a#built-download {
+            :download (content :torrent-file-name)
+            :title (str "download " (content :torrent-file-name)) 
+            :href (content :torrent-file-url)} 
+            "or download the .torrent"]]]]
+    [:div.modal-footer
+      [:a.btn {:data-dismiss "modal"} "close"]]])
 
 (defn bound-class 
   "Given a func that returns boolean display a css class"
@@ -231,6 +285,18 @@
         [:button.btn {:disabled true}
           [:i.icon-trash]]
       ]]])
+
+;;************************************************
+;; Rendering content
+;;************************************************
+
+(def elements (atom {}))
+
+(dispatch/react-to #{:started-torrent} (fn [_ torrent]
+  (let [element (torrent-row torrent)]
+    ; Render the torrent row and add it to the atom
+    (swap! elements assoc (@torrent :pretty-info-hash) element)
+    (append $torrents element))))
 
 (defn active? [torrent]
   "Take either a collection or atom and return it's active status"

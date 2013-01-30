@@ -19,8 +19,12 @@
   ; Does this file contain a given block index
   (-lookup [this k]
     (-lookup this k nil))
+  ; H.C todo, impliment nth-child and clean this up
   (-lookup [this k not-found]
-    (-contains-key? this k))
+    ; (js* "debugger;")
+    (if (-contains-key? this k)
+      true
+      not-found))
 
   Fn
   IFn
@@ -33,9 +37,9 @@
 
   IAssociative
   (-contains-key? [this k]
-    "Check if a block-index is required by this file"
-    (if-not (nil? meta)
-      (<= (meta :block-start) k (meta :piece-end))))
+    "Check if a piece-index is required by this file"
+    (and (not (nil? meta))
+         (<= (meta :piece-start) k (meta :piece-end))))
 
   IHash
   (-hash [o]
@@ -72,7 +76,7 @@
 
   )
 
-(defn piece 
+(defn blocks->piece 
   "Build a piece from its component blocks"
   [blocks]
   (let [blocks (sort :begin blocks)
@@ -82,4 +86,7 @@
     ; Then add all the pieces at their correct offset
     (doseq [block blocks]
       (.set byte-array (block :data) (block :begin)))
-    (Piece. nil byte-array nil)))
+    (piece byte-array)))
+
+(defn piece [byte-array]
+  (Piece. nil byte-array nil))

@@ -22,13 +22,13 @@
   return the result"
   [f c1]
   (async [success-callback]
-    (let [results (atom [])]
+    (let [results (atom {})
+          c1 (map-indexed vector c1)]
       ; Apply the given function to every collection element
-      (doseq [item c1]
+      (doseq [[index item] c1]
         ((f item) (fn [data]
-          (swap! conj results data)
+          (swap! results assoc index data)
           ; If every item has finished its async function
-          (.log js/console "hurrarh!" data (count results) (count collection))
-          (if (= (count results) (count collection))
-            (success-callback @results)))))
-      results)))
+          (.log js/console "hurrarh!" data (count @results) (count c1))
+          (if (= (count @results) (count c1))
+            (success-callback (vals @results)))))))))

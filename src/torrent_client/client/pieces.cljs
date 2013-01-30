@@ -29,18 +29,20 @@
   (let [file (generate-file torrent file-entry file-data)]
     (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]}))))
 
-(defn generate-file [torrent file-entry file-data]
-  (let [boundaries (generate-block-boundaries torrent file-data)]
-    ; Attach information on the block boundaries to the file
-    (with-meta (pieces/piece-file file-entry) (merge file-data boundaries))))
+(defn generate-file 
+  ([torrent file-entry] (generate-file torrent file-entry {}))
+  ([torrent file-entry file-data]
+    (let [boundaries (generate-block-boundaries torrent file-data)]
+      ; Attach information on the block boundaries to the file
+      (with-meta (pieces/piece-file file-entry) (merge file-data boundaries)))))
 
 (defn- generate-block-boundaries [torrent file]
   "Given a file and the torrent block-length calculate the
   blocks that a file needs, note that two files may require
   the same block due to overlap between the head and tail of
   the files. (e.g block 3 has the head of file b and tail of a)"
-  {:block-start (Math/floor (/ (file :pos-start) (@torrent :piece-length)))
-   :block-end   (Math/ceil  (/ (file :pos-end)   (@torrent :piece-length)))})
+  {:piece-start (Math/floor (/ (file :pos-start) (@torrent :piece-length)))
+   :piece-end   (Math/floor  (/ (file :pos-end)   (@torrent :piece-length)))})
 
 ; TODO: switch this over to rarity based search
 (defn wanted-pieces
@@ -102,20 +104,33 @@
         ; Return all the piece parts
         blocks))))
 
-(defn- get-file-block
+(defn- get-file-section
+  "Given a raw file, offset and length return a byte array"
   [offset length file]
   (async [success-callback _]
     (let-async [:let offset (max offset ((meta file) :pos-start))
                 :let end (min (+ offset length) ((meta file) :pos-end))
                 :let length (- end offset)
                 ; Get a filereader on the piece-files underlying file
-                fileb (entry/file (.-file file))
-                data (filesystem/filereader fileb)]
+                ; fileb (entry/file (.-file file))
+                data (filesystem/filereader (.-file file))]
       (.log js/console "get-file-block" offset length ((meta file) :pos-end) (.-byteLength data))
       ; H.C: introduced when in testing ubuntu started trimming the file end for some reason
-      (try
-        (success-callback (uint8-array data offset length))
-        (catch js/Exception _ (.error js/console "file may be corrupt"))))))
+      ; (try
+      (success-callback (uint8-array data offset length))
+        ; (catch js/Error _ (.error js/console "file may be corrupt"))
+        )))
+
+(defn get-file-piece [files piece-length piece-index]
+  (async [success-callback _]
+    (let [offset (*  piece-index piece-length)
+          files (filter #(contains? % piece-index) files)]
+      (.log js/console "files with piece" (count files))
+      (if-not (empty? files)
+        ; Get a byte array subsection of the file then make a piece from it
+        (let-async [section (get-file-section offset piece-length (first files))]
+          (success-callback (pieces/piece section)))
+        (success-callback nil)))))
 
 ; TODO rewrite to grab piece and hold it until all
 ; the blocks have been requested
@@ -129,10 +144,9 @@
           ; stradles two files, establish which files use this block
           files (filter #(contains? % piece-index) (@files info-hash))]
       ; Retrieve the pieces from the files
-      (.log js/console "get-block" piece-index offset length)
-      ; (js* "debugger;")
+      (.log js/console "get-block" piece-index offset length (first files))
       ; TODO: support stradling files
-      (let-async [data (get-file-block block-offset length (first files))]
+      (let-async [data (get-file-section block-offset length (first files))]
         ; (.log js/console data)
         ; (.log js/console "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
         (success-callback data))
@@ -140,6 +154,12 @@
       ;   (success-callback (apply conj data)))
 
       )))
+
+(defn get-piece 
+  "Get the binary data for a piece, straddling files if neccisary"
+  [torrent piece-index]
+  (let [piece-offset (piece-offset torrent piece-index)]
+    (get-file-section piece-offset (@torrent :piece-length) file)))
 
 ; ;;************************************************
 ; ;; Wait for a block to have all its pieces before
@@ -175,15 +195,14 @@
     ; If we've fetched all the pieces for this block
     (let [blocks (get @pieces-to-write queue-key)]
       (if (= (count blocks) (count (piece-blocks torrent piece-index)))
-        (let [piece (pieces/piece blocks)
+        (let [piece (pieces/blocks->piece blocks)
               piece-hash (hash piece)]
           (.log js/console "piece hash" piece-hash (nth (@torrent :pieces-hash) piece-index))
           ; If the hash of the piece we have is correct, use the piece
           (if (= (hash piece) (nth (@torrent :pieces-hash) piece-index))
             (dispatch/fire :receive-piece [info-hash piece-index piece])
             (dispatch/fire :invalid-piece [torrent piece-index]))
-      ))))
-  )))
+      ))))))
 
 (dispatch/react-to #{:invalid-piece} (fn [_ [_ piece-index]]
   (.error js/console "invalid hash" piece-index)))
