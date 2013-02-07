@@ -1,5 +1,4 @@
 (ns torrent-client.views.common
-  (:require [noir.cljs.core :as cljs])
   (:use [noir.core :only [defpartial]]
         [hiccup.page :only [html5 include-css include-js]]
         [hiccup.form :only [label file-upload submit-button text-field]]
@@ -65,22 +64,6 @@
             (submit-button {:class "btn btn-primary" :form "add-form"} "create")]
           ]
 
-        [:div#seed-modal.modal.hide
-          [:div.modal-header
-            [:h3 "Seed a torrent"]
-            [:button.close {:type "button" :data-dismiss "modal"}]]
-          [:form#seed-form.modal-body.form-horizontal
-            [:div.control-group
-              (label {:class "control-label"} "metainfo" ".torrent")
-              [:div.controls (file-upload "metainfo")]]
-            [:div.control-group
-              (label {:class "control-label"} "files" ".torrent")
-              [:div.controls (file-upload "files")]]]
-          [:div.modal-footer
-            [:a.btn {:data-dismiss "modal"} "close"]
-            (submit-button {:class "btn btn-primary" :form "seed-form"} "create")]
-          ]
-
         [:div#about-modal.modal.hide
           [:div.modal-header
             [:h3 "Ampere"]
@@ -116,9 +99,6 @@
                     (link-to {:role "button" :data-toggle "modal"} "#create-modal" 
                       "Create Torrent")]
                   [:li
-                    (link-to {:role "button" :data-toggle "modal"} "#seed-modal" 
-                      "Seed Torrent")]
-                  [:li
                     (link-to {:role "button" :data-toggle "modal"} "#about-modal" 
                       "About")]]]
           ]]]
@@ -135,14 +115,16 @@
           [:div.row-fluid
             [:ul.nav.nav-tabs
               [:li.active 
-                [:a#downloading-tab {:data-toggle "tab"}
+                [:a#downloading-tab.active {:data-toggle "tab" :href "#torrents"}
                   "Downloading " [:span#downloading-count.badge "0"]]]
               [:li
-                [:a#completed-tab {:data-toggle "tab"}
+                [:a#completed-tab {:data-toggle "tab" :href "#torrents"}
                   "Completed " [:span#completed-count.badge "0"]]]
-              ]
+              [:li
+                [:a#settings-tab {:data-toggle "tab" :href "#settings"}
+                  "Settings"]]]
             [:div.tab-content
-              [:div#hom.tab-pane-active
+              [:div#torrents.tab-pane.active
                 [:table.table.table-striped.body
                   [:thead
                     [:tr
@@ -153,6 +135,18 @@
                       [:th.actions ""]
                     ]]
                   [:tbody]
-                ]]]]]
-        (cljs/include-scripts)
+                ]]
+              [:div#settings.tab-pane
+                [:form.form-horizontal.offset4
+                  [:div.control-group
+                    (label {:class "control-label"} "settings-notifications" "browser notifications")
+                    [:div.controls
+                      [:a#settings-notifications.btn "Add browser notifications"]]]
+                  [:div.control-group
+                    (label {:class "control-label"} "settings-magnet" "magnet links")
+                    [:div.controls
+                      [:a#settings-magnet.btn "Handle magnet links"]]]
+                ]]
+                ]]]
+          (include-js "/cljs/bootstrap.js" "/js/monkey.js")
         ])))

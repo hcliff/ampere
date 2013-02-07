@@ -11,6 +11,7 @@ Built using clojurescript (that subsequently compiles down to javascript) and ut
 * HTML5 Filesystem
 * Websockets
 * Typed Arrays
+* IndexedDb
 
 ## Usage
 

@@ -1,13 +1,8 @@
 (ns torrent-client.client.connection
   (:require [torrent-client.client.core.dispatch :as dispatch]
             [torrent-client.client.polyfills.prefix :as prefix]
-            [goog.events :as events]
-            [waltz.state :as state])
-  (:use [jayq.util :only [clj->js]]
-        [torrent-client.client.waltz :only [machine transition]]
-        [waltz.state :only [trigger]])
-  (:use-macros [waltz.macros :only [in out defstate defevent]]
-               [async.macros :only [async let-async]]))
+            [goog.events :as events])
+  (:use-macros [async.macros :only [async let-async]]))
 
 ;;************************************************
 ;; NOTE

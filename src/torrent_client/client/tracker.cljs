@@ -4,7 +4,6 @@
     [goog.Timer :as Timer]
     [goog.events :as events])
   (:use
-    [jayq.util :only [clj->js]]
     [torrent-client.client.torrents :only [torrents]]
     [torrent-client.client.peer-id :only [peer-id]]
     [torrent-client.client.connection :only 

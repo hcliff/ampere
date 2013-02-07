@@ -3,9 +3,7 @@
     [goog.crypt :as crypt]
     [goog.crypt.Sha1 :as Sha1]
     [torrent-client.client.core.reader :as reader])
-  (:use 
-    [torrent-client.client.core.bencode :only [char]]
-    [jayq.util :only [clj->js]]))
+  (:use [torrent-client.client.core.bencode :only [char]]))
 
 (defn sha1 
   "A wrapper around the SHA class to get the

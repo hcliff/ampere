@@ -1,9 +1,7 @@
 (ns torrent-client.client.core.bencode
   (:require 
     [goog.crypt :as crypt]
-    [torrent-client.client.core.reader :as reader])
-  (:use
-    [jayq.util :only [clj->js]]))
+    [torrent-client.client.core.reader :as reader]))
 
 ; There must be a better way to do this
 (defn uint8-array

@@ -1,24 +1,36 @@
 (ns torrent-client.client.core.db
   (:require [goog.db :as db]
+            [goog.db.Cursor :as Cursor]
+            [goog.db.KeyRange :as KeyRange]
             [goog.db.ObjectStore :as ObjectStore]
             [goog.db.IndexedDb :as IndexedDb]
             [torrent-client.client.polyfills.prefix :as prefix])
-  (:use [jayq.util :only [clj->js]])
+  (:use 
+    [torrent-client.client.core.string :only [camel-case selector-case]])
   (:use-macros [async.macros :only [async]]))
 
 ;;************************************************
 ;; Idiomatic clojure wrapper around the objectstore 
 ;;************************************************
 
+
+(defn- db-safe-index [[k x]]
+  (let [s (camel-case (if (keyword? k) (name k) k))
+        x (if (map? x) (db-safe x) x)]
+    [s x]))
+
+(defn db-safe [c]
+  (into {} (map db-safe-index c)))
+
 (extend-type db/ObjectStore
   
   ILookup
   (-lookup
     [os k]
-      (js->clj (.get os (name k))))
+      (js->clj (.get os (clj->js k))))
 
-  ; ; ; ICounted
-  ; ; ; (-count  [ls] (.getCount ls))
+  ; ICounted
+  ; (-count [os] (.count (.-store_ os)))
 
   ; ; IFn
   ; ; (-invoke
@@ -28,17 +40,17 @@
   ITransientAssociative
   (-assoc! 
     [os k v]
-      (.put os (clj->js v) (name k)))
+      (.put os (clj->js v) (clj->js k)))
 
   ; ITransientMap
   ; (-dissoc! [os k]
-  ;   (.remove os (name k)))
+  ;   (.delete os (clj->js k)))
 
   )
 
-; ;;************************************************
-; ;; Wrappers around the closure library
-; ;;************************************************
+;;************************************************
+;; Wrappers around the closure library
+;;************************************************
 
 (defn create-object-store [db name options]
   (.createObjectStore db name (clj->js options)))
@@ -46,9 +58,9 @@
 (defn create-transaction [db object-stores method]
   (.createTransaction db (clj->js object-stores) method))
 
-; ;;************************************************
-; ;; Async helpers
-; ;;************************************************
+;;************************************************
+;; Async helpers
+;;************************************************
 
 (defn open-database 
   "Manages versioning of object-stores for a database"
@@ -63,7 +75,7 @@
                 (let [db (.-result request)]
                   ; Create all the object stores
                   (doseq [store object-stores]
-                    (if-not (.contains (.-objectStoreNames db) (:name store))
+                    (when-not (.contains (.-objectStoreNames db) (:name store))
                       (create-object-store db (:name store) {
                         :keyPath (:key-path store)
                         :autoIncrement (:auto-increment store)

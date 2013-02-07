@@ -1,4 +1,5 @@
-(ns torrent-client.client.core.string)
+(ns torrent-client.client.core.string
+  (:require [goog.string :as gstring]))
 
 (defn partition-string [n string]
   (let [length (count string)]
@@ -36,3 +37,5 @@
   (.log js/console "a2b-hex" string (clojure.string/join (map a2b-part (partition 2 string))))
   (clojure.string/join (map a2b-part (partition 2 string))))
 
+(defn camel-case [s] (gstring/toCamelCase s))
+(defn selector-case [s] (gstring/toSelectorCase s))

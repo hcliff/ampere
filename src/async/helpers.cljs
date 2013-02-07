@@ -1,5 +1,4 @@
 (ns async.helpers
-  (:use [jayq.util :only [clj->js]])
   (:use-macros [async.macros :only [async let-async]]))
 
 ; NOTES
@@ -16,19 +15,31 @@
             ; reader readers]
 ; )
 
+; take multiple collections 
+(defn- map-indexed* [f & collections]
+  ; apply the fn with i as the first argument 
+  ; and the coll values as subsequent
+  (let [f* #(apply f %1 %2)
+        ; c1 [:one :two :three] c2 [:uno :dos :tres] =>
+        ; c [[:one :uno] [:two :dos] [:three :tres]]
+        c (apply (partial map vector) collections)]
+    (map-indexed f* c)))
+
 (defn map-async 
-  "Given an async function and a collection; apply the
-  function to every collection item and when all are done
+  "Given an async function and collection(s); apply the
+  function to every collection(s) item and when all are done
   return the result"
-  [f c1]
+  [f & collections]
   (async [success-callback]
-    (let [results (atom {})
-          c1 (map-indexed vector c1)]
-      ; Apply the given function to every collection element
-      (doseq [[index item] c1]
-        ((f item) (fn [data]
-          (swap! results assoc index data)
-          ; If every item has finished its async function
-          (.log js/console "hurrarh!" data (count @results) (count c1))
-          (if (= (count @results) (count c1))
-            (success-callback (vals @results)))))))))
+    (let [results (atom {})]
+      (letfn [(success [i data]
+                ; preserve results order by using index
+                (swap! results assoc i data)
+                ; when
+                (if (= (count @results) (count (first collections)))
+                  (success-callback (vals @results))))
+              (f* [i & arguments]
+                ; run the provided function with the collections as params
+                ; execute success function with index and result
+                ((apply f arguments) (partial success %1)))]
+        (doall (apply map-indexed* f* collections))))))

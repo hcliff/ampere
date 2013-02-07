@@ -58,10 +58,9 @@
         peer (generate-peer torrent channel peer-id handshake)]
     ; add the peer to the list of peers for this torrent
     (.log js/console "peer" peer)
+    ; TODO: Add reconnect
     (set! (.-close channel) (fn [_]
-      ; Reconnect yo
-      (js* "debugger;")
-      (create-data-channel connection info-hash)
+      
       ))
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
@@ -83,7 +82,8 @@
     (let [peers (sort-by (comp (juxt :optimistic :interested :upload) deref) peers)
           first-peer-status ((juxt :optimistic :interested) (deref (first peers)))
           ; is the first peer is optimistically unchoked but not interested
-          optimistic-uninterested (= [true false] first-peer-status)
+          ; TODO: resolve this testing logic
+          first-peer-unop (= [true false] first-peer-status)
           ; the first n peers are active
           active-peers-count (min (count peers) (if first-peer-unop 5 4))
           ; if the optimisticly unchoked peer isn't interested allow 5 active 

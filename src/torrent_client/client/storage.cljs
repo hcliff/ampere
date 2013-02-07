@@ -13,20 +13,19 @@
   "All the object stores ampere wll use
    NOTE: key-path cannot have dashes"
   [{:name "metainfo"}])
-
 ; ;;************************************************
 ; ;; DB setup and initial data pull
 ; ;;************************************************
 
 (dispatch/react-to #{:document-ready} (fn []
-  (let-async [database (db/open-database "ampere" "3.0" object-stores)]
+  (let-async [database (db/open-database "ampere7" 1 object-stores)]
+    ; Swap out the atom with our db connection
+    (reset! connection database)
     (let [transaction (db/create-transaction database ["metainfo"] "readonly")
           object-store (.objectStore transaction "metainfo")
           ; And finally fetch all our data from the metainfo objectStore
           objects (.getAll object-store)]
-      ; Swap out the atom with our db connection
-      (reset! connection database)
       ; When the entries are loaded from the db add them
       (.addCallback objects (fn [torrents]
-        (doseq [torrent torrents]
-          (dispatch/trigger :add-metainfo-object torrent))))))))
+        (doseq [torrent (js->clj torrents :keywordize-keys true)]
+          (dispatch/fire :add-metainfo-db torrent))))))))

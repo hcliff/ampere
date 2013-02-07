@@ -1,5 +1,4 @@
 (ns filesystem.entry
-  (:use [jayq.util :only [clj->js]])
   (:use-macros [async.macros :only [async]]))
 
 (defn create-writer [file-entry]

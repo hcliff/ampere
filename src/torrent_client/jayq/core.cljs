@@ -1,5 +1,4 @@
-(ns torrent-client.jayq.core
-  (:use [jayq.util :only [clj->js]]))
+(ns torrent-client.jayq.core)
 
 ; Wrappers around jquery methods
 
@@ -12,12 +11,6 @@
 
 (defn param [obj]
   (.param js/jQuery (clj->js obj)))
-
-(defn css
-  ([$elem opts]
-     (.css $elem (clj->js opts)))
-  ([$elem p v]
-     (.css $elem (name p) v)))
 
 ; Bootstrap methods
 

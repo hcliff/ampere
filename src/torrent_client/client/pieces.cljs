@@ -10,39 +10,18 @@
     [async.helpers :only [map-async]]
     [torrent-client.client.core.byte-array :only [uint8-array subarray]]
     [torrent-client.client.torrents :only [torrents]]
+    [torrent-client.client.files :only [files]]
     [torrent-client.client.core.crypt :only [sha1 byte-array->str]]
     )
   (:use-macros 
-    [async.macros :only [async let-async]])
-  )
+    [async.macros :only [async let-async]]))
 
 ; The bytes in a piece block (16kb)
 ; http://bit.ly/RsGL0R
 (def block-length 16384)
 
-(def files (atom {}))
 ; Blocks that have had requests sent out for them
 (def working (atom {}))
-
-(dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
-  "A file has been added to this torrent"
-  (let [file (generate-file torrent file-entry file-data)]
-    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]}))))
-
-(defn generate-file 
-  ([torrent file-entry] (generate-file torrent file-entry {}))
-  ([torrent file-entry file-data]
-    (let [boundaries (generate-block-boundaries torrent file-data)]
-      ; Attach information on the block boundaries to the file
-      (with-meta (pieces/piece-file file-entry) (merge file-data boundaries)))))
-
-(defn- generate-block-boundaries [torrent file]
-  "Given a file and the torrent block-length calculate the
-  blocks that a file needs, note that two files may require
-  the same block due to overlap between the head and tail of
-  the files. (e.g block 3 has the head of file b and tail of a)"
-  {:piece-start (Math/floor (/ (file :pos-start) (@torrent :piece-length)))
-   :piece-end   (Math/floor  (/ (file :pos-end)   (@torrent :piece-length)))})
 
 ; TODO: switch this over to rarity based search
 (defn wanted-pieces
@@ -258,3 +237,5 @@
       (.seek writer seek-position)
       ; H.C: for now only blobs can be written
       (.write writer (js/Blob. (js/Array. piece-data))))))
+
+(.log js/console "EOF")

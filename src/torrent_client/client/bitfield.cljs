@@ -1,6 +1,5 @@
 (ns torrent-client.client.bitfield
-  (:use 
-    [jayq.util :only [clj->js]]
+  (:use
     [torrent-client.client.core.byte-array :only [uint8-array?]])
   (:require [torrent-client.client.core.dispatch :as dispatch]))
 
@@ -8,6 +7,9 @@
 
   Object
   (toString [this] (pr-str byte-array))
+
+  IEncodeJS
+  (-clj->js [_] byte-array)
 
   IIndexed
   (-nth [bitfield n]
@@ -30,6 +32,14 @@
           ; How are we modifying the byte?
           f (if v bit-set bit-clear)]
       (aset byte-array byte-index (f byte piece-bit))))
+
+  ICollection
+  (-conj [coll entry]
+    (if (vector? entry)
+      (-assoc coll (-nth entry 0) (-nth entry 1))
+      (reduce -conj
+              coll
+              entry)))
 
   ISeqable
   (-seq [this] this)
@@ -59,8 +69,9 @@
     ; Construct a bitfield from an existing one
     ; (received from peer)
     (uint8-array? bits)
-    (let [byte-array (js/Uint8Array. bits)]
-      (Bitfield. byte-array 0))
+    ; TODO: check this
+    ; (let [byte-array (js/Uint8Array. bits)]
+    (Bitfield. bits 0)
 
     :else
     (let [byte-array (js/Uint8Array. (clj->js bits))]

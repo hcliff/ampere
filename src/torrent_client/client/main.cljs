@@ -12,11 +12,11 @@
     [crate.core :as crate]
     [crate.form :as form])
   (:use
-    [jayq.core :only [$ on attr document-ready empty text val prepend]]
-    [jayq.util :only [clj->js]]
-    [torrent-client.jayq.core :only [append input-files event-files modal tab css]]
+    [jayq.core :only [$ on attr document-ready empty text val prepend css]]
+    [torrent-client.jayq.core :only [append input-files event-files modal tab]]
     [torrent-client.client.waltz :only [machine]]
-    [torrent-client.client.pieces :only [files]]
+    [torrent-client.client.files :only [files]]
+    [torrent-client.client.torrent :only [share-torrent]]
     [torrent-client.client.torrents :only [torrents]]
     [crate.binding :only [bound]]
     [goog.format :only [numBytesToString]])
@@ -51,8 +51,6 @@
 (def $add-form ($ "#add-form"))
 (def $create-modal ($ "#create-modal"))
 (def $create-form ($ "#create-form"))
-(def $seed-modal ($ "#seed-modal"))
-(def $seed-form ($ "#seed-form"))
 (def $alerts ($ "#alerts"))
 (def $torrents ($ "tbody"))
 (def $demo-torrent ($ "#demo-torrent"))
@@ -105,32 +103,42 @@
   (.modal $create-modal "hide")
   (.modal $add-modal "hide")))
 
-(dispatch/react-to #{:torrent-built} (fn [_ [metainfo data]]
+(dispatch/react-to #{:share-torrent} (fn [_ [torrent torrent-file]]
   (.modal $add-modal "hide")
   (.modal $create-modal "hide")
   ; See the magnet spec for an explanation of these values
   ; http://en.wikipedia.org/wiki/Magnet_URI_scheme
   (let [base-url "http://hcliff.github.com/ampere"
-        querystring {
-          :tr (metainfo :announce)
-          :xt (str "urn:btih" (hash metainfo))
-          :dn (metainfo :name)}
+        querystring 
+         {:xt (str "urn:btih:" (@torrent :pretty-info-hash))
+          :dn (@torrent :name)}
         querydata (QueryData/createFromMap (clj->js querystring))
+        ; preserve special characters (: /)
+        querystring (.toDecodedString querydata)
+        magnet-url  (.setQueryData (Uri/parse base-url) querystring)
+
+        ; add all the trackers
+        ; H.C stupid convention of duplicate keys exists (check any torrent site)
+        add-tracker #(str %1 "&tr=" %2)
+        magnet-url (reduce add-tracker magnet-url (@torrent :announce-list))
 
         ; Build the .torrent for the user to download
-        torrent-file (js/Blob. data)
+        torrent-file (js/Blob. torrent-file)
 
         ; Render the modal dialog
-        modal-content {
-          :magnet-url (str (.setQueryData (Uri/parse base-url) querydata))
+        modal-content 
+         {:magnet-url magnet-url
           :torrent-file-url (.createObjectURL (.-URL js/window) torrent-file)
-          :torrent-file-name (str (metainfo :name) ".torrent")
-          :name (metainfo :name)}
-        $built-modal ($ (built-modal modal-content))]
+          :torrent-file-name (str (@torrent :name) ".torrent")
+          :name (@torrent :name)}
+        $share-modal ($ (share-modal modal-content))]
     ; Unlike other modals there can be multiple built modals
     ; so it must be created as a partial
-    (prepend $body $built-modal)
-    (.modal $built-modal "show"))))
+    (prepend $body $share-modal)
+    ; highlight the whole link when the user clicks it
+    (on ($ "input" $share-modal) :click (fn [e]
+      (.select ($ (.-currentTarget e)))))
+    (.modal $share-modal "show"))))
 
 (on $create-form :submit (fn [e]
   (.preventDefault e)
@@ -159,13 +167,6 @@
 
 (on $add-modal :hide (fn [e]
   (.reset (first $add-form))))
-
-(on $seed-form :submit (fn [e]
-  (.preventDefault e)
-  (.log js/console "fired submit")
-  (let [metainfo (first (input-files ($ "[name=metainfo]" $seed-form)))
-        file-entries [(first (input-files ($ "[name=files]" $seed-form)))]]
-    (dispatch/fire :add-metainfo-file-and-files [metainfo file-entries]))))
 
 (on $demo-torrent :click (fn [e]
   "When the user clicks the demo, download the .torrent and use it"
@@ -202,8 +203,7 @@
 (defpartial torrent-file-badge [content]
   [:span.label (.-name content)])
 
-
-(defpartial built-modal [content]
+(defpartial share-modal [content]
   [:div.modal
     [:div.modal-header
       [:h3 (str (content :name) " is ready to share!")]
@@ -215,10 +215,10 @@
           (form/text-field {:value (content :magnet-url) :class "input-xlarge"} "link")]]
       [:div.control-group
         [:div.controls
-          [:a#built-download {
-            :download (content :torrent-file-name)
+          [:a#built-download 
+           {:download (content :torrent-file-name)
             :title (str "download " (content :torrent-file-name)) 
-            :href (content :torrent-file-url)} 
+            :href (content :torrent-file-url)}
             "or download the .torrent"]]]]
     [:div.modal-footer
       [:a.btn {:data-dismiss "modal"} "close"]]])
@@ -276,6 +276,8 @@
     [:td.flex1.speed (bound torrent torrent-speed-to-string)]
     [:td.actions
       [:div.btn-group
+        [:button.btn
+          [:i.icon-globe]]
         [:button.btn {:disabled true}
           [:i {:class (bound-class torrent active? "icon-pause" "icon-play")}]]
         [:a {:href (file-url torrent) 
@@ -294,6 +296,8 @@
 
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   (let [element (torrent-row torrent)]
+    (on ($ "i.icon-share" element) :click
+      #(dispatch/fire :share-torrent (share-torrent torrent)))
     ; Render the torrent row and add it to the atom
     (swap! elements assoc (@torrent :pretty-info-hash) element)
     (append $torrents element))))
@@ -331,10 +335,12 @@
   (let [me (machine {:label :tab-machine :current :downloading})]
 
     ; When a torrent finishes automatically show the completed tab
-    (dispatch/react-to #{:completed-torrent} #(state/set me :completed))
+    (dispatch/react-to #{:completed-torrent :built-torrent} 
+      #(state/set me :completed))
 
     (on ($ "#downloading-tab") :click #(state/set me :downloading))
     (on ($ "#completed-tab") :click #(state/set me :completed))
+    (on ($ "#settings-tab") :click #(state/set me :settings))
 
     (defstate me :downloading
       (in []
@@ -353,6 +359,10 @@
               elements (map (comp @elements :pretty-info-hash deref) torrents)]
           (append $torrents (doall elements)))
         (tab ($ "#completed-tab") "show")))
+
+    (defstate me :settings
+      (in []
+        (tab ($ "#settings-tab") "show")))
 
     ))
 
@@ -396,6 +406,7 @@
     (.log js/console "gone offline!"))))
 
 (document-ready (fn [e]
+  (.info js/console "document-ready")
   (dispatch/fire :document-ready)))
 
 ; TODO: A/B test this to minimise leechers
