@@ -24,12 +24,19 @@
   (let-async [granted-bytes (request-quota type size)]
     (request-file-system type granted-bytes)))
 
-(defn filereader [obj]
-  (async [success-callback error-callback]
-    (let [reader (js/FileReader.)
-          ; onloadend actually triggers a progress event
-          ; we want the actual file contents
-          success-callback #(success-callback (.-result (.-currentTarget %)))]
-      (set! (.-onerror reader) error-callback)
-      (set! (.-onloadend reader) success-callback)
-      (.readAsArrayBuffer reader obj))))
+(defn filereader 
+  ([obj]
+    (async [success-callback error-callback]
+      (let [reader (js/FileReader.)
+            ; onloadend actually triggers a progress event
+            ; we want the actual file contents
+            success-callback #(success-callback (.-result (.-currentTarget %)))]
+        (set! (.-onerror reader) error-callback)
+        (set! (.-onloadend reader) success-callback)
+        (.readAsArrayBuffer reader obj))))
+  ([obj offset length]
+    "Small helper function to build the slicer when given a offset and length"
+    ; H.C: not sure if .slice can be relied on? (see mozSlice)
+    ; at this time ampere only targets chrome so this isn't an issue
+    (let [blob (.slice obj offset (+ offset length))]
+      (filereader blob))))

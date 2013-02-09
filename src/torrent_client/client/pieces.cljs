@@ -91,14 +91,9 @@
                 :let end (min (+ offset length) ((meta file) :pos-end))
                 :let length (- end offset)
                 ; Get a filereader on the piece-files underlying file
-                ; fileb (entry/file (.-file file))
-                data (filesystem/filereader (.-file file))]
-      (.log js/console "get-file-block" offset length ((meta file) :pos-end) (.-byteLength data))
-      ; H.C: introduced when in testing ubuntu started trimming the file end for some reason
-      ; (try
-      (success-callback (uint8-array data offset length))
-        ; (catch js/Error _ (.error js/console "file may be corrupt"))
-        )))
+                data (filesystem/filereader (.-file file) offset length)]
+      (.log js/console "get-file-section" offset length ((meta file) :pos-end) (.-byteLength data))
+      (success-callback (uint8-array data)))))
 
 (defn get-file-piece [files piece-length piece-index]
   (async [success-callback _]

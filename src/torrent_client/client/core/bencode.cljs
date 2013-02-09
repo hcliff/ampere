@@ -1,4 +1,5 @@
 (ns torrent-client.client.core.bencode
+  (:use [clojure.walk :only [keywordize-keys]])
   (:require 
     [goog.crypt :as crypt]
     [torrent-client.client.core.reader :as reader]))
@@ -54,11 +55,13 @@
 
 (defn- decode-map [stream] 
   (let [list (decode-list stream)] 
-    (with-meta 
-      (apply hash-map list) 
-      {:order (map first (partition 2 list))})))
-  ; (keywordize-keys (apply hash-map (decode-list stream)))
-    ; (apply array-map (decode-list stream)))
+    ; (with-meta 
+    ;   (apply hash-map list) 
+    ;   {:order (map first (partition 2 list))})
+    ; (let [f (fn [[k v]] )]
+    ; apply hash-map list))
+    (keywordize-keys (apply array-map list))
+))
 
 
 (defprotocol ArrayOutputStream
@@ -82,7 +85,8 @@
     (.-array stream)))
 
 (defn- encode-object [obj stream]
-  (cond (string?  obj) (encode-string obj stream)
+  (cond (keyword? obj) (encode-string (name obj) stream)
+        (string? obj) (encode-string obj stream)
         (number? obj) (encode-number obj stream)
         (vector? obj) (encode-list obj stream)
         (map? obj) (encode-dictionary obj stream)))
@@ -106,8 +110,7 @@
 
 (defn- encode-dictionary [dictionary stream]
   (write stream 100)
-  (doseq [item (if (nil? (meta dictionary)) 
-               (keys dictionary)(:order (meta dictionary)))]
+  (doseq [item (keys dictionary)]
     (encode-object item stream)
     (encode-object (dictionary item) stream))
   (write stream 101))

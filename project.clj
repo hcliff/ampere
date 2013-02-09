@@ -21,6 +21,6 @@
         :compiler {
           :output-to "resources/public/cljs/bootstrap.js"
           :optimizations :whitespace
-          :pretty-print true}}}
+          :pretty-print true}}}}
   :source-paths ["src"]
   :main torrent-client.server)

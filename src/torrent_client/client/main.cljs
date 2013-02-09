@@ -103,7 +103,7 @@
   (.modal $create-modal "hide")
   (.modal $add-modal "hide")))
 
-(dispatch/react-to #{:share-torrent} (fn [_ [torrent torrent-file]]
+(dispatch/react-to #{:share-torrent} (fn [_ torrent]
   (.modal $add-modal "hide")
   (.modal $create-modal "hide")
   ; See the magnet spec for an explanation of these values
@@ -122,14 +122,10 @@
         add-tracker #(str %1 "&tr=" %2)
         magnet-url (reduce add-tracker magnet-url (@torrent :announce-list))
 
-        ; Build the .torrent for the user to download
-        torrent-file (js/Blob. torrent-file)
-
         ; Render the modal dialog
         modal-content 
          {:magnet-url magnet-url
-          :torrent-file-url (.createObjectURL (.-URL js/window) torrent-file)
-          :torrent-file-name (str (@torrent :name) ".torrent")
+          ; :torrent-file torrent-file
           :name (@torrent :name)}
         $share-modal ($ (share-modal modal-content))]
     ; Unlike other modals there can be multiple built modals
@@ -192,36 +188,8 @@
       (.send xhr))))
 
 ;;************************************************
-;; Templates
+;; Template methods
 ;;************************************************
-
-(defpartial alert [content]
-  [:div.alert
-    [:button.close {:type "button" :data-dismiss "alert"} "×"]
-    content])
-
-(defpartial torrent-file-badge [content]
-  [:span.label (.-name content)])
-
-(defpartial share-modal [content]
-  [:div.modal
-    [:div.modal-header
-      [:h3 (str (content :name) " is ready to share!")]
-      [:button.close {:type "button" :data-dismiss "modal"}]]
-    [:form#create-form.modal-body.form-horizontal
-      [:div.control-group
-        (form/label {:class "control-label"} "link" "download link")
-        [:div.controls
-          (form/text-field {:value (content :magnet-url) :class "input-xlarge"} "link")]]
-      [:div.control-group
-        [:div.controls
-          [:a#built-download 
-           {:download (content :torrent-file-name)
-            :title (str "download " (content :torrent-file-name)) 
-            :href (content :torrent-file-url)}
-            "or download the .torrent"]]]]
-    [:div.modal-footer
-      [:a.btn {:data-dismiss "modal"} "close"]]])
 
 (defn bound-class 
   "Given a func that returns boolean display a css class"
@@ -256,9 +224,42 @@
   ""
   )
 
-(defn file-url [torrent]
-  "Given a torrent return a link to it's file"
-  (.toURL (.-file (first (@files (@torrent :pretty-info-hash))))))
+(defn file-url [file]
+  "Given a file return a link to it's localstorage entry"
+  (.toURL (.-file file)))
+
+;;************************************************
+;; Templates
+;;************************************************
+
+(defpartial alert [content]
+  [:div.alert
+    [:button.close {:type "button" :data-dismiss "alert"} "×"]
+    content])
+
+(defpartial torrent-file-badge [content]
+  [:span.label (.-name content)])
+
+(defpartial share-modal [content]
+  [:div.modal
+    [:div.modal-header
+      [:h3 (str (content :name) " is ready to share!")]
+      [:button.close {:type "button" :data-dismiss "modal"}]]
+    [:form#create-form.modal-body.form-horizontal
+      [:div.control-group
+        (form/label {:class "control-label"} "link" "download link")
+        [:div.controls
+          (form/text-field {:value (content :magnet-url) :class "input-xlarge"} "link")]]
+      ; [:div.control-group
+      ;   [:div.controls
+      ;     [:a#built-download 
+      ;      {:download (get-in content [:torrent-file .-name])
+      ;       :title (str "download " (get-in content [:torrent-file .-name]))
+      ;       :href (file-url (content :torrent-file))}
+      ;       "or download the .torrent"]]]
+            ]
+    [:div.modal-footer
+      [:a.btn {:data-dismiss "modal"} "close"]]])
 
 (defpartial torrent-row [torrent]
   [:tr
@@ -280,7 +281,7 @@
           [:i.icon-globe]]
         [:button.btn {:disabled true}
           [:i {:class (bound-class torrent active? "icon-pause" "icon-play")}]]
-        [:a {:href (file-url torrent) 
+        [:a {:href (file-url (first (@files (@torrent :pretty-info-hash))))
              :target "_blank" 
              :class (bound-class torrent completed? "btn" "btn hide")}
           [:i.icon-folder-open]]
@@ -296,8 +297,8 @@
 
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   (let [element (torrent-row torrent)]
-    (on ($ "i.icon-share" element) :click
-      #(dispatch/fire :share-torrent (share-torrent torrent)))
+    (on ($ "i.icon-globe" element) :click (fn [_]
+      (dispatch/fire :share-torrent torrent)))
     ; Render the torrent row and add it to the atom
     (swap! elements assoc (@torrent :pretty-info-hash) element)
     (append $torrents element))))

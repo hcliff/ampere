@@ -53,7 +53,8 @@
 
 (defn uint8-array
   "Build a new byte array"
-  ([length] (js/Uint8Array. length))
+  ; x can be length or array buffer
+  ([x] (js/Uint8Array. x))
   ([array-buffer offset] (js/Uint8Array. array-buffer offset))
   ([array-buffer offset length] (js/Uint8Array. array-buffer offset length)))
 
