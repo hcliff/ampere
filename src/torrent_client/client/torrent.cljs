@@ -76,16 +76,16 @@
   (let [reader (push-back-reader (uint8-array byte-array 0))
         metadata (process-metadata (decode reader))
         ; Create an empty bitfield of the correct length
-        bitfield (bitfield/bitfield (metadata :pieces-length))]
-    (assoc metadata :bitfield bitfield)
-    (assoc metadata :pieces-written 0)
+        bitfield (bitfield/bitfield (metadata :pieces-length))
+        metadata (assoc metadata :bitfield bitfield
+                                 :pieces-written 0)]
     metadata))
 
 (defn read-metainfo-db
   "Given torrent data saved in the db process it"
   [db-entry]
-  (let [bitfield (bitfield/bitfield (db-entry :bitfield))]
-    (assoc db-entry :bitfield bitfield)
+  (let [bitfield (bitfield/bitfield (db-entry :bitfield))
+        db-entry (assoc db-entry :bitfield bitfield)]
     db-entry))
 
 (defn read-metainfo-file 
@@ -94,6 +94,13 @@
   (async [success-callback _]
     (let-async [torrent-file (filesystem/filereader torrent-file)]
       (success-callback (read-metainfo-byte-array torrent-file)))))
+
+(defn read-magnet-link
+  "Given a magnet link grab as much data as we can"
+  [x]
+   {:announce-list (filter http-scheme? announce-list)
+    :name (x :name "")
+    :pretty-info-hash (x :info-hash)})
 
 ;************************************************
 ; When a torrent is initialized create
@@ -216,12 +223,15 @@
         object-store (.objectStore transaction "metainfo")]
     (assoc! object-store (metainfo :pretty-info-hash) metainfo)))
 
+(defn torrent-storage [torrent]
+  ; Any changes to the torrent should be saved in the db
+  (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
+    (write-metainfo-to-db new-metainfo))))
+
 (defn torrent [metainfo files]
   (let [torrent (atom metainfo)
         dispatcher #(dispatch/fire :add-file [torrent % %2])]
-    ; Any changes to the torrent should be saved in the db
-    (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
-      (write-metainfo-to-db new-metainfo)))
+    (torrent-storage torrent)
     ; Track all the file entires
     (doall (map dispatcher files (metainfo :files)))
     ; Notify that a torrent has been started
@@ -262,3 +272,8 @@
     (write-metainfo-to-db @torrent)
     ; Inform the UI the torrent has been built
     (dispatch/fire :share-torrent torrent))))
+
+(dispatch/react-to #{:add-magnet-link} (fn [_ metainfo])
+  (let [metainfo (read-magnet-link metainfo)]
+    (torrent-storage torrent)
+    (dispatch/fire :processed-torrent torrent)))

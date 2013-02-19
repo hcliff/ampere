@@ -10,7 +10,8 @@
     [clojure.string :as string]
     [waltz.state :as state]
     [crate.core :as crate]
-    [crate.form :as form])
+    [crate.form :as form]
+    [clojure.browser.repl :as repl])
   (:use
     [jayq.core :only [$ on attr document-ready empty text val prepend css]]
     [torrent-client.jayq.core :only [append input-files event-files modal tab]]
@@ -31,7 +32,7 @@
 
 ; [noir.cljs.client.watcher :as watcher]
 ; (watcher/init)
-; (repl/connect "http://localhost:9000/repl")
+(repl/connect "http://localhost:9000/repl")
 
 ;;************************************************
 ;; Atoms & state
@@ -169,11 +170,11 @@
   (.preventDefault e)
   (let [url (attr $demo-torrent :href)
         options {:xhrFields {:responseType "arraybuffer"} :dataType "binary"}]
-      ; Hide the demo, no longer relevant
-      (css $demo-torrent :display "none")
-      ; Given a .torrent URL, download it then use it
-      (let-async [file (ajax-binary url options)]
-        (dispatch/fire :add-metainfo-byte-array file)))))
+    ; Hide the demo, no longer relevant
+    (css $demo-torrent :display "none")
+    ; Given a .torrent URL, download it then use it
+    (let-async [file (ajax-binary url options)]
+      (dispatch/fire :add-metainfo-byte-array file)))))
 
 ; jQuery doesn't support binary requests
 (defn ajax-binary [url settings]
@@ -329,8 +330,8 @@
         downloading (count (filter downloading? torrents))
         ; If it's active and downloading
         completed (count (filter completed? torrents))]
-  (text ($ "#downloading-count") downloading)
-  (text ($ "#completed-count") completed))))
+    (text ($ "#downloading-count") downloading)
+    (text ($ "#completed-count") completed))))
 
 (defn tab-machine []
   (let [me (machine {:label :tab-machine :current :downloading})]
@@ -397,7 +398,7 @@
 (on $window :online (fn [_]
   (reset! online true)))
 
-(dispatch/react-to #{:document-ready} (fn []
+(dispatch/react-to #{:document-ready} (fn [_]
   (reset! online (.-onLine js/navigator))))
 
 (add-watch online nil (fn [_ _ old-val new-val]
@@ -414,5 +415,19 @@
 (on $window :beforeunload (fn [_]
   (if-not (zero? (count (filter active? @torrents)))
     "You still have active torrents")))
+
+(dispatch/react-to #{:document-ready} (fn [_]
+  "When provided with a magnet link, use it to initiate a torrent"
+  (let [qs (Uri/QueryData. (.-search (.-location js/window)))
+        torrent-name (.get qs "dn")
+        ; torrent-file (.get gs "xs")
+        ]
+    ; Some early stage filtering, we need an info hash and a tracker
+    ; the tracker may or may not be valid (validation occurs later)
+    (if-let [announce-list (js->clj (.getValues qs "tr"))]
+      (if-let [info-hash (.get qs "xt")]
+        (dispatch/fire #{:add-magnet} 
+          {:announce-list announce-list
+           :info-hash info-hash}))))))
 
 (.log js/console "js loaded")

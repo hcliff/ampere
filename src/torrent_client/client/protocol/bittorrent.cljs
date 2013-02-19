@@ -51,18 +51,54 @@
 (def msg-cancel (char 8))
 ; ; The length of the string "BitTorrent protocol"
 (def msg-handshake (char 19))
+(def msg-extended (char 20))
+
+; handshake indicated by id of 0 (no extension can have this id)
+(def extended-handshake 0)
+(def ut-metadata 3)
+
+; map extension ids to a keyword
+(def extensions 
+  {extended-handshake :extended-handshake
+   ut-metadata :ut-metadata})
+
+;;************************************************
+;; Map received extensions based on their
+;; extension and msg_type
+;;************************************************
+
+(defmulti receive-extension (fn [peer extension message data]
+  (if-let [msg-type (message :msg_type)]
+    [extension (message :msg_type)]
+    extension)))
+
+(defmethod receive-extension [ut-metadata 0] [p _ message _]
+  (trigger p :receive-metadata-request [(message :piece_index)]))
+
+(defmethod receive-extension [ut-metadata 1] [p _ message data]
+  (trigger p :receive-metadata-piece [(message :piece_index) data]))
+
+(defmethod receive-extension [ut-metadata 2] [p _ message _]
+  (trigger p :receive-metadata-reject [(message :piece_index)]))
 
 ;;************************************************
 ;; Map incoming data based on it's first byte
 ;; and co-ordinate with the peer with the data
 ;;************************************************
 
-(defmulti receive-data (fn [peer data] (char (first data))))
+(defmulti receive-data (fn [peer data] 
+  (char (first data))))
+
+(defmethod receive-data msg-extended [p data]
+  "When given an extension pass it off to a further multimethod"
+  (let [extension (first data)
+        [message, data] (bencode/decode (rest data))]
+    (receive-extension p extension message data)))
 
 (defmethod receive-data msg-choke [p _]
   (trigger p :receive-choke))
+
 (defmethod receive-data msg-unchoke [p _]
-  (.log js/console "msg-unchoke")
   (trigger p :receive-unchoke))
 
 (defmethod receive-data msg-interested [p _]
@@ -153,10 +189,34 @@
   (send-handshake [client]
     "Generate a handshake string"
     (let [protocol-name "BitTorrent protocol"
-          reserved (crypt/byte-array->str [00 00 00 00 00 00 00 00])
+          reserved (crypt/byte-array->str [00 00 00 00 00 10 00 00])
           info-hash (crypt/byte-array->str (@torrent :info-hash))
           data (str protocol-name reserved info-hash @peer-id)]
       (protocol/send-data client msg-handshake data)))
+
+  (send-extended 
+    ([client id message] 
+      (protocol/send-data client id message ""))
+    ([client id message data]
+      (let [header {:m extensions :metadata_size 3125}
+            id (if (keyword? id) (get extensions id) id)
+            data (str (char id) (encode message) data)]
+        (protocol/send-data client msg-extended data))))
+
+  (send-extended-handshake [client]
+    (send-extended client extended-handshake {}))
+
+  (send-metadata-request [client piece-index]
+    (let [message {:msg_type 0 :piece piece-index}]
+      (send-extended client ut-metadata message)))
+
+  (send-metadata-piece [client piece-index data]
+    (let [message {:msg_type 1 :piece piece-index :total_size piece-size}]
+      (send-metadata client ut-metadata message data)))
+
+  (send-metadata-reject [client]
+    (let [message {:msg_type 2 :piece 0}]
+      (send-metadata client ut-metadata message)))
 
   (send-choke [client]
     (protocol/send-data client msg-choke ""))

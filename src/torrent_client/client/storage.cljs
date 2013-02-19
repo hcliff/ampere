@@ -18,7 +18,7 @@
 ; ;;************************************************
 
 (dispatch/react-to #{:document-ready} (fn []
-  (let-async [database (db/open-database "ampere7" 1 object-stores)]
+  (let-async [database (db/open-database "ampere8" 1 object-stores)]
     ; Swap out the atom with our db connection
     (reset! connection database)
     (let [transaction (db/create-transaction database ["metainfo"] "readonly")

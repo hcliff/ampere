@@ -29,6 +29,8 @@
   (let [me (machine {:label :peer-machine :current :init})
         bittorrent-client (generate-protocol torrent channel me)
         peer-data (atom (merge peer-data {
+                         ; Does this peer have the torrents metadata?
+                         :has-metadata nil
                          ; Is this client choking the peer,
                          :choking true 
                          ; Is peer interested in this client
@@ -52,6 +54,38 @@
                  (= (@peer-data :peer-id) peer-id))
         (transition me :sent-handshake :sent-bitfield)
         (transition me :init :sent-handshake)))
+
+    ; (defevent me :extended-handshake [_]
+    ;   ;TODO: extension negotiation?
+    ;   (transition me :sent))
+
+    (defn update-metadata-queue []
+      "Saturate the peers queue with metadata piece requests"
+      (let [pieces (metadata/wanted-pieces torrent)]
+        (when (and (not (false? (@peer-data :has-metadata)))
+                   (< (@peer-data :outstanding) max-outstanding)
+                   (not-empty pieces))
+          (request-metadata (first pieces))
+          (update-metadata-queue))))
+
+    (defn request-metadata [piece-index]
+      "Request all the pieces the metadata is made from"
+      (metadata/work-piece! torrent piece-index)
+      (swap! peer-data update-in [:outstanding] inc)
+      (protocol/send-metadata-request bittorrent-client piece-index))
+
+    (defevent me :receive-metadata-request [piece-index]
+      ; If we have metadata we have every piece
+      (if (@torrent :metadata-byte-array)
+        (let-async [data (metadata/get-piece torrent piece-index)]
+          (protocol/send-metadata-piece bittorrent-client piece-index data))
+        ; Otherwise reject
+        (protocol/send-metadata-reject bittorrent-client piece-index)))
+
+    (defevent me :receive-metadata-piece [piece-index data]
+      (swap! peer-data update-in [:outstanding] dec)
+      (update-metadata-queue)
+      (dispatch/fire :receive-metadata-piece [torrent piece-index data]))
 
     (defevent me :receive-choke []
       (transition me :not-choked-not-interested :choked-not-interested)
@@ -103,7 +137,7 @@
       and then ask for the next piece"
       (.log js/console "received block" piece-index begin)
       ; Regardless of the blocks validity reduce the queue
-      (swap! peer-data #(update-in % [:outstanding] dec))
+      (swap! peer-data update-in [:outstanding] dec)
       (update-queue)
       (dispatch/fire :receive-block [torrent piece-index begin data]))
 
@@ -123,8 +157,8 @@
     (defn update-queue []
       "Saturate the peers queue with block requests"
       (let [pieces (wanted-pieces torrent (@peer-data :bitfield))]
-        (if (and (< (@peer-data :outstanding) max-outstanding)
-                 (not-empty pieces))
+        (when (and (< (@peer-data :outstanding) max-outstanding)
+                   (not-empty pieces))
           (request-piece (rand-nth pieces))
           (update-queue))))
 
@@ -133,7 +167,7 @@
       (work-piece! torrent piece-index)
       (doseq [[begin length] (piece-blocks torrent piece-index)]
         ; Add to the outstanding queue
-        (swap! peer-data #(update-in % [:outstanding] inc))
+        (swap! peer-data update-in [:outstanding] inc)
         (protocol/send-request bittorrent-client piece-index begin length)))
 
     (defstate me :init)
