@@ -8,7 +8,7 @@
   (send-extended-handshake [client] "")
   (send-metadata-request [client piece-index] "")
   (send-metadata-piece [client piece-index data] "")
-  (send-metadata-reject [client piece-index ""])
+  (send-metadata-reject [client piece-index] "")
   (send-choke [client] "")
   (send-unchoke [client] "")
   (send-interested [client] "")

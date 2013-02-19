@@ -30,11 +30,11 @@
     (swap! recieved assoc-in [info-hash piece-index] payload)
     ; And if we have all the metadata pieces 
     (if (= (count received) (count (pieces torrent)))
-      (let [byte-array (pieces-metadata received)]
+      (let [byte-array (pieces->metadata received)]
         (swap! received dissoc info-hash)
-        (dispatch/fire :receieve-metadata [torrent byte-array])))))
+        (dispatch/fire :receive-metadata [torrent byte-array])))))
 
-(dispatch/react-to #{:receieve-metadata} (fn [_ [torrent metadata]]
+(dispatch/react-to #{:receive-metadata} (fn [_ [torrent metadata]]
   (if (= (hash metadata) (@torrent :info-hash))
     (dispatch/fire :add-metadata-byte-array metadata))))
 

@@ -1,6 +1,7 @@
 (ns torrent-client.client.protocol.bittorrent
   (:require
     [torrent-client.client.core.crypt :as crypt]
+    [torrent-client.client.core.bencode :as bencode]
     [torrent-client.client.bitfield :as bitfield]
     [torrent-client.client.protocol.main :as protocol]
     [goog.events :as events])
@@ -56,6 +57,10 @@
 ; handshake indicated by id of 0 (no extension can have this id)
 (def extended-handshake 0)
 (def ut-metadata 3)
+; msg_type codes for the ut-metadata extension
+(def ut-metadata-request 0)
+(def ut-metadata-piece 1)
+(def ut-metadata-reject 2)
 
 ; map extension ids to a keyword
 (def extensions 
@@ -72,13 +77,13 @@
     [extension (message :msg_type)]
     extension)))
 
-(defmethod receive-extension [ut-metadata 0] [p _ message _]
+(defmethod receive-extension [ut-metadata ut-metadata-request] [p _ message _]
   (trigger p :receive-metadata-request [(message :piece_index)]))
 
-(defmethod receive-extension [ut-metadata 1] [p _ message data]
+(defmethod receive-extension [ut-metadata ut-metadata-piece] [p _ message data]
   (trigger p :receive-metadata-piece [(message :piece_index) data]))
 
-(defmethod receive-extension [ut-metadata 2] [p _ message _]
+(defmethod receive-extension [ut-metadata ut-metadata-reject] [p _ message _]
   (trigger p :receive-metadata-reject [(message :piece_index)]))
 
 ;;************************************************
@@ -194,29 +199,31 @@
           data (str protocol-name reserved info-hash @peer-id)]
       (protocol/send-data client msg-handshake data)))
 
-  (send-extended 
-    ([client id message] 
-      (protocol/send-data client id message ""))
-    ([client id message data]
-      (let [header {:m extensions :metadata_size 3125}
-            id (if (keyword? id) (get extensions id) id)
-            data (str (char id) (encode message) data)]
-        (protocol/send-data client msg-extended data))))
+  (send-extended [client id message] 
+    (protocol/send-extended client id message nil))
+
+  (send-extended [client id message data] 
+    (let [header {:m extensions :metadata_size 3125}
+          id (if (keyword? id) (get extensions id) id)
+          data (str (char id) (bencode/encode message) data)]
+      (protocol/send-data client msg-extended data)))
 
   (send-extended-handshake [client]
-    (send-extended client extended-handshake {}))
+    (protocol/send-extended client extended-handshake {}))
 
   (send-metadata-request [client piece-index]
-    (let [message {:msg_type 0 :piece piece-index}]
-      (send-extended client ut-metadata message)))
+    (let [message {:msg_type ut-metadata-request :piece piece-index}]
+      (protocol/send-extended client ut-metadata message)))
 
   (send-metadata-piece [client piece-index data]
-    (let [message {:msg_type 1 :piece piece-index :total_size piece-size}]
-      (send-metadata client ut-metadata message data)))
+    (let [message {:msg_type ut-metadata-piece 
+                   :piece piece-index 
+                   :total_size "urgh"}]
+      (protocol/send-extended client ut-metadata message data)))
 
-  (send-metadata-reject [client]
-    (let [message {:msg_type 2 :piece 0}]
-      (send-metadata client ut-metadata message)))
+  (send-metadata-reject [client piece-index]
+    (let [message {:msg_type ut-metadata-reject :piece piece-index}]
+      (protocol/send-extended client ut-metadata message)))
 
   (send-choke [client]
     (protocol/send-data client msg-choke ""))

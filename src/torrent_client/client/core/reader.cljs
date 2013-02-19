@@ -2,12 +2,13 @@
   (:use [torrent-client.client.core.byte-array :only [subarray]]))
 
 (defprotocol PushbackReader
-  (read [reader length] "Returns the next char from the Reader,
+  (read [reader] [reader length] "Returns the next char from the Reader,
 nil if the end of stream has been reached"))
 
 ; Using two atoms is less idomatic, but saves the repeat overhead of map creation
 (deftype ArrayPushbackReader [array index-atom]
   PushbackReader
+  (read [reader] (reader/read 1))
   (read [reader length]
     (let [idx @index-atom
           length (or length 1)

@@ -1,14 +1,10 @@
 (ns torrent-client.client.core.bencode
-  (:use [clojure.walk :only [keywordize-keys]])
+  (:use 
+    [clojure.walk :only [keywordize-keys]]
+    [torrent-client.client.core.byte-array :only [uint8-array]])
   (:require 
     [goog.crypt :as crypt]
     [torrent-client.client.core.reader :as reader]))
-
-; There must be a better way to do this
-(defn uint8-array
-  ([length] (js/Uint8Array. length))
-  ([array-buffer offset] (js/Uint8Array. array-buffer offset))
-  ([array-buffer offset length] (js/Uint8Array. array-buffer offset length)))
 
 (defn char [characters]
   (cond
@@ -21,18 +17,6 @@
 
 (defn int [number]
   (js/parseInt number))
-
-(defn decode [stream & i]
-  (let [indicator (if (nil? i) (reader/read stream) (first i))]
-    (cond 
-      ; indicator is a number (indicates a string)
-      (and (>= indicator 48) (<= indicator 57)) (decode-string stream indicator)
-      ; indicator is i
-      (= indicator 105) (decode-number stream "e")
-      ; indicator is l
-      (= indicator 108) (decode-list stream)
-      ; indicator is d
-      (= indicator 100) (decode-map stream))))
 
 (defn- decode-number [stream delimeter & ch]
   (loop [i (if (nil? ch) (reader/read stream) (first ch)), result ""]
@@ -55,14 +39,19 @@
 
 (defn- decode-map [stream] 
   (let [list (decode-list stream)] 
-    ; (with-meta 
-    ;   (apply hash-map list) 
-    ;   {:order (map first (partition 2 list))})
-    ; (let [f (fn [[k v]] )]
-    ; apply hash-map list))
-    (keywordize-keys (apply array-map list))
-))
+    (keywordize-keys (apply array-map list))))
 
+(defn decode [stream & i]
+  (let [indicator (if (nil? i) (reader/read stream) (first i))]
+    (cond 
+      ; indicator is a number (indicates a string)
+      (and (>= indicator 48) (<= indicator 57)) (decode-string stream indicator)
+      ; indicator is i
+      (= indicator 105) (decode-number stream "e")
+      ; indicator is l
+      (= indicator 108) (decode-list stream)
+      ; indicator is d
+      (= indicator 100) (decode-map stream))))
 
 (defprotocol ArrayOutputStream
   (write [array bytes] "append the bytes to the array"))
@@ -72,24 +61,12 @@
   (write [stream bytes]
     (if (number? bytes)
       (.push array bytes)
-      (.apply (.-push array) array bytes))))
+      (.apply (.-push array) bytes))))
 
 (defn byte-array-output-stream []
   "Generate a new ByteArrayOutputStream with a native
   javascript array (performance reasons)"
   (ByteArrayOutputStream. (js/Array)))
-
-(defn encode [obj]
-  (let [stream (byte-array-output-stream)] 
-    (encode-object obj stream)
-    (.-array stream)))
-
-(defn- encode-object [obj stream]
-  (cond (keyword? obj) (encode-string (name obj) stream)
-        (string? obj) (encode-string obj stream)
-        (number? obj) (encode-number obj stream)
-        (vector? obj) (encode-list obj stream)
-        (map? obj) (encode-dictionary obj stream)))
 
 (defn- encode-string [obj stream]
   (let [bytes (crypt/stringToByteArray obj)
@@ -114,3 +91,15 @@
     (encode-object item stream)
     (encode-object (dictionary item) stream))
   (write stream 101))
+
+(defn- encode-object [obj stream]
+  (cond (keyword? obj) (encode-string (name obj) stream)
+        (string? obj) (encode-string obj stream)
+        (number? obj) (encode-number obj stream)
+        (vector? obj) (encode-list obj stream)
+        (map? obj) (encode-dictionary obj stream)))
+
+(defn encode [obj]
+  (let [stream (byte-array-output-stream)] 
+    (encode-object obj stream)
+    (.-array stream)))

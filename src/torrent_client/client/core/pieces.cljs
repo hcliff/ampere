@@ -76,6 +76,9 @@
 
   )
 
+(defn piece [byte-array]
+  (Piece. nil byte-array nil))
+
 (defn blocks->piece 
   "Build a piece from its component blocks"
   [blocks]
@@ -87,6 +90,3 @@
     (doseq [block blocks]
       (.set byte-array (block :data) (block :begin)))
     (piece byte-array)))
-
-(defn piece [byte-array]
-  (Piece. nil byte-array nil))

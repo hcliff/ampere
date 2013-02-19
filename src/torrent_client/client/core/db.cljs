@@ -13,15 +13,6 @@
 ;; Idiomatic clojure wrapper around the objectstore 
 ;;************************************************
 
-
-(defn- db-safe-index [[k x]]
-  (let [s (camel-case (if (keyword? k) (name k) k))
-        x (if (map? x) (db-safe x) x)]
-    [s x]))
-
-(defn db-safe [c]
-  (into {} (map db-safe-index c)))
-
 (extend-type db/ObjectStore
   
   ILookup

@@ -21,6 +21,15 @@
         :compiler {
           :output-to "resources/public/cljs/bootstrap.js"
           :optimizations :whitespace
-          :pretty-print true}}}}
+          :pretty-print true}}}
+    :repl-listen-port 9000
+    :repl-launch-commands{
+      "firefox"  ["firefox"
+                  :stdout ".repl-firefox-out"
+                  :stderr ".repl-firefox-err"]
+      "chrome" ["/opt/google/chrome/chrome" "http://localhost:8091/"
+                :stdout ".repl-chrome-out"
+                :stderr ".repl-chrome-err"
+                ]}}
   :source-paths ["src"]
   :main torrent-client.server)

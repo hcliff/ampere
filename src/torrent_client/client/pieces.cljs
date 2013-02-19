@@ -47,7 +47,8 @@
 
 (dispatch/react-to #{:written-piece :invalid-piece} (fn [_ torrent block-index]
   "When a block has finished or is invalid, remove it from the in-progress"
-  (let [blocks (remove #(= block-index %) (@working :info-hash))]
+  (let [info-hash (@torrent :pretty-info-hash)
+        blocks (remove #(= block-index %) (@working info-hash))]
     (swap! working assoc info-hash blocks))))
 
 (defn piece-length 
@@ -128,12 +129,6 @@
       ;   (success-callback (apply conj data)))
 
       )))
-
-(defn get-piece 
-  "Get the binary data for a piece, straddling files if neccisary"
-  [torrent piece-index]
-  (let [piece-offset (piece-offset torrent piece-index)]
-    (get-file-section piece-offset (@torrent :piece-length) file)))
 
 ; ;;************************************************
 ; ;; Wait for a block to have all its pieces before

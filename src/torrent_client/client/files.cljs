@@ -34,16 +34,16 @@
 ; Manage torrent files
 ;************************************************
 
-(dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
-  "A file has been added to this torrent"
-  (let [file (generate-file torrent file-entry file-data)]
-    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]}))))
-
 (defn generate-file [torrent file-entry file-data]
   ; file-data is {:pos-start x :pos-end x}, file-entry is the file on the filesystem
   (let [boundaries (block-boundaries torrent file-data)]
     ; Attach information on the block boundaries to the file
     (with-meta (pieces/piece-file file-entry) (merge file-data boundaries))))
+
+(dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
+  "A file has been added to this torrent"
+  (let [file (generate-file torrent file-entry file-data)]
+    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]}))))
 
 ;************************************************
 ; Reading and writing from the filesystem

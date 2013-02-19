@@ -23,12 +23,6 @@
   :double (/ 64 8)
   })
 
-; H.C currently packs to string
-; if we change communication to bytearray will need changing
-(defn pack [& formatters]
-  (let [formatters (partition 2 formatters)]
-    (apply str (map pack-data formatters))))
-
 (defmulti pack-data (fn [[format data]] format))
 
 (defmethod pack-data :int [[_ data]]
@@ -36,6 +30,20 @@
          (bit-and 0xff (bit-shift-right data 16))
          (bit-and 0xff (bit-shift-right data 8))
          (bit-and 0xff data)]))
+
+; H.C currently packs to string
+; if we change communication to bytearray will need changing
+(defn pack [& formatters]
+  (let [formatters (partition 2 formatters)]
+    (apply str (map pack-data formatters))))
+
+(defmulti unpack-data (fn [format data] format))
+
+(defmethod unpack-data :int [_ data]
+  (+ (bit-shift-left (nth data 0) 24)
+     (bit-shift-left (nth data 1) 16)
+     (bit-shift-left (nth data 2) 8)
+     (nth data 3)))
 
 (defn unpack [formatters data]
   (let [reader (reader/push-back-reader data)]
@@ -48,14 +56,6 @@
                  (conj data (unpack-data formatter bytes))))
         ; And return the data when we're done
         data))))
-
-(defmulti unpack-data (fn [format data] format))
-
-(defmethod unpack-data :int [_ data]
-  (+ (bit-shift-left (nth data 0) 24)
-     (bit-shift-left (nth data 1) 16)
-     (bit-shift-left (nth data 2) 8)
-     (nth data 3)))
 
 (defn b64-encode [string]
   (.btoa js/window string))
