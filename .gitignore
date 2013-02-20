@@ -7,5 +7,5 @@ pom.xml
 .lein-env
 resources/public/cljs/*/
 *log
-.repl
+.repl/
 target
