@@ -15,7 +15,7 @@
     :builds {
       :main {
         ; The path to the top-level ClojureScript source directory:
-        :source-paths ["src/cljs"]
+        :source-paths ["src-cljs"]
         ; The standard ClojureScript compiler options:
         ; (See the ClojureScript compiler documentation for details.)
         :compiler {
@@ -31,5 +31,5 @@
                 :stdout ".repl-chrome-out"
                 :stderr ".repl-chrome-err"
                 ]}}
-  :source-paths ["src/clj"]
+  :source-paths ["src-clj"]
   :main torrent-client.server)
