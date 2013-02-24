@@ -4,7 +4,7 @@
     [crate.core :as crate]
     [crate.form :as form])
   (:use
-    [torrent-client.torrent :only [active? paused? completed? downloading?]]
+    [torrent-client.torrent :only [active? paused? completed? downloading? has-full-metadata?]]
     [crate.binding :only [bound]]
     [goog.format :only [numBytesToString]]
     [torrent-client.files :only [files]])
@@ -15,10 +15,13 @@
 ;; View methods
 ;;************************************************
 
+(defn html [& args]
+  "Help crate deal with logic"
+  (let [args (remove nil? args)]
+    (apply crate/html args)))
+
 (defn download-percent 
-  "Rapidly determine the download progress by examining the
-  bitfield completion, not 100% accurate due to variable
-  last block size, but good enough"
+  "Percentage of pieces saved to needed, rough estimate of progress"
   [torrent]
   (let [percent (/ (torrent :pieces-written) (torrent :pieces-length))]
     (str (/ percent 0.01) "%")))
@@ -75,8 +78,8 @@
     [:div.modal-footer
       [:a.btn {:data-dismiss "modal"} "close"]]])
 
-(defn torrent-progress [torrent]
-  (if (empty? (@files (torrent :pretty-info-hash)))
+(defn- torrent-progress [torrent]
+  (if-not (has-full-metadata? torrent)
     [:div.progress.progress-striped.progress-success.active
       [:div.bar.bar-success {:style {:width "100%"}}]
       [:label.label "starting..."]]
@@ -86,17 +89,22 @@
       [:label {:class (str "label" (if-not (active? torrent) " hide"))} 
         (time-remaining-to-string torrent)]]))
 
-(defn torrent-actions [torrent]
+(defn- action-browse [torrent]
+  (let [files (@files (torrent :pretty-info-hash))]
+    (if (and (not-empty files) (completed? torrent))
+      [:a.btn {:href (file-url (first files)) :target "_blank"}
+        [:i.icon-folder-open]]
+        )))
+
+(defn- torrent-actions [torrent]
   [:div.btn-group
-    (when-let [files (@files (torrent :pretty-info-hash))]
+    (html
+      (when (has-full-metadata? torrent)
         [:button.btn
           [:i.icon-globe]]
         [:button.btn {:disabled true}
           [:i {:class (if (active? torrent) "icon-pause" "icon-play")}]]
-        [:a {:href (file-url (first files))
-             :target "_blank" 
-             :class (str "btn" (if (completed? torrent) " hide"))}
-          [:i.icon-folder-open]])
+        (action-browse torrent)))
     [:button.btn {:disabled true}
       [:i.icon-trash]]])
 

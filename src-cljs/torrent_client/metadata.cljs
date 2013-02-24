@@ -5,6 +5,10 @@
     [torrent-client.torrents :only [torrents]]
     [torrent-client.core.metadata :only [piece-length pieces->metadata]]))
 
+;;************************************************
+;; For retrieving metadata per BEP 9
+;;************************************************
+
 ; metadata pieces we are currently getting
 (def working (atom {}))
 

@@ -37,10 +37,17 @@
   "Take a collection or atom and determin if the torrent has finished"
   (if-not (coll? torrent)
     (completed? @torrent)
-    (and (torrent :pieces-length)
+    (and (has-full-metadata? torrent)
          (>= (torrent :pieces-written) (torrent :pieces-length)))))
 
 (def downloading? (complement completed?))
+
+(defn has-full-metadata? [torrent]
+  (if-not (coll? torrent)
+    (has-full-metadata? @torrent)
+    (boolean (and (torrent :pretty-info-hash)
+                  (torrent :pieces-hash)
+                  (torrent :files)))))
 
 ;************************************************
 ; Functions for processing torrent data into
@@ -238,73 +245,51 @@
     [torrent torrent-file]))
 
 ;************************************************
-; Maintain torrent state
-;************************************************
-
-(defn- write-metainfo-to-db [metainfo]
-  (let [transaction (db/create-transaction @connection ["metainfo"] "readwrite")
-        object-store (.objectStore transaction "metainfo")]
-    (assoc! object-store (metainfo :pretty-info-hash) metainfo)))
-
-(defn torrent-storage [torrent]
-  ; Any changes to the torrent should be saved in the db
-  (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
-    (write-metainfo-to-db new-metainfo))))
-
-(defn torrent [metainfo]
-  "Given metainfo build an atom and start watching it"
-  (let [torrent (atom metainfo)]
-    (torrent-storage torrent)
-    ; Notify that a torrent has been started
-    (dispatch/fire :processed-torrent torrent)
-    torrent))
-
-(defn torrent-files [torrent files]
-  (let [dispatcher #(dispatch/fire :add-file [torrent % %2])]
-    ; Track all the file entires
-    (doall (map dispatcher files (metainfo :files)))))
-
-;************************************************
 ; Create torrents from various client events
 ;************************************************
 
+(defn torrent-files [torrent files]
+  "Dispatch helper"
+  (let [dispatcher #(dispatch/fire :add-file [torrent % %2])]
+    ; Track all the file entires
+    (doall (map dispatcher files (@torrent :files)))))
+
 ; When a torrent is loaded from the db
-(dispatch/react-to #{:add-metainfo-db} (fn [_ metainfo]
-  (let-async [:let metainfo (read-metainfo-db metainfo)
+(dispatch/react-to #{:add-metainfo-db} (fn [_ metadata]
+  (let-async [:let metadata (read-metainfo-db metadata)
               ; The files allready exist on the filesystem
               ; generate file handlers
-              files (read-torrent-files metainfo)
-              torrent (torrent metainfo)]
-    (torrent-files torrent files))))
+              files (read-torrent-files metadata)]
+    (torrent-files torrent files)
+    (dispatch/fire :processed-metadata metadata))))
 
 ; When the add-torrent form is submitted
-(dispatch/react-to #{:add-metainfo-file} (fn [_ metainfo-file]
-  (let-async [metainfo (read-metainfo-file metainfo-file)
-              files (write-torrent-files metainfo)
-              :let torrent (torrent metainfo)]
-    (torrent-files torrent files))))
+(dispatch/react-to #{:add-metainfo-file} (fn [_ metadata-file]
+  (let-async [metadata (read-metadata-file metadata-file)
+              files (write-torrent-files metadata)]
+    (torrent-files torrent files)
+    (dispatch/fire :processed-metadata torrent))))
 
-; Given an byte-array of metainfo (metainfo from url)
+; Given an byte-array of metadata (metadata from url)
 (dispatch/react-to #{:add-metainfo-byte-array} (fn [_ byte-array]
-  (let-async [:let metainfo (read-metainfo-byte-array byte-array)
-              files (write-torrent-files metainfo)
-              :let torrent (torrent metainfo)]
-    (torrent-files torrent files))))
+  (let-async [:let metadata (read-metainfo-byte-array byte-array)
+              files (write-torrent-files metadata)]
+    (torrent-files (atom metadata) files)
+    (dispatch/fire :processed-metadata metadata))))
 
 ; When the user submits a form with details for a torrent
 (dispatch/react-to #{:create-torrent} (fn [_ form]
   ; Write the provided files to fs before continuing
-  (let-async [metainfo (create-torrent form)
-              files (write-torrent-files metainfo (form :files))
-              :let torrent (torrent metainfo files)]
-    ; This happens automatically on updates, not on creation
-    (write-metainfo-to-db @torrent)
-    (torrent-files torrent files)
+  (let-async [metadata (create-torrent form)
+              files (write-torrent-files metadata (form :files))]
+    (torrent-files (atom metadata) files)
+    (dispatch/fire :processed-metadata metadata)
     ; Inform the UI the torrent has been built
-    (dispatch/fire :share-torrent torrent))))
+    ; (dispatch/fire :share-torrent torrent)
+    )))
 
-; When given some basic metainfo via the magnet link
-(dispatch/react-to #{:add-magnet-link} (fn [_ metainfo]
-  (let [metainfo (read-magnet-link metainfo)]
+; When given some basic metadata via the magnet link
+(dispatch/react-to #{:add-magnet-link} (fn [_ metadata]
+  (let [metadata (read-magnet-link metadata)]
     ; Set up the torrent and grab the rest of the metadata from peers
-    (torrent metainfo))))
+    (dispatch/fire :processed-metadata metadata))))

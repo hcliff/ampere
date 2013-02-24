@@ -43,7 +43,11 @@
 (dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
   "A file has been added to this torrent"
   (let [file (generate-file torrent file-entry file-data)]
-    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]}))))
+    ; TODO: use below code
+    ; (swap! files update-in [(@torrent :pretty-info-hash)] conj file)
+    (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]})
+    ; "touch" the torrent atom to let listeners know related content has chanegd
+    (swap! torrent identity))))
 
 ;************************************************
 ; Reading and writing from the filesystem

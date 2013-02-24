@@ -6,11 +6,14 @@
 ; the key is the pretty-info-hash
 (def torrents (atom {}))
 
-; When a torrent is started, add it to the torrents
-(dispatch/react-to #{:processed-torrent} (fn [_ torrent]
-  (.log js/console "Adding to torrents atom" torrent)
-  (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
-  (dispatch/fire :started-torrent torrent)))
+; When metadata is processed turn it into an atom and track it
+(dispatch/react-to #{:processed-metadata} (fn [_ metadata]
+  (.log js/console "Adding to torrents atom" metadata)
+  (if-let [existing (@torrents (metadata :pretty-info-hash))]
+    (dispatch/fire :duplicate-torrent existing)
+    (let [torrent (atom metadata)]
+      (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
+      (dispatch/fire :started-torrent torrent)))))
 
 (dispatch/react-to #{:written-piece} (fn [_ [torrent _]]
   (let [pieces-written (inc (or (@torrent :pieces-written) 0))]
