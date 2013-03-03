@@ -54,11 +54,17 @@
 ; all the information we need to download it
 ;************************************************
 
+(defn pretty-info-hash [info-hash]
+  (pad-string-left (crypt/byteArrayToHex info-hash) "0" 40))
+
+(defn info-hash [pretty-info-hash]
+  (crypt/hexToByteArray pretty-info-hash))
+
 (defn process-metadata [metadata]
   (let [info (metadata :info)
         info-hash (sha1 (encode info))
         ; Used as a key to refer to the torrent
-        pretty-info-hash (pad-string-left (crypt/byteArrayToHex info-hash) "0" 40)
+        pretty-info-hash (pretty-info-hash info-hash)
         
         ; The blocks in the file
         ; each 20 byte hash represents a block
@@ -130,6 +136,7 @@
   [x]
    {:announce-list (filter http-scheme? (x :announce-list))
     :name (x :name "")
+    :info-hash (info-hash (x :info-hash))
     :pretty-info-hash (x :info-hash)})
 
 ;************************************************
@@ -260,14 +267,14 @@
               ; The files allready exist on the filesystem
               ; generate file handlers
               files (read-torrent-files metadata)]
-    (torrent-files torrent files)
+    (torrent-files (atom metadata) files)
     (dispatch/fire :processed-metadata metadata))))
 
 ; When the add-torrent form is submitted
 (dispatch/react-to #{:add-metainfo-file} (fn [_ metadata-file]
   (let-async [metadata (read-metadata-file metadata-file)
               files (write-torrent-files metadata)]
-    (torrent-files torrent files)
+    (torrent-files (atom metadata) files)
     (dispatch/fire :processed-metadata torrent))))
 
 ; Given an byte-array of metadata (metadata from url)

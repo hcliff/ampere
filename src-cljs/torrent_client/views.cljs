@@ -98,13 +98,15 @@
 
 (defn- torrent-actions [torrent]
   [:div.btn-group
-    (html
-      (when (has-full-metadata? torrent)
-        [:button.btn
+    (if (has-full-metadata? torrent)
+      (html
+        [:button.btn.share
           [:i.icon-globe]]
         [:button.btn {:disabled true}
           [:i {:class (if (active? torrent) "icon-pause" "icon-play")}]]
-        (action-browse torrent)))
+        (action-browse torrent))
+      ; Crate cannot take nil thus the if cannot be uncaught
+      (html))
     [:button.btn {:disabled true}
       [:i.icon-trash]]])
 

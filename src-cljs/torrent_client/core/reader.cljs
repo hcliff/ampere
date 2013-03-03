@@ -3,13 +3,14 @@
 
 (defprotocol PushbackReader
   (read [reader] [reader length] "Returns the next char from the Reader,
-nil if the end of stream has been reached"))
+nil if the end of stream has been reached")
+  (rem [reader] "Return the unread part of the array"))
 
 ; Using two atoms is less idomatic, but saves the repeat overhead of map creation
 (deftype ArrayPushbackReader [array index-atom]
   PushbackReader
-  (read [reader] (reader/read 1))
-  (read [reader length]
+  (read [reader] (read reader 1))
+  (read [_ length]
     (let [idx @index-atom
           length (or length 1)
           buffer-view (subarray array idx (+ idx length))]
@@ -18,7 +19,8 @@ nil if the end of stream has been reached"))
       ; otherwise return an array of characters
       (if (= length 1)
         (aget buffer-view 0)
-        buffer-view))))
+        buffer-view)))
+  (rem [_] (subarray array @index-atom)))
 
 (defn push-back-reader [array]
   "Creates an ArrayPushbackReader from a given array"

@@ -2,6 +2,7 @@
   (:require
     [torrent-client.core.crypt :as crypt]
     [torrent-client.core.bencode :as bencode]
+    [torrent-client.core.reader :as reader]
     [torrent-client.bitfield :as bitfield]
     [torrent-client.protocol.main :as protocol]
     [goog.events :as events])
@@ -72,18 +73,21 @@
 ;; extension and msg_type
 ;;************************************************
 
-(defmulti receive-extension (fn [peer extension message data]
+(defmulti receive-extension (fn [peer extension message]
   (if-let [msg-type (message :msg_type)]
     [extension (message :msg_type)]
     extension)))
 
-(defmethod receive-extension [ut-metadata ut-metadata-request] [p _ message _]
+(defmethod receive-extension extended-handshake [p _ message]
+  (trigger p :receive-extended message))
+
+(defmethod receive-extension [ut-metadata ut-metadata-request] [p _ message]
   (trigger p :receive-metadata-request [(message :piece_index)]))
 
-(defmethod receive-extension [ut-metadata ut-metadata-piece] [p _ message data]
+(defmethod receive-extension [ut-metadata ut-metadata-piece] [p _ [message data]]
   (trigger p :receive-metadata-piece [(message :piece_index) data]))
 
-(defmethod receive-extension [ut-metadata ut-metadata-reject] [p _ message _]
+(defmethod receive-extension [ut-metadata ut-metadata-reject] [p _ message]
   (trigger p :receive-metadata-reject [(message :piece_index)]))
 
 ;;************************************************
@@ -96,9 +100,11 @@
 
 (defmethod receive-data msg-extended [p data]
   "When given an extension pass it off to a further multimethod"
-  (let [extension (first data)
-        [message, data] (bencode/decode (rest data))]
-    (receive-extension p extension message data)))
+  (let [extension (second data)
+        reader (reader/push-back-reader (subarray data 2))
+        message (bencode/decode reader)]
+    (js* "debugger;")
+    (receive-extension p extension message)))
 
 (defmethod receive-data msg-choke [p _]
   (trigger p :receive-choke))
@@ -132,9 +138,10 @@
     (trigger p :receive-cancel index begin length)))
 
 (defmethod receive-data :default [p data]
-  (let [info-hash (vec (subarray data 28 48))
+  (let [reserved (bitfield/bitfield (subarray data 20 28))
+        info-hash (vec (subarray data 28 48))
         peer-id (crypt/byte-array->str (vec (subarray data 48 68)))]
-    (trigger p :receive-handshake info-hash peer-id)))
+    (trigger p :receive-handshake reserved info-hash peer-id)))
 
 ;;************************************************
 ;; The bittorrent protocol
@@ -203,13 +210,15 @@
     (protocol/send-extended client id message nil))
 
   (send-extended [client id message data] 
-    (let [header {:m extensions :metadata_size 3125}
-          id (if (keyword? id) (get extensions id) id)
-          data (str (char id) (bencode/encode message) data)]
+    (let [id (if (keyword? id) (get extensions id) id)
+          body (crypt/byte-array->str (bencode/encode message))
+          data (str (char id) body data)]
+      (js* "debugger;")
       (protocol/send-data client msg-extended data)))
 
   (send-extended-handshake [client]
-    (protocol/send-extended client extended-handshake {}))
+    (let [message {:m extensions :metadata_size 3125}]
+      (protocol/send-extended client extended-handshake message)))
 
   (send-metadata-request [client piece-index]
     (let [message {:msg_type ut-metadata-request :piece piece-index}]

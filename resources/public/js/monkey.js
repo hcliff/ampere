@@ -27,3 +27,19 @@ goog.db.ObjectStore.prototype.openCursor = function(opt_range, opt_direction) {
   };
   return cursor;
 };
+
+/**
+ * Converts a hex string into an integer array.
+ * @param {string} hexString Hex string of 16-bit integers (two characters
+ *     per integer).
+ * @return {!Array.<number>} Array of {0,255} integers for the given string.
+ */
+goog.crypt.hexToByteArray = function(hexString) {
+  goog.asserts.assert(hexString.length % 2 == 0,
+                      'Key string length must be multiple of 2');
+  var arr = [];
+  for (var i = 0; i < hexString.length; i += 2) {
+    arr.push(parseInt(hexString.substring(i, i + 2), 16));
+  }
+  return arr;
+};

@@ -1,17 +1,17 @@
 (ns torrent-client.peer
   (:use 
+    [torrent-client.torrent :only [pretty-info-hash has-full-metadata?]]
     [torrent-client.protocol.bittorrent :only [generate-protocol]]
     [torrent-client.waltz :only [machine transition]]
     [torrent-client.bitfield :only [bitfield-unique]]
     [torrent-client.pieces :only [wanted-pieces work-piece! piece-blocks get-block]]
-    [torrent-client.peer-id :only [peer-id]]
-    )
+    [torrent-client.peer-id :only [peer-id]])
   (:require
     [torrent-client.core.dispatch :as dispatch]
     [torrent-client.protocol.main :as protocol]
     [waltz.state :as state])
   (:use-macros 
-    [waltz.macros :only [in out defstate defevent]]
+    [waltz.macros :only [in out constraint defstate defevent]]
     [async.macros :only [async let-async]]))
 
 ; How many outstanding requests can a peer have at any given time
@@ -46,18 +46,29 @@
     (dispatch/react-to #{[:unchoke-peer (@peer-data :peer-id)]}
       #(state/trigger me :unchoke-peer))
 
-    (defevent me :receive-handshake [info-hash peer-id]
+    ; If the metadata becomes available and we were waiting on it
+    ; proceed to send the bitfield
+    (dispatch/react-to #{[:full-metadata (@torrent :pretty-info-hash)]}
+      #(state/set me :sent-bitfield))
+
+    (defevent me :receive-handshake [reserved info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
       peer-id and the torrent info-hash"
-      (.log js/console "recieve handshake" (@peer-data :peer-id) peer-id)
+      (.log js/console "recieve handshake" peer-id)
       (when (and (= (vec (@torrent :info-hash)) info-hash)
                  (= (@peer-data :peer-id) peer-id))
-        (transition me :sent-handshake :sent-bitfield)
-        (transition me :init :sent-handshake)))
+        ; If this peer supports extensions
+        ; H.C: currently can't deal with peers who don't
+        ; we can't send a bitfield on magnet requests obviously
+        (if (nth reserved 44)
+          (state/set me :sent-extended)
+          (state/set me :sent-bitfield))
+        (state/set me :sent-handshake)
+        (.log js/console (state/current me))))
 
-    ; (defevent me :extended-handshake [_]
-    ;   ;TODO: extension negotiation?
-    ;   (transition me :sent))
+    (defevent me :receive-extended [extensions]
+      (state/set me :sent-bitfield)
+      (state/set me :sent-extended))
 
     (defn update-metadata-queue []
       "Saturate the peers queue with metadata piece requests"
@@ -173,10 +184,19 @@
     (defstate me :init)
 
     (defstate me :sent-handshake
-      (in [] (protocol/send-handshake bittorrent-client)))
+      (in [] (protocol/send-handshake bittorrent-client))
+      ; Only send the handshake once
+      (constraint [_ _] (state/in? me :init)))
+
+    (defstate me :sent-extended
+      (in [] (protocol/send-extended-handshake bittorrent-client))
+      ; Can't send extensions until peer is validated
+      (constraint [_ _] (state/in? me :sent-handshake)))
 
     (defstate me :sent-bitfield
-      (in [] (protocol/send-bitfield bittorrent-client)))
+      (in [] (protocol/send-bitfield bittorrent-client))
+      ; Can't send the bitfield until we have all our metadata
+      (constraint [_ _] (has-full-metadata? torrent)))
 
     (defstate me :choked-not-interested
       (in [] (protocol/send-not-interested bittorrent-client)))
@@ -200,7 +220,7 @@
     ; Handshake if this is the first client
     (when handshake
       (.log js/console "INITIATE HANDSHAKE")
-      (state/set-ex me :init :sent-handshake))
+      (state/set me :sent-handshake))
 
     ; Return some info on the peer
     peer-data

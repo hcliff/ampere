@@ -61,6 +61,7 @@
     (.info js/console "trying tracker" tracker-url)
     (let-async [socket (tracker-socket tracker-url)]
       (.info js/console "connected to tracker" tracker-url)
+      (.info js/console "torrent has trackers" (@torrent :pretty-info-hash))
       (swap! trackers assoc tracker socket)
       (emit socket :started {
         :peer_id @peer-id

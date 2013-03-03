@@ -14,12 +14,15 @@
    NOTE: key-path cannot have dashes"
   [{:name "metainfo"}])
 
+; NOTE: edge case on magnet links, they will try to add before the db is ready
+
 ;;************************************************
 ;; DB setup and initial data pull
 ;;************************************************
 
 (dispatch/react-to #{:document-ready} (fn []
-  (let-async [database (db/open-database "ampere9" 1 object-stores)]
+  (let-async [database (db/open-database "ampere10" 1 object-stores)]
+    (.info js/console "opened indexeddb")
     ; Swap out the atom with our db connection
     (reset! connection database)
     (let [transaction (db/create-transaction database ["metainfo"] "readonly")
@@ -36,11 +39,14 @@
 ;;************************************************
 
 (defn- write-metadata-to-db [metainfo]
-  (let [transaction (db/create-transaction @connection ["metainfo"] "readwrite")
-        object-store (.objectStore transaction "metainfo")]
-    (assoc! object-store (metainfo :pretty-info-hash) metainfo)))
+  "We can function without indexeddb, so don't crash if there's no connection"
+  (if @connection
+    (let [transaction (db/create-transaction @connection ["metainfo"] "readwrite")
+          object-store (.objectStore transaction "metainfo")]
+      (assoc! object-store (metainfo :pretty-info-hash) metainfo))))
 
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   "When a torrent is started we should set up a handler in the db"
   (add-watch torrent :update-db (fn [_ _ _ new-metainfo]
-    (write-metadata-to-db new-metainfo)))))
+    (write-metadata-to-db new-metainfo)))
+  (swap! torrent identity)))

@@ -38,7 +38,7 @@
             [:div.control-group
               (label {:class "control-label"} "tracker" "tracker")
               [:div.controls
-                (text-field {:type "url" :value "http://ec2-184-73-103-94.compute-1.amazonaws.com:8010"} "tracker")]]
+                (text-field {:type "url" :value "http://ec2-184-73-103-94.compute-1.amazonaws.com:80"} "tracker")]]
             [:div.control-group
               (label {:class "control-label"} "files" "files")
               [:div.controls

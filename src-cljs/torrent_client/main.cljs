@@ -159,18 +159,22 @@
 (on $add-modal :hide (fn [e]
   (.reset (first $add-form))))
 
+(def urn-pattern #"^urn:btih:([a-zA-F\d]{40})$")
+
 (dispatch/react-to #{:document-ready} (fn [_]
   "When provided with a magnet link, use it to initiate a torrent"
   (let [qo (.getQueryData (goog/Uri. (.-location js/window)))
         torrent-name (.get qo "dn")]
     ; Some early stage filtering, we need an info hash and a tracker
     ; the tracker may or may not be valid (validation occurs later)
-    (if-let [info-hash (.get qo "xt")]
-      (if-let [announce-list (js->clj (.getValues qo "tr"))]
-        (dispatch/fire :add-magnet-link
-          {:announce-list announce-list
-           :info-hash info-hash
-           :name torrent-name}))))))
+    ; H.C: There must be a better way....
+    (if-let [info-hash-urn (.get qo "xt" "")]
+      (if-let [info-hash (re-find urn-pattern info-hash-urn)]
+        (if-let [announce-list (js->clj (.getValues qo "tr"))]
+          (dispatch/fire :add-magnet-link
+            {:announce-list announce-list
+             :info-hash (second info-hash)
+             :name torrent-name})))))))
 
 (on $demo-torrent :click (fn [e]
   "When the user clicks the demo, download the .torrent and use it"
@@ -203,7 +207,7 @@
 
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   (let [element (views/torrent-row torrent)]
-    (on ($ "i.icon-globe" element) :click (fn [_]
+    (on ($ element) :click "button.share" (fn [_]
       (dispatch/fire :share-torrent torrent)))
     ; Render the torrent row and add it to the atom
     (swap! elements assoc (@torrent :pretty-info-hash) element)
@@ -299,8 +303,8 @@
   (dispatch/fire :document-ready)))
 
 ; TODO: A/B test this to minimise leechers
-(on $window :beforeunload (fn [_]
-  (if-not (zero? (count (filter active? @torrents)))
-    "You still have active torrents")))
+; (on $window :beforeunload (fn [_]
+;   (if-not (zero? (count (filter active? @torrents)))
+;     "You still have active torrents")))
 
 (.log js/console "js loaded")

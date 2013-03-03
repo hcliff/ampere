@@ -35,13 +35,13 @@
       ; If c is e - the end character then return the result
       (if (= c 101)
         result
-        (recur (conj result (decode stream c)))))))
+        (recur (conj result (decode-dispatch stream c)))))))
 
 (defn- decode-map [stream] 
   (let [list (decode-list stream)] 
     (keywordize-keys (apply array-map list))))
 
-(defn decode [stream & i]
+(defn- decode-dispatch [stream & i]
   (let [indicator (if (nil? i) (reader/read stream) (first i))]
     (cond 
       ; indicator is a number (indicates a string)
@@ -53,15 +53,25 @@
       ; indicator is d
       (= indicator 100) (decode-map stream))))
 
+(defn decode [stream]
+  (let [output (decode-dispatch stream)
+        data (reader/rem stream)]
+    ; If the bencoding completed fully just return the object
+    (if (empty? data)
+      output
+      ; Otherwise return the object and the remainder
+      [output data])))
+
 (defprotocol ArrayOutputStream
   (write [array bytes] "append the bytes to the array"))
 
 (deftype ByteArrayOutputStream [array]
   ArrayOutputStream
-  (write [stream bytes]
+  (write [_ bytes]
     (if (number? bytes)
       (.push array bytes)
-      (.apply (.-push array) bytes))))
+      (.apply (.-push array) array bytes)))
+    array)
 
 (defn byte-array-output-stream []
   "Generate a new ByteArrayOutputStream with a native
@@ -71,13 +81,13 @@
 (defn- encode-string [obj stream]
   (let [bytes (crypt/stringToByteArray obj)
         bytes-length (crypt/stringToByteArray (str (count bytes) ":"))]
-    (write stream bytes-length 0 (count bytes-length))
-    (write stream bytes 0 (count bytes))))
+    (write stream bytes-length)
+    (write stream bytes)))
 
 (defn- encode-number [number stream]
   (let [string (str "i" number "e")
         bytes (crypt/stringToByteArray string)]
-    (write stream bytes 0 (count bytes))))
+    (write stream bytes)))
 
 (defn- encode-list [list stream]
   (write stream 108)
@@ -93,6 +103,7 @@
   (write stream 101))
 
 (defn- encode-object [obj stream]
+  ; (js* "debugger;")
   (cond (keyword? obj) (encode-string (name obj) stream)
         (string? obj) (encode-string obj stream)
         (number? obj) (encode-number obj stream)
