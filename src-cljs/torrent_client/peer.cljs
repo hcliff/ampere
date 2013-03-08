@@ -9,6 +9,7 @@
   (:require
     [torrent-client.core.dispatch :as dispatch]
     [torrent-client.protocol.main :as protocol]
+    [torrent-client.metadata :as metadata]
     [waltz.state :as state])
   (:use-macros 
     [waltz.macros :only [in out constraint defstate defevent]]
@@ -63,15 +64,23 @@
         (if (nth reserved 44)
           (state/set me :sent-extended)
           (state/set me :sent-bitfield))
-        (state/set me :sent-handshake)
+        (if-not (state/in? me :sent-handshake)
+          (state/set me :sent-handshake))
         (.log js/console (state/current me))))
 
-    (defevent me :receive-extended [extensions]
-      (state/set me :sent-bitfield)
-      (state/set me :sent-extended))
+    (defevent me :receive-extended [message]
+      ; Store the metadata length for later use
+      ; (work out how many pieces to request)
+      (let [metadata {:metadata-length (message :metadata_size)}]
+        (dispatch/fire :update-metadata [torrent metadata]))
+      ; And begin the process of retrieving the metadata
+      (state/set me :acquiring-metadata)
+      (if-not (state/in? me :sent-extended)
+        (state/set me :sent-extended)))
 
     (defn update-metadata-queue []
       "Saturate the peers queue with metadata piece requests"
+      (js* "debugger;")
       (let [pieces (metadata/wanted-pieces torrent)]
         (when (and (not (false? (@peer-data :has-metadata)))
                    (< (@peer-data :outstanding) max-outstanding)
@@ -193,19 +202,30 @@
       ; Can't send extensions until peer is validated
       (constraint [_ _] (state/in? me :sent-handshake)))
 
+    (defstate me :acquiring-metadata
+      (in []
+        ; Try to transition immediately
+        (state/set me :sent-bitfield)
+        ; Or start getting the metadata
+        (update-metadata-queue))
+      (constraint [_ _] (state/in? me :sent-handshake)))
+
     (defstate me :sent-bitfield
       (in [] (protocol/send-bitfield bittorrent-client))
       ; Can't send the bitfield until we have all our metadata
       (constraint [_ _] (has-full-metadata? torrent)))
 
     (defstate me :choked-not-interested
-      (in [] (protocol/send-not-interested bittorrent-client)))
+      (in [] (protocol/send-not-interested bittorrent-client))
+      (constraint [_ _] (state/in? me :sent-bitfield)))
 
     (defstate me :choked-interested
-      (in [] (protocol/send-interested bittorrent-client)))
+      (in [] (protocol/send-interested bittorrent-client))
+      (constraint [_ _] (state/in? me :sent-bitfield)))
 
     (defstate me :not-choked-not-interested
-      (in [] (protocol/send-not-interested bittorrent-client)))
+      (in [] (protocol/send-not-interested bittorrent-client))
+      (constraint [_ _] (state/in? me :sent-bitfield)))
 
     ; This is when downloading actually occurs
     ; TODO: this can be optimised
@@ -215,7 +235,8 @@
         ; If the peer has pieces we want then start fetching
         (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
           (update-queue)
-          (state/set me :not-choked-not-interested))))
+          (state/set me :not-choked-not-interested)))
+      (constraint [_ _] (state/in? me :sent-bitfield)))
 
     ; Handshake if this is the first client
     (when handshake

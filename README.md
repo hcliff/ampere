@@ -4,6 +4,13 @@ A bittorrent client that runs in the browser without plugins. **Currently only w
 
 DEMO: http://hcliff.github.com/ampere
 
+## Bittorrent
+
+* Built to the official spec 
+* Can read .torrent files
+* BEP 9 support (magnet links)
+* Partial BEP 10 support (extension negotiation)
+
 ## Tech
 
 Built using clojurescript (that subsequently compiles down to javascript) and utilizing the latest in HTML5 tech

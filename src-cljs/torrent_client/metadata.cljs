@@ -26,14 +26,23 @@
         working (set (@working info-hash))]
     (remove #(contains? working %) wanted)))
 
-(dispatch/react-to #{:receive-metadata-piece} (fn [_ [torrent piece-index payload]]
+(defn work-piece!
+  "Marks that we have started fetching a piece"
+  [torrent piece-index]
+  (let [info-hash (@torrent :pretty-info-hash)]
+    (.log js/console "work-next-piece" piece-index)
+    ; Add this block to the works in progress
+    (swap! working (partial merge-with concat) {info-hash [piece-index]})
+    piece-index))
+
+(dispatch/react-to #{:receive-metadata-piece} (fn [_ [torrent piece-index data]]
   "When we get a metadata piece add it to the receieved pile"
   (let [info-hash (@torrent :pretty-info-hash)
         pieces (remove #(= piece-index %) (@working info-hash))]
     (swap! working assoc info-hash pieces))
-    (swap! recieved assoc-in [info-hash piece-index] payload)
+    (swap! recieved assoc-in [info-hash piece-index] data)
     ; And if we have all the metadata pieces 
-    (if (= (count received) (count (pieces torrent)))
+    (if (= (count (@received info-hash)) (count (pieces torrent)))
       (let [byte-array (pieces->metadata received)]
         (swap! received dissoc info-hash)
         (dispatch/fire :receive-metadata [torrent byte-array])))))
@@ -44,3 +53,4 @@
 
 (defn get-piece [torrent piece-index]
   (uint8-array (@torrent :metadata-byte-array) (* piece-index piece-length)))
+

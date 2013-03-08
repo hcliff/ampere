@@ -21,3 +21,6 @@
     ; If this torrent has all it's pieces mark as such
     (if (= pieces-written (@torrent :pieces-length))
       (dispatch/fire :completed-torrent torrent)))))
+
+(dispatch/react-to #{:update-metadata} (fn [_ [torrent metadata]]
+  (swap! torrent merge metadata)))

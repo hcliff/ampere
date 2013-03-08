@@ -29,12 +29,13 @@
   from this peer
   note: not lazy!"
   [torrent peer-bitfield]
-  (let [info-hash (@torrent :pretty-info-hash)
-        ; Get a bitfield of the blocks we want from the peer
-        wanted-bitfield (bitfield/difference peer-bitfield (@torrent :bitfield))
-        wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)
-        working (set (@working info-hash))]
-    (remove #(contains? working %) wanted)))
+  (if-let [client-bitfield (@torrent :bitfield)]
+    (let [info-hash (@torrent :pretty-info-hash)
+          ; Get a bitfield of the blocks we want from the peer
+          wanted-bitfield (bitfield/difference peer-bitfield client-bitfield)
+          wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)
+          working (set (@working info-hash))]
+      (remove #(contains? working %) wanted))))
 
 (defn work-piece!
   "Marks that we have started fetching a piece"
