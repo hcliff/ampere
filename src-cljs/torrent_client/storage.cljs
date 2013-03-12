@@ -21,7 +21,7 @@
 ;;************************************************
 
 (dispatch/react-to #{:document-ready} (fn []
-  (let-async [database (db/open-database "ampere10" 1 object-stores)]
+  (let-async [database (db/open-database "ampere11" 1 object-stores)]
     (.info js/console "opened indexeddb")
     ; Swap out the atom with our db connection
     (reset! connection database)

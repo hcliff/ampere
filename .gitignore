@@ -9,3 +9,7 @@ resources/public/cljs/*/
 *log
 .repl/
 target
+.lein-repl-history
+phantom/
+repl/
+out/

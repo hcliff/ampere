@@ -5,14 +5,15 @@
                  [noir "1.3.0-beta2"]
                  [environ "0.3.0"]
                  [jayq "2.0.0"]
-                 [crate "0.2.4"]
-                 ]
+                 [crate "0.2.4"]]
   :git-dependencies [["https://github.com/hcliff/waltz.git"]]
   :hooks [environ.leiningen.hooks]
   :plugins [[environ/environ.lein "0.3.0"]
             [lein-exec "0.2.1"]
             [lein-cljsbuild "0.3.0"]
             [lein-git-deps "0.0.1-SNAPSHOT"]]
+  :source-paths ["src-clj"]
+  :main torrent-client.server
   :cljsbuild {
     :builds {
       :main {
@@ -31,9 +32,4 @@
                   :stderr ".repl-firefox-err"]
       "chrome"  ["/opt/google/chrome/chrome" "http://localhost:8091/"
                   :stdout ".repl-chrome-out"
-                  :stderr ".repl-chrome-err"]
-      "phantom" ["phantomjs" "phantom/repl.js"
-                  :stdout ".repl-phantom-out"
-                  :stderr ".repl-phantom-err"]}}
-  :source-paths ["src-clj", ".lein-git-deps/waltz/src/"]
-  :main torrent-client.server)
+                  :stderr ".repl-chrome-err"]}})

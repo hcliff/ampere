@@ -10,7 +10,8 @@
     [torrent-client.core.string :only [partition-string pad-string-left]]
     [torrent-client.core.url :only [http-scheme?]]
     [torrent-client.core.reader :only [push-back-reader]]
-    [torrent-client.core.bencode :only [encode decode uint8-array]]
+    [torrent-client.core.bencode :only [encode decode]]
+    [torrent-client.core.byte-array :only [uint8-array]]
     [torrent-client.core.crypt :only [sha1]]
     [torrent-client.storage :only [connection]]
     [torrent-client.pieces :only [get-file-piece]]
@@ -62,7 +63,8 @@
 
 (defn process-metadata [metadata]
   (let [info (metadata :info)
-        info-hash (sha1 (encode info))
+        info-bencode (encode info)
+        info-hash (sha1 info-bencode)
         ; Used as a key to refer to the torrent
         pretty-info-hash (pretty-info-hash info-hash)
         
@@ -93,6 +95,7 @@
         last-piece-length (if (zero? last-piece-length) 
                             piece-length last-piece-length)]
   {:info-hash info-hash
+   :info-byte-array (uint8-array info-bencode)
    :pretty-info-hash pretty-info-hash
    :encoding (metadata :encoding)
    :pieces-hash pieces-hash
@@ -124,7 +127,7 @@
         db-entry (assoc db-entry :bitfield bitfield)]
     db-entry))
 
-(defn read-metainfo-file 
+(defn read-metadata-file 
   "Given a metainfo file, read it as an byte-array then process it"
   [torrent-file]
   (async [success-callback _]
