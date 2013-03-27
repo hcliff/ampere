@@ -71,7 +71,7 @@
         peer-connection (peer-connection options)]
     ; When we receive an ice candiate add it to the candiates
     (set! (.-onicecandidate peer-connection) (fn [event]
-      (if-not (undefined? (.-candidate event))
+      (if-not (or (nil? (.-candidate event)) (undefined? (.-candidate event)))
         (add-ice-candidate peer-connection event))))
     peer-connection))
 

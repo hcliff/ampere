@@ -26895,10 +26895,10 @@ torrent_client.core.bencode.decode_number = function() {
       if(cljs.core._EQ_.call(null, c, delimeter)) {
         return torrent_client.core.bencode.int$.call(null, result)
       }else {
-        var G__3153 = torrent_client.core.reader.read.call(null, stream);
-        var G__3154 = [cljs.core.str(result), cljs.core.str(c)].join("");
-        i = G__3153;
-        result = G__3154;
+        var G__14144 = torrent_client.core.reader.read.call(null, stream);
+        var G__14145 = [cljs.core.str(result), cljs.core.str(c)].join("");
+        i = G__14144;
+        result = G__14145;
         continue
       }
       break
@@ -26912,10 +26912,10 @@ torrent_client.core.bencode.decode_number = function() {
     return decode_number__delegate.call(this, stream, delimeter, ch)
   };
   decode_number.cljs$lang$maxFixedArity = 2;
-  decode_number.cljs$lang$applyTo = function(arglist__3155) {
-    var stream = cljs.core.first(arglist__3155);
-    var delimeter = cljs.core.first(cljs.core.next(arglist__3155));
-    var ch = cljs.core.rest(cljs.core.next(arglist__3155));
+  decode_number.cljs$lang$applyTo = function(arglist__14146) {
+    var stream = cljs.core.first(arglist__14146);
+    var delimeter = cljs.core.first(cljs.core.next(arglist__14146));
+    var ch = cljs.core.rest(cljs.core.next(arglist__14146));
     return decode_number__delegate(stream, delimeter, ch)
   };
   decode_number.cljs$lang$arity$variadic = decode_number__delegate;
@@ -26932,8 +26932,8 @@ torrent_client.core.bencode.decode_list = function decode_list(stream) {
     if(cljs.core._EQ_.call(null, c, 101)) {
       return result
     }else {
-      var G__3156 = cljs.core.conj.call(null, result, torrent_client.core.bencode.decode_dispatch.call(null, stream, c));
-      result = G__3156;
+      var G__14147 = cljs.core.conj.call(null, result, torrent_client.core.bencode.decode_dispatch.call(null, stream, c));
+      result = G__14147;
       continue
     }
     break
@@ -26979,9 +26979,9 @@ torrent_client.core.bencode.decode_dispatch = function() {
     return decode_dispatch__delegate.call(this, stream, i)
   };
   decode_dispatch.cljs$lang$maxFixedArity = 1;
-  decode_dispatch.cljs$lang$applyTo = function(arglist__3157) {
-    var stream = cljs.core.first(arglist__3157);
-    var i = cljs.core.rest(arglist__3157);
+  decode_dispatch.cljs$lang$applyTo = function(arglist__14148) {
+    var stream = cljs.core.first(arglist__14148);
+    var i = cljs.core.rest(arglist__14148);
     return decode_dispatch__delegate(stream, i)
   };
   decode_dispatch.cljs$lang$arity$variadic = decode_dispatch__delegate;
@@ -27005,9 +27005,9 @@ torrent_client.core.bencode.decode = function() {
     return decode__delegate.call(this, stream, flags)
   };
   decode.cljs$lang$maxFixedArity = 1;
-  decode.cljs$lang$applyTo = function(arglist__3158) {
-    var stream = cljs.core.first(arglist__3158);
-    var flags = cljs.core.rest(arglist__3158);
+  decode.cljs$lang$applyTo = function(arglist__14149) {
+    var stream = cljs.core.first(arglist__14149);
+    var flags = cljs.core.rest(arglist__14149);
     return decode__delegate(stream, flags)
   };
   decode.cljs$lang$arity$variadic = decode__delegate;
@@ -27076,15 +27076,15 @@ torrent_client.core.bencode.encode_number = function encode_number(number, strea
   var bytes = goog.crypt.stringToByteArray(string);
   return torrent_client.core.bencode.write.call(null, stream, bytes)
 };
-torrent_client.core.bencode.encode_list = function encode_list(list, stream) {
+torrent_client.core.bencode.encode_seq = function encode_seq(seq, stream) {
   torrent_client.core.bencode.write.call(null, stream, 108);
-  var G__3160_3161 = cljs.core.seq.call(null, list);
+  var G__14151_14152 = cljs.core.seq.call(null, seq);
   while(true) {
-    if(G__3160_3161) {
-      var item_3162 = cljs.core.first.call(null, G__3160_3161);
-      torrent_client.core.bencode.encode_object.call(null, item_3162, stream);
-      var G__3163 = cljs.core.next.call(null, G__3160_3161);
-      G__3160_3161 = G__3163;
+    if(G__14151_14152) {
+      var item_14153 = cljs.core.first.call(null, G__14151_14152);
+      torrent_client.core.bencode.encode_object.call(null, item_14153, stream);
+      var G__14154 = cljs.core.next.call(null, G__14151_14152);
+      G__14151_14152 = G__14154;
       continue
     }else {
     }
@@ -27094,14 +27094,14 @@ torrent_client.core.bencode.encode_list = function encode_list(list, stream) {
 };
 torrent_client.core.bencode.encode_dictionary = function encode_dictionary(dictionary, stream) {
   torrent_client.core.bencode.write.call(null, stream, 100);
-  var G__3165_3166 = cljs.core.seq.call(null, cljs.core.keys.call(null, dictionary));
+  var G__14156_14157 = cljs.core.seq.call(null, cljs.core.keys.call(null, dictionary));
   while(true) {
-    if(G__3165_3166) {
-      var item_3167 = cljs.core.first.call(null, G__3165_3166);
-      torrent_client.core.bencode.encode_object.call(null, item_3167, stream);
-      torrent_client.core.bencode.encode_object.call(null, dictionary.call(null, item_3167), stream);
-      var G__3168 = cljs.core.next.call(null, G__3165_3166);
-      G__3165_3166 = G__3168;
+    if(G__14156_14157) {
+      var item_14158 = cljs.core.first.call(null, G__14156_14157);
+      torrent_client.core.bencode.encode_object.call(null, item_14158, stream);
+      torrent_client.core.bencode.encode_object.call(null, dictionary.call(null, item_14158), stream);
+      var G__14159 = cljs.core.next.call(null, G__14156_14157);
+      G__14156_14157 = G__14159;
       continue
     }else {
     }
@@ -27119,8 +27119,8 @@ torrent_client.core.bencode.encode_object = function encode_object(obj, stream) 
       if(cljs.core.number_QMARK_.call(null, obj)) {
         return torrent_client.core.bencode.encode_number.call(null, obj, stream)
       }else {
-        if(cljs.core.vector_QMARK_.call(null, obj)) {
-          return torrent_client.core.bencode.encode_list.call(null, obj, stream)
+        if(cljs.core.seq_QMARK_.call(null, obj)) {
+          return torrent_client.core.bencode.encode_seq.call(null, obj, stream)
         }else {
           if(cljs.core.map_QMARK_.call(null, obj)) {
             return torrent_client.core.bencode.encode_dictionary.call(null, obj, stream)
@@ -30329,7 +30329,14 @@ torrent_client.connection.peer_connection_ice = function peer_connection_ice() {
   var options = cljs.core.ObjMap.fromObject(["\ufdd0'iceServers"], {"\ufdd0'iceServers":cljs.core.PersistentVector.fromArray([cljs.core.ObjMap.fromObject(["\ufdd0'url"], {"\ufdd0'url":"stun:stun.l.google.com:19302"})], true)});
   var peer_connection = torrent_client.connection.peer_connection.call(null, options);
   peer_connection.onicecandidate = function(event) {
-    if(!(void 0 === event.candidate)) {
+    if(!function() {
+      var or__3824__auto__ = event.candidate == null;
+      if(or__3824__auto__) {
+        return or__3824__auto__
+      }else {
+        return void 0 === event.candidate
+      }
+    }()) {
       return torrent_client.connection.add_ice_candidate.call(null, peer_connection, event)
     }else {
       return null
@@ -30340,9 +30347,9 @@ torrent_client.connection.peer_connection_ice = function peer_connection_ice() {
 torrent_client.connection.connections = cljs.core.atom.call(null, cljs.core.ObjMap.EMPTY);
 torrent_client.connection.pending_connections = cljs.core.atom.call(null, cljs.core.ObjMap.EMPTY);
 torrent_client.connection.get_or_create_connection = function() {
-  var get_or_create_connection__delegate = function(peer_id, p__3540) {
-    var vec__3542 = p__3540;
-    var potential_connection = cljs.core.nth.call(null, vec__3542, 0, null);
+  var get_or_create_connection__delegate = function(peer_id, p__8374) {
+    var vec__8376 = p__8374;
+    var potential_connection = cljs.core.nth.call(null, vec__8376, 0, null);
     var temp__3971__auto__ = cljs.core.deref.call(null, torrent_client.connection.connections).call(null, peer_id);
     if(cljs.core.truth_(temp__3971__auto__)) {
       var peer_connection = temp__3971__auto__;
@@ -30359,17 +30366,17 @@ torrent_client.connection.get_or_create_connection = function() {
     }
   };
   var get_or_create_connection = function(peer_id, var_args) {
-    var p__3540 = null;
+    var p__8374 = null;
     if(goog.isDef(var_args)) {
-      p__3540 = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0)
+      p__8374 = cljs.core.array_seq(Array.prototype.slice.call(arguments, 1), 0)
     }
-    return get_or_create_connection__delegate.call(this, peer_id, p__3540)
+    return get_or_create_connection__delegate.call(this, peer_id, p__8374)
   };
   get_or_create_connection.cljs$lang$maxFixedArity = 1;
-  get_or_create_connection.cljs$lang$applyTo = function(arglist__3543) {
-    var peer_id = cljs.core.first(arglist__3543);
-    var p__3540 = cljs.core.rest(arglist__3543);
-    return get_or_create_connection__delegate(peer_id, p__3540)
+  get_or_create_connection.cljs$lang$applyTo = function(arglist__8377) {
+    var peer_id = cljs.core.first(arglist__8377);
+    var p__8374 = cljs.core.rest(arglist__8377);
+    return get_or_create_connection__delegate(peer_id, p__8374)
   };
   get_or_create_connection.cljs$lang$arity$variadic = get_or_create_connection__delegate;
   return get_or_create_connection
@@ -31058,7 +31065,7 @@ filesystem.filesystem.request_file_system = function request_file_system(type, s
 };
 filesystem.filesystem.request_quota = function request_quota(type, size) {
   return function(success_callback, error_callback) {
-    return window.webkitStorageInfo.requestQuota(window[cljs.core.name.call(null, type)], size, success_callback, error_callback)
+    return navigator.webkitPersistentStorage.requestQuota(size, success_callback, error_callback)
   }
 };
 filesystem.filesystem.request_quota_then_filesystem = function request_quota_then_filesystem(type, size) {
@@ -31074,8 +31081,8 @@ filesystem.filesystem.filereader = function() {
   var filereader__1 = function(obj) {
     return function(success_callback, error_callback) {
       var reader = new FileReader;
-      var success_callback__$1 = function(p1__2961_SHARP_) {
-        return success_callback.call(null, p1__2961_SHARP_.currentTarget.result)
+      var success_callback__$1 = function(p1__9654_SHARP_) {
+        return success_callback.call(null, p1__9654_SHARP_.currentTarget.result)
       };
       reader.onerror = error_callback;
       reader.onloadend = success_callback__$1;
@@ -32419,8 +32426,9 @@ torrent_client.torrent.info_hash = function info_hash(pretty_info_hash) {
   return goog.crypt.hexToByteArray(pretty_info_hash)
 };
 torrent_client.torrent.process_metadata = function process_metadata(metadata) {
+  debugger;
   var info = metadata.call(null, "\ufdd0'info");
-  var info_bencode = torrent_client.core.bencode.encode.call(null, cljs.core.clj__GT_js.call(null, info));
+  var info_bencode = torrent_client.core.bencode.encode.call(null, info);
   var info_byte_array = torrent_client.core.byte_array.uint8_array.call(null, info_bencode);
   var info_hash = torrent_client.core.crypt.sha1.call(null, info_bencode);
   var pretty_info_hash = torrent_client.torrent.pretty_info_hash.call(null, info_hash);
@@ -32483,8 +32491,8 @@ torrent_client.torrent.read_torrent_files = function read_torrent_files(torrent)
   return function(success_callback, _) {
     return filesystem.filesystem.request_file_system.call(null, "\ufdd0'PERSISTENT", 0).call(null, function(binding_name__2947__auto__) {
       var fs = binding_name__2947__auto__;
-      var reader = function(p1__3107_SHARP_) {
-        return torrent_client.files.read_file.call(null, fs, p1__3107_SHARP_)
+      var reader = function(p1__11398_SHARP_) {
+        return torrent_client.files.read_file.call(null, fs, p1__11398_SHARP_)
       };
       var files = cljs.core.map.call(null, "\ufdd0'path", torrent.call(null, "\ufdd0'files"));
       return async.helpers.map_async.call(null, reader, files).call(null, function(binding_name__2947__auto____$1) {
@@ -32511,8 +32519,8 @@ torrent_client.torrent.write_torrent_files = function() {
         var granted_bytes = binding_name__2947__auto__;
         return filesystem.filesystem.request_file_system.call(null, "\ufdd0'PERSISTENT", granted_bytes).call(null, function(binding_name__2947__auto____$1) {
           var fs = binding_name__2947__auto____$1;
-          var writer = function(p1__3108_SHARP_, p2__3109_SHARP_) {
-            return torrent_client.files.write_file.call(null, fs, p1__3108_SHARP_, p2__3109_SHARP_)
+          var writer = function(p1__11399_SHARP_, p2__11400_SHARP_) {
+            return torrent_client.files.write_file.call(null, fs, p1__11399_SHARP_, p2__11400_SHARP_)
           };
           var file_paths = cljs.core.map.call(null, "\ufdd0'path", metainfo.call(null, "\ufdd0'files"));
           return async.helpers.map_async.call(null, writer, file_paths, files).call(null, function(binding_name__2947__auto____$2) {
@@ -32592,12 +32600,12 @@ torrent_client.torrent.piece_length = function piece_length(length) {
   var exp = length > 2048 * 1024 * 1024 ? 20 : length > 512 * 1024 * 1024 ? 19 : length > 64 * 1024 * 1024 ? 18 : length > 16 * 1024 * 1024 ? 17 : length > 4 * 1024 * 1024 ? 16 : "\ufdd0'else" ? 15 : null;
   return Math.pow.call(null, 2, exp)
 };
-torrent_client.torrent.create_torrent = function create_torrent(p__3112) {
-  var map__3114 = p__3112;
-  var map__3114__$1 = cljs.core.seq_QMARK_.call(null, map__3114) ? cljs.core.apply.call(null, cljs.core.hash_map, map__3114) : map__3114;
-  var form = map__3114__$1;
-  var files = cljs.core._lookup.call(null, map__3114__$1, "\ufdd0'files", null);
-  var tracker = cljs.core._lookup.call(null, map__3114__$1, "\ufdd0'tracker", null);
+torrent_client.torrent.create_torrent = function create_torrent(p__11403) {
+  var map__11405 = p__11403;
+  var map__11405__$1 = cljs.core.seq_QMARK_.call(null, map__11405) ? cljs.core.apply.call(null, cljs.core.hash_map, map__11405) : map__11405;
+  var form = map__11405__$1;
+  var files = cljs.core._lookup.call(null, map__11405__$1, "\ufdd0'files", null);
+  var tracker = cljs.core._lookup.call(null, map__11405__$1, "\ufdd0'tracker", null);
   return function(success_callback, _) {
     var files_metainfo = cljs.core.map.call(null, torrent_client.torrent.file_metainfo, files);
     var total_length = cljs.core.reduce.call(null, cljs.core._PLUS_, cljs.core.map.call(null, "\ufdd0'length", files_metainfo));
@@ -32605,8 +32613,8 @@ torrent_client.torrent.create_torrent = function create_torrent(p__3112) {
     var metainfo = cljs.core.atom.call(null, cljs.core.ObjMap.fromObject(["\ufdd0'piece-length"], {"\ufdd0'piece-length":piece_length}));
     var file_boundaries = torrent_client.files.file_boundaries.call(null, files_metainfo);
     var files_data = cljs.core.map.call(null, cljs.core.merge, files_metainfo, file_boundaries);
-    var files__$1 = cljs.core.map.call(null, function(p1__3110_SHARP_, p2__3111_SHARP_) {
-      return torrent_client.files.generate_file.call(null, metainfo, p1__3110_SHARP_, p2__3111_SHARP_)
+    var files__$1 = cljs.core.map.call(null, function(p1__11401_SHARP_, p2__11402_SHARP_) {
+      return torrent_client.files.generate_file.call(null, metainfo, p1__11401_SHARP_, p2__11402_SHARP_)
     }, files, files_data);
     return torrent_client.torrent.hashes.call(null, metainfo, files__$1).call(null, function(binding_name__2947__auto__) {
       var hashes = binding_name__2947__auto__;
@@ -32631,8 +32639,8 @@ torrent_client.torrent.share_torrent = function share_torrent(torrent) {
   return cljs.core.PersistentVector.fromArray([torrent, torrent_file], true)
 };
 torrent_client.torrent.torrent_files = function torrent_files(torrent, files) {
-  var dispatcher = function(p1__3115_SHARP_, p2__3116_SHARP_) {
-    return torrent_client.core.dispatch.fire.call(null, "\ufdd0'add-file", cljs.core.PersistentVector.fromArray([torrent, p1__3115_SHARP_, p2__3116_SHARP_], true))
+  var dispatcher = function(p1__11406_SHARP_, p2__11407_SHARP_) {
+    return torrent_client.core.dispatch.fire.call(null, "\ufdd0'add-file", cljs.core.PersistentVector.fromArray([torrent, p1__11406_SHARP_, p2__11407_SHARP_], true))
   };
   return cljs.core.doall.call(null, cljs.core.map.call(null, dispatcher, files, cljs.core.deref.call(null, torrent).call(null, "\ufdd0'files")))
 };
@@ -37696,8 +37704,8 @@ goog.require("torrent_client.core.dispatch");
 torrent_client.tracker.announce_period = 15 * 60 * 1E3;
 torrent_client.tracker.trackers = cljs.core.atom.call(null, cljs.core.ObjMap.EMPTY);
 torrent_client.tracker.on = function on(socket, event, callback) {
-  return socket.on(cljs.core.name.call(null, event), function(p1__3198_SHARP_) {
-    return callback.call(null, cljs.core.js__GT_clj.call(null, p1__3198_SHARP_, "\ufdd0'keywordize-keys", true))
+  return socket.on(cljs.core.name.call(null, event), function(p1__7639_SHARP_) {
+    return callback.call(null, cljs.core.js__GT_clj.call(null, p1__7639_SHARP_, "\ufdd0'keywordize-keys", true))
   })
 };
 torrent_client.tracker.tracker_socket = function tracker_socket(tracker) {
@@ -37708,19 +37716,19 @@ torrent_client.tracker.tracker_socket = function tracker_socket(tracker) {
       return success_callback.call(null, tracker__$1)
     }else {
       var socket = io.connect(tracker);
-      cljs.core.swap_BANG_.call(null, torrent_client.tracker.trackers, cljs.core.assoc, torrent_client.tracker.tracker_url, socket);
+      cljs.core.swap_BANG_.call(null, torrent_client.tracker.trackers, cljs.core.assoc, tracker, socket);
       tracker.onerror = error_callback;
       torrent_client.tracker.on.call(null, socket, "\ufdd0'connect", function() {
         return success_callback.call(null, socket)
       });
-      torrent_client.tracker.on.call(null, socket, "\ufdd0'need_offer", function(p1__3199_SHARP_) {
-        return torrent_client.core.dispatch.fire.call(null, "\ufdd0'need-offer", cljs.core.PersistentVector.fromArray([socket, p1__3199_SHARP_], true))
+      torrent_client.tracker.on.call(null, socket, "\ufdd0'need_offer", function(p1__7640_SHARP_) {
+        return torrent_client.core.dispatch.fire.call(null, "\ufdd0'need-offer", cljs.core.PersistentVector.fromArray([socket, p1__7640_SHARP_], true))
       });
-      torrent_client.tracker.on.call(null, socket, "\ufdd0'offer", function(p1__3200_SHARP_) {
-        return torrent_client.core.dispatch.fire.call(null, "\ufdd0'offer", cljs.core.PersistentVector.fromArray([socket, p1__3200_SHARP_], true))
+      torrent_client.tracker.on.call(null, socket, "\ufdd0'offer", function(p1__7641_SHARP_) {
+        return torrent_client.core.dispatch.fire.call(null, "\ufdd0'offer", cljs.core.PersistentVector.fromArray([socket, p1__7641_SHARP_], true))
       });
-      return torrent_client.tracker.on.call(null, socket, "\ufdd0'answer", function(p1__3201_SHARP_) {
-        return torrent_client.core.dispatch.fire.call(null, "\ufdd0'answer", cljs.core.PersistentVector.fromArray([socket, p1__3201_SHARP_], true))
+      return torrent_client.tracker.on.call(null, socket, "\ufdd0'answer", function(p1__7642_SHARP_) {
+        return torrent_client.core.dispatch.fire.call(null, "\ufdd0'answer", cljs.core.PersistentVector.fromArray([socket, p1__7642_SHARP_], true))
       })
     }
   }
@@ -37729,24 +37737,24 @@ torrent_client.tracker.emit = function emit(socket, event, data) {
   return socket.emit(cljs.core.clj__GT_js.call(null, event), cljs.core.clj__GT_js.call(null, data))
 };
 torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'started-torrent"]), function(_, torrent) {
-  var G__3202 = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent).call(null, "\ufdd0'announce-list"));
+  var G__7643 = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent).call(null, "\ufdd0'announce-list"));
   while(true) {
-    if(G__3202) {
-      var tracker_url = cljs.core.first.call(null, G__3202);
+    if(G__7643) {
+      var tracker_url = cljs.core.first.call(null, G__7643);
       console.info("trying tracker", tracker_url);
-      torrent_client.tracker.tracker_socket.call(null, tracker_url).call(null, function(G__3202, tracker_url) {
+      torrent_client.tracker.tracker_socket.call(null, tracker_url).call(null, function(G__7643, tracker_url) {
         return function(binding_name__2947__auto__) {
           var socket = binding_name__2947__auto__;
           console.info("Torrent", cljs.core.deref.call(null, torrent).call(null, "\ufdd0'pretty-info-hash"), "connect to", tracker_url);
           return torrent_client.tracker.emit.call(null, socket, "\ufdd0'started", cljs.core.ObjMap.fromObject(["\ufdd0'peer_id", "\ufdd0'info_hash", "\ufdd0'numwant"], {"\ufdd0'peer_id":cljs.core.deref.call(null, torrent_client.peer_id.peer_id), "\ufdd0'info_hash":cljs.core.deref.call(null, torrent).call(null, "\ufdd0'pretty-info-hash"), "\ufdd0'numwant":10}))
         }
-      }(G__3202, tracker_url), function(G__3202, tracker_url) {
+      }(G__7643, tracker_url), function(G__7643, tracker_url) {
         return function(error__2948__auto__) {
           return console.error(error__2948__auto__)
         }
-      }(G__3202, tracker_url));
-      var G__3203 = cljs.core.next.call(null, G__3202);
-      G__3202 = G__3203;
+      }(G__7643, tracker_url));
+      var G__7644 = cljs.core.next.call(null, G__7643);
+      G__7643 = G__7644;
       continue
     }else {
       return null
@@ -37755,13 +37763,13 @@ torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fro
   }
 });
 torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'completed-torrent"]), function(_, torrent) {
-  var G__3204 = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent_client.tracker.trackers));
+  var G__7645 = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent_client.tracker.trackers));
   while(true) {
-    if(G__3204) {
-      var socket = cljs.core.first.call(null, G__3204);
+    if(G__7645) {
+      var socket = cljs.core.first.call(null, G__7645);
       torrent_client.tracker.emit.call(null, socket, "\ufdd0'completed", cljs.core.ObjMap.fromObject(["\ufdd0'peer_id", "\ufdd0'info_hash"], {"\ufdd0'peer_id":cljs.core.deref.call(null, torrent_client.peer_id.peer_id), "\ufdd0'info_hash":cljs.core.deref.call(null, torrent).call(null, "\ufdd0'pretty-info-hash")}));
-      var G__3205 = cljs.core.next.call(null, G__3204);
-      G__3204 = G__3205;
+      var G__7646 = cljs.core.next.call(null, G__7645);
+      G__7645 = G__7646;
       continue
     }else {
       return null
@@ -37770,13 +37778,13 @@ torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fro
   }
 });
 torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'stopped-torrent"]), function(_, torrent) {
-  var G__3206 = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent_client.tracker.trackers));
+  var G__7647 = cljs.core.seq.call(null, cljs.core.deref.call(null, torrent_client.tracker.trackers));
   while(true) {
-    if(G__3206) {
-      var socket = cljs.core.first.call(null, G__3206);
+    if(G__7647) {
+      var socket = cljs.core.first.call(null, G__7647);
       torrent_client.tracker.emit.call(null, socket, "\ufdd0'stopped", cljs.core.ObjMap.fromObject(["\ufdd0'peer_id", "\ufdd0'info_hash"], {"\ufdd0'peer_id":cljs.core.deref.call(null, torrent_client.peer_id.peer_id), "\ufdd0'info_hash":cljs.core.deref.call(null, torrent).call(null, "\ufdd0'pretty-info-hash")}));
-      var G__3207 = cljs.core.next.call(null, G__3206);
-      G__3206 = G__3207;
+      var G__7648 = cljs.core.next.call(null, G__7647);
+      G__7647 = G__7648;
       continue
     }else {
       return null
@@ -37784,13 +37792,13 @@ torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fro
     break
   }
 });
-torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'need-offer"]), function(_, p__3208) {
-  var vec__3209 = p__3208;
-  var tracker_socket = cljs.core.nth.call(null, vec__3209, 0, null);
-  var map__3210 = cljs.core.nth.call(null, vec__3209, 1, null);
-  var map__3210__$1 = cljs.core.seq_QMARK_.call(null, map__3210) ? cljs.core.apply.call(null, cljs.core.hash_map, map__3210) : map__3210;
-  var info_hash = cljs.core._lookup.call(null, map__3210__$1, "\ufdd0'info_hash", null);
-  var peer_id = cljs.core._lookup.call(null, map__3210__$1, "\ufdd0'peer_id", null);
+torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'need-offer"]), function(_, p__7649) {
+  var vec__7650 = p__7649;
+  var tracker_socket = cljs.core.nth.call(null, vec__7650, 0, null);
+  var map__7651 = cljs.core.nth.call(null, vec__7650, 1, null);
+  var map__7651__$1 = cljs.core.seq_QMARK_.call(null, map__7651) ? cljs.core.apply.call(null, cljs.core.hash_map, map__7651) : map__7651;
+  var info_hash = cljs.core._lookup.call(null, map__7651__$1, "\ufdd0'info_hash", null);
+  var peer_id = cljs.core._lookup.call(null, map__7651__$1, "\ufdd0'peer_id", null);
   console.log(tracker_socket, peer_id, info_hash);
   debugger;
   var connection = torrent_client.connection.get_or_create_connection.call(null, peer_id);
@@ -37808,14 +37816,14 @@ torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fro
     return console.error(error__2948__auto__)
   })
 });
-torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'offer"]), function(_, p__3211) {
-  var vec__3212 = p__3211;
-  var tracker_socket = cljs.core.nth.call(null, vec__3212, 0, null);
-  var map__3213 = cljs.core.nth.call(null, vec__3212, 1, null);
-  var map__3213__$1 = cljs.core.seq_QMARK_.call(null, map__3213) ? cljs.core.apply.call(null, cljs.core.hash_map, map__3213) : map__3213;
-  var sdp = cljs.core._lookup.call(null, map__3213__$1, "\ufdd0'sdp", null);
-  var info_hash = cljs.core._lookup.call(null, map__3213__$1, "\ufdd0'info_hash", null);
-  var peer_id = cljs.core._lookup.call(null, map__3213__$1, "\ufdd0'peer_id", null);
+torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'offer"]), function(_, p__7652) {
+  var vec__7653 = p__7652;
+  var tracker_socket = cljs.core.nth.call(null, vec__7653, 0, null);
+  var map__7654 = cljs.core.nth.call(null, vec__7653, 1, null);
+  var map__7654__$1 = cljs.core.seq_QMARK_.call(null, map__7654) ? cljs.core.apply.call(null, cljs.core.hash_map, map__7654) : map__7654;
+  var sdp = cljs.core._lookup.call(null, map__7654__$1, "\ufdd0'sdp", null);
+  var info_hash = cljs.core._lookup.call(null, map__7654__$1, "\ufdd0'info_hash", null);
+  var peer_id = cljs.core._lookup.call(null, map__7654__$1, "\ufdd0'peer_id", null);
   var connection = torrent_client.connection.get_or_create_connection.call(null, peer_id);
   torrent_client.connection.receive_offer_BANG_.call(null, connection, sdp);
   return torrent_client.connection.send_answer_BANG_.call(null, connection, peer_id).call(null, function(binding_name__2947__auto__) {
@@ -37833,14 +37841,14 @@ torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fro
     return console.error(error__2948__auto__)
   })
 });
-torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'answer"]), function(_, p__3214) {
-  var vec__3215 = p__3214;
-  var tracker_socket = cljs.core.nth.call(null, vec__3215, 0, null);
-  var map__3216 = cljs.core.nth.call(null, vec__3215, 1, null);
-  var map__3216__$1 = cljs.core.seq_QMARK_.call(null, map__3216) ? cljs.core.apply.call(null, cljs.core.hash_map, map__3216) : map__3216;
-  var sdp = cljs.core._lookup.call(null, map__3216__$1, "\ufdd0'sdp", null);
-  var info_hash = cljs.core._lookup.call(null, map__3216__$1, "\ufdd0'info_hash", null);
-  var peer_id = cljs.core._lookup.call(null, map__3216__$1, "\ufdd0'peer_id", null);
+torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'answer"]), function(_, p__7655) {
+  var vec__7656 = p__7655;
+  var tracker_socket = cljs.core.nth.call(null, vec__7656, 0, null);
+  var map__7657 = cljs.core.nth.call(null, vec__7656, 1, null);
+  var map__7657__$1 = cljs.core.seq_QMARK_.call(null, map__7657) ? cljs.core.apply.call(null, cljs.core.hash_map, map__7657) : map__7657;
+  var sdp = cljs.core._lookup.call(null, map__7657__$1, "\ufdd0'sdp", null);
+  var info_hash = cljs.core._lookup.call(null, map__7657__$1, "\ufdd0'info_hash", null);
+  var peer_id = cljs.core._lookup.call(null, map__7657__$1, "\ufdd0'peer_id", null);
   var peer_connection = torrent_client.connection.recieve_answer.call(null, sdp, peer_id);
   var channel = torrent_client.connection.create_data_channel.call(null, peer_connection, info_hash);
   return channel.onopen = torrent_client.connection.on_open.call(null, peer_id, "\ufdd0'handshake")

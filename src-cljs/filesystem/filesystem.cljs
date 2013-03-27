@@ -12,8 +12,7 @@
 
 (defn request-quota [type size]
   (async [success-callback error-callback]
-    (.requestQuota (.-webkitStorageInfo js/window) 
-                   (aget js/window (name type)) 
+    (.requestQuota (.-webkitPersistentStorage js/navigator) 
                    size 
                    success-callback 
                    error-callback)))

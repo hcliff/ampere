@@ -89,14 +89,16 @@
         bytes (crypt/stringToByteArray string)]
     (write stream bytes)))
 
-(defn- encode-list [list stream]
+(defn- encode-seq [seq stream]
   (write stream 108)
-  (doseq [item list]
+  ; (js* "debugger;")
+  (doseq [item seq]
     (encode-object item stream))
   (write stream 101))
 
 (defn- encode-dictionary [dictionary stream]
   (write stream 100)
+  ; (js* "debugger;")
   (doseq [item (keys dictionary)]
     (encode-object item stream)
     (encode-object (dictionary item) stream))
@@ -107,7 +109,7 @@
   (cond (keyword? obj) (encode-string (name obj) stream)
         (string? obj) (encode-string obj stream)
         (number? obj) (encode-number obj stream)
-        (vector? obj) (encode-list obj stream)
+        (seq? obj) (encode-seq obj stream)
         (map? obj) (encode-dictionary obj stream)))
 
 (defn encode [obj]

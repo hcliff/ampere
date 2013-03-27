@@ -62,8 +62,9 @@
   (crypt/hexToByteArray pretty-info-hash))
 
 (defn process-metadata [metadata]
+  (js* "debugger;")
   (let [info (metadata :info)
-        info-bencode (encode (clj->js info))
+        info-bencode (encode info)
         info-byte-array (uint8-array info-bencode)
         info-hash (sha1 info-bencode)
         ; Used as a key to refer to the torrent

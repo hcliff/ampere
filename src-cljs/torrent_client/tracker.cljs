@@ -40,7 +40,7 @@
       (success-callback tracker)
       ; Otherwise build one
       (let [socket (.connect js/io tracker)]
-        (swap! trackers assoc tracker-url socket)
+        (swap! trackers assoc tracker socket)
         (set! (.-onerror tracker) error-callback)
         ; Continue once the socket is opened
         (on socket :connect #(success-callback socket))
