@@ -58,11 +58,14 @@
         peer (generate-peer torrent channel peer-id handshake)]
     ; add the peer to the list of peers for this torrent
     (.log js/console "peer" peer)
-    ; TODO: Add reconnect
-    (set! (.-close channel) (fn [_]
-      
-      ))
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
+
+(dispatch/react-to #{:remove-channel} (fn [_ [peer-id channel]]
+  (let [info-hash (.-label channel)
+        peers (@peers info-hash)
+        ; Remove this peer from the torrent peers
+        peers (remove #(= peer-id (-> % deref :peer-id)) peers)]
+  (swap! peers assoc info-hash peers))))
 
 ; (dispatch/react-to #{:written-piece} (fn [_ [torrent block]]
 ;   "When a peer sends us a block we didn't have before"

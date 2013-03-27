@@ -12,6 +12,8 @@
 ; Generate data for files
 ;************************************************
 
+(.log js/console "files.cljs")
+
 (defn file-boundaries
   "Given files in a set order, calculate start and stop indexes"
   ([files] (file-boundaries files 0 []))

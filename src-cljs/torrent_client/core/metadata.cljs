@@ -7,10 +7,9 @@
 (defn pieces->metadata
   "Build metadata from its pieces"
   [pieces]
-  (let [piece-size (reduce + (map count pieces))
-        pieces (map-indexed vec pieces)
+  (let [info-length (reduce + (map count (vals pieces)))
         ; Build a byte array long enough for all the pieces
-        byte-array (uint8-array piece-size)]
+        byte-array (uint8-array info-length)]
     ; Then add all the pieces at their correct offset
     (doseq [[piece-index piece] pieces
             :let [offset (* piece-index piece-length)]]

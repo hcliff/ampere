@@ -11,8 +11,7 @@
     [torrent-client.core.byte-array :only [uint8-array subarray]]
     [torrent-client.torrents :only [torrents]]
     [torrent-client.files :only [files]]
-    [torrent-client.core.crypt :only [sha1 byte-array->str]]
-    )
+    [torrent-client.core.crypt :only [sha1 byte-array->str]])
   (:use-macros 
     [async.macros :only [async let-async]]))
 
@@ -186,7 +185,7 @@
       ; Add this to list of pieces to write for this file
       (queue! file-write-queue file [piece-index file piece])
       ; And potentially initiate a writer
-      (.log js/console "we should now be writing")
+      (.log js/console "Writing to disk")
       (dispatch/fire :write-file [torrent file])))))
 
 (dispatch/react-to #{:write-file} (fn [_ [torrent file]]

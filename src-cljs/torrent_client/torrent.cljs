@@ -63,7 +63,8 @@
 
 (defn process-metadata [metadata]
   (let [info (metadata :info)
-        info-bencode (encode info)
+        info-bencode (encode (clj->js info))
+        info-byte-array (uint8-array info-bencode)
         info-hash (sha1 info-bencode)
         ; Used as a key to refer to the torrent
         pretty-info-hash (pretty-info-hash info-hash)
@@ -95,7 +96,8 @@
         last-piece-length (if (zero? last-piece-length) 
                             piece-length last-piece-length)]
   {:info-hash info-hash
-   :info-byte-array (uint8-array info-bencode)
+   :info-byte-array info-byte-array
+   :info-length (count info-byte-array)
    :pretty-info-hash pretty-info-hash
    :encoding (metadata :encoding)
    :pieces-hash pieces-hash
@@ -108,17 +110,25 @@
    :total-length total-length
    :last-piece-length last-piece-length}))
 
-(defn read-metainfo-byte-array 
-  "Given a byte array of a torrent file, decode it then
-   extract the important bits of information"
-  [byte-array]
-  (let [reader (push-back-reader (uint8-array byte-array 0))
-        metadata (process-metadata (decode reader))
-        ; Create an empty bitfield of the correct length
+(defn- with-blank-bitfield [metadata]
+  (let [; Create an empty bitfield of the correct length
         bitfield (bitfield/bitfield (metadata :pieces-length))
         metadata (assoc metadata :bitfield bitfield
                                  :pieces-written 0)]
     metadata))
+
+(defn read-metainfo-byte-array [byte-array]
+  "Given a byte array of a torrent file, decode it then
+   extract the important bits of information"
+  (let [reader (push-back-reader (uint8-array byte-array 0))
+        metadata (process-metadata (decode reader))]
+    (with-blank-bitfield metadata)))
+
+(defn read-info-byte-array [byte-array]
+  "Given just the info section of a torrent, decode and process it"
+  (let [reader (push-back-reader (uint8-array byte-array 0))
+        metadata (process-metadata {:info (decode reader)})]
+    (with-blank-bitfield metadata)))
 
 (defn read-metainfo-db
   "Given torrent data saved in the db process it"
@@ -280,12 +290,20 @@
     (torrent-files (atom metadata) files)
     (dispatch/fire :processed-metadata torrent))))
 
+(defn- add-byte-array [metadata]
+  "General method to handle adding torrents from byte-arrays"
+  (let-async [files (write-torrent-files metadata)]
+    (torrent-files (atom metadata) files)
+    (dispatch/fire :processed-metadata metadata)))
+
 ; Given an byte-array of metadata (metadata from url)
 (dispatch/react-to #{:add-metainfo-byte-array} (fn [_ byte-array]
-  (let-async [:let metadata (read-metainfo-byte-array byte-array)
-              files (write-torrent-files metadata)]
-    (torrent-files (atom metadata) files)
-    (dispatch/fire :processed-metadata metadata))))
+  (add-byte-array (read-metainfo-byte-array byte-array))))
+
+; Given a byte-array of the info section of a torrent
+; (e.g: from a peer)
+(dispatch/react-to #{:add-info-byte-array} (fn [_ byte-array]
+  (add-byte-array (read-info-byte-array byte-array))))
 
 ; When the user submits a form with details for a torrent
 (dispatch/react-to #{:create-torrent} (fn [_ form]

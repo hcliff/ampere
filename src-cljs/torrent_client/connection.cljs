@@ -1,7 +1,6 @@
 (ns torrent-client.connection
   (:require [torrent-client.core.dispatch :as dispatch]
-            [torrent-client.polyfills.prefix :as prefix]
-            [goog.events :as events])
+            [torrent-client.polyfills.prefix :as prefix])
   (:use-macros [async.macros :only [async let-async]]))
 
 ;;************************************************
@@ -31,11 +30,17 @@
 (defn create-answer [peer-connection success-callback error-callback]
   (.createAnswer peer-connection success-callback))
 
-(defn set-local-description [peer-connection description]
+(defn set-local-description! [peer-connection description]
   (.setLocalDescription peer-connection description))
 
-(defn set-remote-description [peer-connection description]
+(defn local-description [peer-connection]
+  (.-localDescription peer-connection))
+
+(defn set-remote-description! [peer-connection description]
   (.setRemoteDescription peer-connection description))
+
+(defn remote-description [peer-connection]
+  (.-remoteDescription peer-connection))
 
 (defn add-ice-candidate [peer-connection event]
   (let [options {:sdpMLineIndex (.-label event) :candidate (.-candidate event)}
@@ -59,18 +64,15 @@
 ;; Methods for creating and recieving offers and answers
 ;;************************************************
 
-(defn peer-connection-ice 
+(defn peer-connection-ice []
   "Provide some sane defaults for building a peer connection"
-  []
   ; Create the peer-connection with some basic settings
   (let [options {:iceServers [{:url "stun:stun.l.google.com:19302"}]}
         peer-connection (peer-connection options)]
-
     ; When we receive an ice candiate add it to the candiates
     (set! (.-onicecandidate peer-connection) (fn [event]
       (if-not (undefined? (.-candidate event))
         (add-ice-candidate peer-connection event))))
-
     peer-connection))
 
 ; An atom of connections where the key is the peer-id
@@ -79,67 +81,86 @@
 ; An atom of unfufilled offers, the key is the offer id
 (def pending-connections (atom {}))
 
-(defn create-connection-send-offer
+(defn- get-or-create-connection [peer-id & [potential-connection]]
+  "Return or create a peer connection"
+  (if-let [peer-connection (@connections peer-id)]
+    (do
+      (.info js/console "Peer connection allready exists with peer:" peer-id)
+      peer-connection)
+    (do
+      (.info js/console "Peer connection being made with peer:" peer-id)
+      (or potential-connection (peer-connection-ice)))))
+
+(defn send-offer! [peer-connection]
   "Given a torrent build a connection and create an offer"
-  []
   (async [success-callback error-callback]
-    ; Set up the connection and start listening for ice
-    (let [peer-connection (peer-connection-ice)]
+    (if (nil? (local-description peer-connection))
       (create-offer peer-connection (fn [description]
-        ; When the offer is built update our local description
-        (set-local-description peer-connection description)
-        ; Add it to the pending peers using the local description as a key
-        (swap! pending-connections assoc (local-id peer-connection) peer-connection)
-        ; And finally mark it complete
-        (success-callback peer-connection)
-        ) error-callback))))
+          ; When the offer is built update our local description
+          (set-local-description! peer-connection description)
+          ; Add it to the pending peers using the local description as a key
+          (swap! pending-connections assoc (local-id peer-connection) peer-connection)
+          ; And finally mark it complete
+          (success-callback peer-connection))
+        error-callback)
+      (success-callback peer-connection))))
 
 (defn recieve-answer
   "Given an answer by a peer (after we made an offer);
    mark the connection active"
   [answer-description peer-id]
   ; Find the connection in the connections list
-  (let [peer-connection (@pending-connections (id answer-description))
+  (let [pending (@pending-connections (id answer-description))
+        peer-connection (get-or-create-connection peer-id pending)
         answer-description (session-description "answer" answer-description)]
     ; Since it's no longer pending, remove it
     (swap! pending-connections dissoc (remote-id answer-description))
+    (when (nil? (remote-description peer-connection))
+      ; Associate the answer
+      (set-remote-description! peer-connection answer-description)
+      ; Add it to the real connections list
+      (swap! connections assoc peer-id peer-connection))
+    peer-connection))
 
-    (if-let [peer-connection (@connections peer-id)]
-      (do
-        (.log js/console "PEER EXISTS...?")
-        peer-connection)
-      (do
-        (.log js/console "PEER NO EXIST")
-        ; Add it to the real connections list
-        (swap! connections assoc peer-id peer-connection)
-        ; Associate the answer
-        (set-remote-description peer-connection answer-description)
-        peer-connection))))
+(defn receive-offer!
+  "Given an offer, update the the peers sdp offers"
+  [peer-connection offer-description]
+  (let [offer-description (session-description "offer" offer-description)]
+    (if (nil? (remote-description peer-connection))
+      (set-remote-description! peer-connection offer-description))
+    peer-connection))
 
-(defn receive-offer-send-answer
-  "Given an offer; connect to a peer and add it to our connections list"
-  [offer-description peer-id]
+(defn send-answer!
+  "Generate an answer to send to a peer, mark this connection active"
+  [peer-connection peer-id]
   (async [success-callback error-callback]
-    (if (contains? @connections peer-id)
-      ; If we have allready connected to this peer then return it
-      (success-callback (@connections peer-id))
-      ; Otherwise connect first
-      (let [peer-connection (peer-connection-ice)
-            offer-description (session-description "offer" offer-description)]
-        ; When we create a new peer connection listen for any channels
-        ; allow multiple channels to one peer by sniffing the channel label
-        (set! (.-ondatachannel peer-connection) (fn [event]
-          (let [channel (.-channel event)]
-            (.log js/console "from ondatachannel" peer-id)
-            (dispatch/fire :add-channel [peer-id channel]))))
+    (if (nil? (local-description peer-connection))
+      ; Create an answer and set our local description
+      (create-answer peer-connection (fn [description]
+          (set-local-description! peer-connection description)
+          (swap! connections assoc peer-id peer-connection)
+          (success-callback peer-connection)) 
+        error-callback)
+      (success-callback peer-connection))))
 
-        (set-remote-description peer-connection offer-description)
-        ; Create an answer and set our local description
-        (create-answer peer-connection 
-          (fn [answer-description]
-            (set-local-description peer-connection answer-description)
-            (swap! connections assoc peer-id peer-connection)
-            (.log js/console "about to success")
-            (success-callback peer-connection)) 
-          error-callback)))))
+(defn on-close [peer-id]
+  (fn []
+    (this-as channel
+      (.info js/console "Channel closed with peer:" peer-id)
+      (dispatch/fire :remove-channel [peer-id channel]))))
 
+(defn on-open [peer-id]
+  "React to the client opening a channel"
+  (fn []
+    (this-as channel
+      (.info js/console "Channel opened with peer:" peer-id)
+      (set! (.-onclose channel) (on-close peer-id))
+      (dispatch/fire :add-channel [peer-id channel :handshake]))))
+
+(defn on-data-channel [peer-id]
+  "React to the peer opening a channel"
+  (fn [event]
+    (let [channel (.-channel event)]
+      (.info js/console "Channel opened by peer:" peer-id)
+      (set! (.-onclose channel) (on-close channel))
+      (dispatch/fire :add-channel [peer-id channel]))))

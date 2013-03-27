@@ -1,9 +1,13 @@
 (ns torrent-client.metadata
   (:require 
-    [torrent-client.core.dispatch :as dispatch])
+    [torrent-client.core.dispatch :as dispatch]
+    [cljconsole.main :as console])
   (:use
+    [torrent-client.torrent :only [has-full-metadata?]]
     [torrent-client.torrents :only [torrents]]
-    [torrent-client.core.metadata :only [piece-length pieces->metadata]]))
+    [torrent-client.core.crypt :only [sha1]]
+    [torrent-client.core.metadata :only [piece-length pieces->metadata]]
+    [torrent-client.core.byte-array :only [uint8-array]]))
 
 ;;************************************************
 ;; For retrieving metadata per BEP 9
@@ -12,19 +16,20 @@
 ; metadata pieces we are currently getting
 (def working (atom {}))
 
-; All the metadata pieces we've recieved
-(def recieved (atom {}))
+; All the metadata pieces we've received
+(def received (atom {}))
 
 ; Indexes of all the pieces in a torrent
 (defn pieces [torrent]
-  (range (Math/ceil (/ (@torrent :metadata-length) piece-length))))
+  (range (Math/ceil (/ (@torrent :info-length) piece-length))))
 
 (defn wanted-pieces [torrent]
   "Given a torrent return the pieces missing from its metadata"
   (let [info-hash (@torrent :pretty-info-hash)
         wanted (pieces torrent)
         working (set (@working info-hash))]
-    (remove #(contains? working %) wanted)))
+    (if-not (has-full-metadata? torrent)
+      (remove #(contains? working %) wanted))))
 
 (defn work-piece!
   "Marks that we have started fetching a piece"
@@ -40,17 +45,22 @@
   (let [info-hash (@torrent :pretty-info-hash)
         pieces (remove #(= piece-index %) (@working info-hash))]
     (swap! working assoc info-hash pieces))
-    (swap! recieved assoc-in [info-hash piece-index] data)
+    (swap! received assoc-in [info-hash piece-index] data)
     ; And if we have all the metadata pieces 
     (if (= (count (@received info-hash)) (count (pieces torrent)))
-      (let [byte-array (pieces->metadata received)]
+      (let [byte-array (pieces->metadata (@received info-hash))]
         (swap! received dissoc info-hash)
         (dispatch/fire :receive-metadata [torrent byte-array])))))
 
-(dispatch/react-to #{:receive-metadata} (fn [_ [torrent metadata]]
-  (if (= (hash metadata) (@torrent :info-hash))
-    (dispatch/fire :add-metadata-byte-array metadata))))
+(dispatch/react-to #{:receive-metadata} (fn [_ [torrent byte-array]]
+  ; TODO: needless string conversion
+  (if (= (vec (sha1 byte-array)) (vec (@torrent :info-hash)))
+    (dispatch/fire :add-info-byte-array byte-array)
+    (dispatch/fire :corrupt-metadata torrent))))
+
+(dispatch/react-to #{:corrupt-metadata} (fn [_ torrent]
+  (console/warn "Received incorrect metadata for torrent" 
+                (@torrent :pretty-info-hash))))
 
 (defn get-piece [torrent piece-index]
-  (uint8-array (@torrent :metadata-byte-array) (* piece-index piece-length)))
-
+  (uint8-array (@torrent :info-byte-array) (* piece-index piece-length) piece-length))

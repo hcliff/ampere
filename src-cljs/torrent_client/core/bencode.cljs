@@ -53,11 +53,11 @@
       ; indicator is d
       (= indicator 100) (decode-map stream))))
 
-(defn decode [stream]
+(defn decode [stream & flags]
   (let [output (decode-dispatch stream)
         data (reader/rem stream)]
-    ; If the bencoding completed fully just return the object
-    (if (empty? data)
+    ; Check if data at the end of the stream was requested
+    (if-not (contains? (set flags) :payload)
       output
       ; Otherwise return the object and the remainder
       [output data])))

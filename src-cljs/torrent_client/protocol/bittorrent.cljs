@@ -73,7 +73,7 @@
 ;; extension and msg_type
 ;;************************************************
 
-(defmulti receive-extension (fn [peer extension message]
+(defmulti receive-extension (fn [peer extension & [message data]]
   (if-let [msg-type (message :msg_type)]
     [extension (message :msg_type)]
     extension)))
@@ -82,13 +82,13 @@
   (trigger p :receive-extended message))
 
 (defmethod receive-extension [ut-metadata ut-metadata-request] [p _ message]
-  (trigger p :receive-metadata-request [(message :piece_index)]))
+  (trigger p :receive-metadata-request (message :piece)))
 
-(defmethod receive-extension [ut-metadata ut-metadata-piece] [p _ [message data]]
-  (trigger p :receive-metadata-piece [(message :piece_index) data]))
+(defmethod receive-extension [ut-metadata ut-metadata-piece] [p _ message data]
+  (trigger p :receive-metadata-piece (message :piece) data))
 
 (defmethod receive-extension [ut-metadata ut-metadata-reject] [p _ message]
-  (trigger p :receive-metadata-reject [(message :piece_index)]))
+  (trigger p :receive-metadata-reject (message :piece)))
 
 ;;************************************************
 ;; Map incoming data based on it's first byte
@@ -102,9 +102,8 @@
   "When given an extension pass it off to a further multimethod"
   (let [extension (second data)
         reader (reader/push-back-reader (subarray data 2))
-        message (bencode/decode reader)]
-    (js* "debugger;")
-    (receive-extension p extension message)))
+        [message data] (bencode/decode reader :payload)]
+    (receive-extension p extension message data)))
 
 (defmethod receive-data msg-choke [p _]
   (trigger p :receive-choke))
@@ -213,21 +212,20 @@
     (let [id (if (keyword? id) (get extensions id) id)
           body (crypt/byte-array->str (bencode/encode message))
           data (str (char id) body data)]
-      (js* "debugger;")
       (protocol/send-data client msg-extended data)))
 
   (send-extended-handshake [client]
-    (let [message {:m extensions :metadata_size 3125}]
+    (let [message {:m extensions :metadata_size (@torrent :info-length)}]
       (protocol/send-extended client extended-handshake message)))
 
   (send-metadata-request [client piece-index]
     (let [message {:msg_type ut-metadata-request :piece piece-index}]
       (protocol/send-extended client ut-metadata message)))
 
-  (send-metadata-piece [client piece-index data]
+  (send-metadata-piece [client piece-index info-length data]
     (let [message {:msg_type ut-metadata-piece 
                    :piece piece-index 
-                   :total_size "urgh"}]
+                   :metadata_size info-length}]
       (protocol/send-extended client ut-metadata message data)))
 
   (send-metadata-reject [client piece-index]

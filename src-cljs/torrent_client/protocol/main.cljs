@@ -7,7 +7,7 @@
   (send-extended [client id message] [client id message data] "")
   (send-extended-handshake [client] "")
   (send-metadata-request [client piece-index] "")
-  (send-metadata-piece [client piece-index data] "")
+  (send-metadata-piece [client piece-index info-length data] "")
   (send-metadata-reject [client piece-index] "")
   (send-choke [client] "")
   (send-unchoke [client] "")

@@ -71,17 +71,19 @@
     (defevent me :receive-extended [message]
       ; Store the metadata length for later use
       ; (work out how many pieces to request)
-      (let [metadata {:metadata-length (message :metadata_size)}]
+      (let [info-length (or (@torrent :info-length) (message :metadata_size))
+            metadata {:info-length info-length}]
         (dispatch/fire :update-metadata [torrent metadata]))
       ; And begin the process of retrieving the metadata
       (state/set me :acquiring-metadata)
+      ; (js* "debugger;")
       (if-not (state/in? me :sent-extended)
         (state/set me :sent-extended)))
 
     (defn update-metadata-queue []
       "Saturate the peers queue with metadata piece requests"
-      (js* "debugger;")
       (let [pieces (metadata/wanted-pieces torrent)]
+        ; (js* "debugger;")
         (when (and (not (false? (@peer-data :has-metadata)))
                    (< (@peer-data :outstanding) max-outstanding)
                    (not-empty pieces))
@@ -96,9 +98,10 @@
 
     (defevent me :receive-metadata-request [piece-index]
       ; If we have metadata we have every piece
-      (if (@torrent :metadata-byte-array)
-        (let-async [data (metadata/get-piece torrent piece-index)]
-          (protocol/send-metadata-piece bittorrent-client piece-index data))
+      (if (has-full-metadata? @torrent)
+        (let [data (metadata/get-piece torrent piece-index)
+              info-length (@torrent :info-length)]
+          (protocol/send-metadata-piece bittorrent-client piece-index info-length data))
         ; Otherwise reject
         (protocol/send-metadata-reject bittorrent-client piece-index)))
 

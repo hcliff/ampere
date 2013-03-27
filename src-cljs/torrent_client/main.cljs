@@ -9,7 +9,8 @@
     [goog.Uri.QueryData :as QueryData]
     [goog.string :as gstring]
     [waltz.state :as state]
-    [clojure.browser.repl :as repl])
+    [clojure.browser.repl :as repl]
+    [cljconsole.main :as console])
   (:use
     [jayq.core :only [$ on attr document-ready empty text val prepend css]]
     [torrent-client.jayq :only [append input-files event-files modal tab]]
@@ -133,7 +134,7 @@
 
 (on $create-form :submit (fn [e]
   (.preventDefault e)
-  (.log js/console "tracker" (val ($ "[name=tracker]" $create-form)))
+  (console/log "tracker" (val ($ "[name=tracker]" $create-form)))
   (dispatch/fire :create-torrent {
     :name (val ($ "[name=name]" $create-form))
     :tracker (val ($ "[name=tracker]" $create-form))
@@ -294,12 +295,12 @@
 
 (add-watch online nil (fn [_ _ old-val new-val]
   (if (and (false? old-val) new-val)
-    (.log js/console "gone online"))
+    (console/info "Client online"))
   (if (and old-val (false? new-val))
-    (.log js/console "gone offline!"))))
+    (console/info "Client offline"))))
 
 (document-ready (fn [e]
-  (.info js/console "document-ready")
+  (console/info "document-ready")
   (dispatch/fire :document-ready)))
 
 ; TODO: A/B test this to minimise leechers
@@ -307,4 +308,4 @@
 ;   (if-not (zero? (count (filter active? @torrents)))
 ;     "You still have active torrents")))
 
-(.log js/console "js loaded")
+(console/info "Javascript loaded")
