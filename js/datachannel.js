@@ -161,11 +161,12 @@ function DCPF_install(ws_url)
         channel._udt.onopen = function()
         {
 
-          console.log('your channel is open')
+          console.log('your channel is open');
           // Wait until the other end of the channel is ready
           channel._udt.onmessage = function(message)
           {
-            if(message.data == 'ready')
+
+            if(message.data == '["ready"]')
             {
               // PeerConnection is closed, do nothing
               if(self.readyState == "closed")
