@@ -62,7 +62,6 @@
   (crypt/hexToByteArray pretty-info-hash))
 
 (defn process-metadata [metadata]
-  (js* "debugger;")
   (let [info (metadata :info)
         info-bencode (encode info)
         info-byte-array (uint8-array info-bencode)

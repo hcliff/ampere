@@ -12,10 +12,15 @@
 
 (defn request-quota [type size]
   (async [success-callback error-callback]
-    (.requestQuota (.-webkitPersistentStorage js/navigator) 
-                   size 
-                   success-callback 
-                   error-callback)))
+    (if-let [storage (.-webkitPersistentStorage js/navigator)]
+      ; Chrome 27 and up
+      (.requestQuota storage size success-callback error-callback)
+      ; Chrome 26
+      (.requestQuota (.-webkitStorageInfo js/window)
+                     (aget js/window (name type))
+                     size
+                     success-callback
+                     error-callback))))
 
 (defn request-quota-then-filesystem [type size]
   "A combination of the above two functions, if request-quota succeeds,
