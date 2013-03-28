@@ -1,7 +1,4 @@
 (ns torrent-client.torrents
-  (:use 
-    ; [torrent-client.torrent :only [has-full-metadata?]]
-    )
   (:require 
     [torrent-client.core.dispatch :as dispatch]))
 
@@ -15,15 +12,14 @@
     (dispatch/fire :started-torrent torrent)))
 
 (defn- update-torrent [torrent metadata]
-  (let [torrent (merge @torrent metadata)]
-    (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
-    (dispatch/fire :updated-torrent torrent)))
+  (swap! torrent merge metadata)
+  (dispatch/fire :updated-torrent torrent))
 
 ; When metadata is processed turn it into an atom and track it
 (dispatch/react-to #{:processed-metadata} (fn [_ metadata]
   (.log js/console "Adding to torrents atom" metadata)
   (if-let [existing (@torrents (metadata :pretty-info-hash))]
-    (if (has-full-metadata? existing)
+    (if (@existing :pieces-hash)
       ; If we have all the metadata why would the user give us more
       (dispatch/fire :duplicate-torrent existing)
       ; If we receieve extra data on the torrent

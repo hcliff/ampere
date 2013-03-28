@@ -57,7 +57,7 @@
   ; TODO: needless string conversion
   ; Verify that the correct metadata was received
   (if (= (vec (sha1 byte-array)) (vec (@torrent :info-hash)))
-    (dispatch/fire :add-info-byte-array byte-array)
+    (dispatch/fire :add-info-byte-array [torrent byte-array])
     (dispatch/fire :corrupt-metadata torrent))))
 
 (dispatch/react-to #{:corrupt-metadata} (fn [_ torrent]

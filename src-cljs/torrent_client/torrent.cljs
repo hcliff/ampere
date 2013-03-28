@@ -62,7 +62,6 @@
   (crypt/hexToByteArray pretty-info-hash))
 
 (defn process-metadata [metadata]
-  (js* "debugger;")
   (let [info (metadata :info)
         info-bencode (encode info)
         info-byte-array (uint8-array info-bencode)
@@ -125,10 +124,14 @@
         metadata (process-metadata (decode reader))]
     (with-blank-bitfield metadata)))
 
-(defn read-info-byte-array [byte-array]
+(defn read-info-byte-array [torrent byte-array]
   "Given just the info section of a torrent, decode and process it"
   (let [reader (push-back-reader (uint8-array byte-array 0))
-        metadata (process-metadata {:info (decode reader)})]
+        ; Add data provided by the magnet link
+        metadata {:info (decode reader)
+                  :announce-list (@torrent :announce-list)
+                  :name (@torrent :name)}
+        metadata (process-metadata metadata)]
     (with-blank-bitfield metadata)))
 
 (defn read-metainfo-db
@@ -306,8 +309,8 @@
 
 ; Given a byte-array of the info section of a torrent
 ; (e.g: from a peer)
-(dispatch/react-to #{:add-info-byte-array} (fn [_ byte-array]
-  (add-byte-array (read-info-byte-array byte-array))))
+(dispatch/react-to #{:add-info-byte-array} (fn [_ [torrent byte-array]]
+  (add-byte-array (read-info-byte-array torrent byte-array))))
 
 ; When the user submits a form with details for a torrent
 (dispatch/react-to #{:create-torrent} (fn [_ form]
