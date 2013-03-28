@@ -59,7 +59,7 @@
 ; TODO: logical falicy, find a better way to manage
 ; the number of connections, we shouldn't request offers from
 ; every tracker
-(dispatch/react-to #{:started-torrent} (fn [_ torrent]
+(dispatch/react-to #{:started-torrent :updated-torrent} (fn [_ torrent]
   "Update the list of trackers for this torrent
    and send out the start event to the trackers"
   (doseq [tracker-url (@torrent :announce-list)]
@@ -95,7 +95,6 @@
 (dispatch/react-to #{:need-offer} (fn [_ [tracker-socket {:keys [peer_id info_hash]}]]
   "The tracker has requested an offer from this client"
   (.log js/console tracker-socket peer_id info_hash)
-  (js* "debugger;")
   (let [connection (get-or-create-connection peer_id)]
     (let-async [_ (send-offer! connection)
                 :let sdp (-> connection .-localDescription .-sdp)]
@@ -135,7 +134,7 @@
         ; Build a channel on this connection for the torrent
         channel (create-data-channel peer-connection info_hash)]
     ; When the channel we opened is successful announce it
-    (set! (.-onopen channel) (on-open peer_id :handshake)))))
+    (set! (.-onopen channel) (on-open peer_id)))))
 
 ;;************************************************
 ;; Statistics

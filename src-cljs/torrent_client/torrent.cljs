@@ -62,6 +62,7 @@
   (crypt/hexToByteArray pretty-info-hash))
 
 (defn process-metadata [metadata]
+  (js* "debugger;")
   (let [info (metadata :info)
         info-bencode (encode info)
         info-byte-array (uint8-array info-bencode)
@@ -133,8 +134,11 @@
 (defn read-metainfo-db
   "Given torrent data saved in the db process it"
   [db-entry]
-  (let [bitfield (bitfield/bitfield (db-entry :bitfield))
-        db-entry (assoc db-entry :bitfield bitfield)]
+  ; If the entry doesn't have all it's metadata it won't have a bitfield
+  (if (has-full-metadata? db-entry)
+    (let [bitfield (bitfield/bitfield (db-entry :bitfield))
+          db-entry (assoc db-entry :bitfield bitfield)]
+      db-entry)
     db-entry))
 
 (defn read-metadata-file 

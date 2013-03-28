@@ -38,8 +38,8 @@
         (recur (conj result (decode-dispatch stream c)))))))
 
 (defn- decode-map [stream] 
-  (let [list (decode-list stream)] 
-    (keywordize-keys (apply array-map list))))
+  (let [list (decode-list stream)]
+    (apply array-map (map #(%1 %2) (cycle [keyword identity]) list))))
 
 (defn- decode-dispatch [stream & i]
   (let [indicator (if (nil? i) (reader/read stream) (first i))]
@@ -99,9 +99,9 @@
 (defn- encode-dictionary [dictionary stream]
   (write stream 100)
   ; (js* "debugger;")
-  (doseq [item (keys dictionary)]
-    (encode-object item stream)
-    (encode-object (dictionary item) stream))
+  (doseq [[key item] (seq dictionary)]
+    (encode-object key stream)
+    (encode-object item stream))
   (write stream 101))
 
 (defn- encode-object [obj stream]
@@ -109,7 +109,7 @@
   (cond (keyword? obj) (encode-string (name obj) stream)
         (string? obj) (encode-string obj stream)
         (number? obj) (encode-number obj stream)
-        (seq? obj) (encode-seq obj stream)
+        (sequential? obj) (encode-seq obj stream)
         (map? obj) (encode-dictionary obj stream)))
 
 (defn encode [obj]

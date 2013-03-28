@@ -1,4 +1,7 @@
 (ns torrent-client.torrents
+  (:use 
+    ; [torrent-client.torrent :only [has-full-metadata?]]
+    )
   (:require 
     [torrent-client.core.dispatch :as dispatch]))
 
@@ -6,14 +9,26 @@
 ; the key is the pretty-info-hash
 (def torrents (atom {}))
 
+(defn- start-torrent [metadata]
+  (let [torrent (atom metadata)]
+    (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
+    (dispatch/fire :started-torrent torrent)))
+
+(defn- update-torrent [torrent metadata]
+  (let [torrent (merge @torrent metadata)]
+    (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
+    (dispatch/fire :updated-torrent torrent)))
+
 ; When metadata is processed turn it into an atom and track it
 (dispatch/react-to #{:processed-metadata} (fn [_ metadata]
   (.log js/console "Adding to torrents atom" metadata)
   (if-let [existing (@torrents (metadata :pretty-info-hash))]
-    (dispatch/fire :duplicate-torrent existing)
-    (let [torrent (atom metadata)]
-      (swap! torrents assoc (@torrent :pretty-info-hash) torrent)
-      (dispatch/fire :started-torrent torrent)))))
+    (if (has-full-metadata? existing)
+      ; If we have all the metadata why would the user give us more
+      (dispatch/fire :duplicate-torrent existing)
+      ; If we receieve extra data on the torrent
+      (update-torrent existing metadata))
+    (start-torrent metadata))))
 
 (dispatch/react-to #{:written-piece} (fn [_ [torrent _]]
   (let [pieces-written (inc (or (@torrent :pieces-written) 0))]
