@@ -40,6 +40,12 @@
     (swap! working (partial merge-with concat) {info-hash [piece-index]})
     piece-index))
 
+; (dispatch/react-to #{:receive-metadata-reject} (fn [_ [torrent piece-index]]
+;   "A peer indicates it doesn't have a metadata piece, mark it no longer worked"
+;   (let [info-hash (@torrent :pretty-info-hash)
+;         pieces (remove #(= piece-index %) (@working info-hash))]
+;     (swap! working assoc info-hash pieces))))
+
 (dispatch/react-to #{:receive-metadata-piece} (fn [_ [torrent piece-index data]]
   "When we get a metadata piece add it to the receieved pile"
   (let [info-hash (@torrent :pretty-info-hash)

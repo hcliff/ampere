@@ -2,7 +2,8 @@
   (:require
     [torrent-client.core.dispatch :as dispatch]
     [torrent-client.core.pieces :as pieces]
-    [filesystem.entry :as entry])
+    [filesystem.entry :as entry]
+    [cljconsole.main :as console])
   (:use-macros 
     [async.macros :only [async let-async]]))
 
@@ -11,8 +12,6 @@
 ;************************************************
 ; Generate data for files
 ;************************************************
-
-(.log js/console "files.cljs")
 
 (defn file-boundaries
   "Given files in a set order, calculate start and stop indexes"
@@ -58,14 +57,14 @@
 (defn read-file 
   "Given a path, read a file from the filesystem and trigger :add-file"
   [fs path]
-  (.log js/console "read file from filesystem" path)
+  (console/info "Read file from filesystem" path)
   (async [success-callback _]
     (let-async [entry (entry/get-entry fs path {:create false})]
       (success-callback entry))))
 
 (defn write-file
   [fs path data]
-  (.log js/console "write file to filesystem" path data)
+  (console/info "Write file to filesystem" path data)
   (async [success-callback error-callback]
     (let-async [entry (entry/get-entry fs path {:create true})
                 writer (entry/create-writer entry)]

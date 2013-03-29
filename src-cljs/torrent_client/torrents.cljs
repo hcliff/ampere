@@ -1,6 +1,7 @@
 (ns torrent-client.torrents
   (:require 
-    [torrent-client.core.dispatch :as dispatch]))
+    [torrent-client.core.dispatch :as dispatch]
+    [cljconsole.main :as console]))
 
 ; A vector of the torrents currently in use
 ; the key is the pretty-info-hash
@@ -17,7 +18,7 @@
 
 ; When metadata is processed turn it into an atom and track it
 (dispatch/react-to #{:processed-metadata} (fn [_ metadata]
-  (.log js/console "Adding to torrents atom" metadata)
+  (console/info "Adding torrent to atom:" metadata)
   (if-let [existing (@torrents (metadata :pretty-info-hash))]
     (if (@existing :pieces-hash)
       ; If we have all the metadata why would the user give us more

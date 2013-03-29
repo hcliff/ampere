@@ -1,6 +1,7 @@
 (ns torrent-client.tracker
   (:require 
     [torrent-client.core.dispatch :as dispatch]
+    [cljconsole.main :as console]
     [goog.Timer :as Timer]
     [goog.events :as events])
   (:use
@@ -63,9 +64,9 @@
   "Update the list of trackers for this torrent
    and send out the start event to the trackers"
   (doseq [tracker-url (@torrent :announce-list)]
-    (.info js/console "trying tracker" tracker-url)
+    (console/info "Trying tracker" tracker-url)
     (let-async [socket (tracker-socket tracker-url)]
-      (.info js/console "Torrent" (@torrent :pretty-info-hash) "connect to" tracker-url)
+      (console/info "Torrent" (@torrent :pretty-info-hash) "connected to" tracker-url)
       (emit socket :started {
         :peer_id @peer-id
         :info_hash (@torrent :pretty-info-hash)
@@ -94,7 +95,6 @@
 
 (dispatch/react-to #{:need-offer} (fn [_ [tracker-socket {:keys [peer_id info_hash]}]]
   "The tracker has requested an offer from this client"
-  (.log js/console tracker-socket peer_id info_hash)
   (let [connection (get-or-create-connection peer_id)]
     (let-async [_ (send-offer! connection)
                 :let sdp (-> connection .-localDescription .-sdp)]
@@ -160,4 +160,4 @@
 ;           }))
 ;     ))))
 
-(.log js/console "EOF tracker")
+(console/log "EOF")

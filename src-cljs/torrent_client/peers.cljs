@@ -1,10 +1,12 @@
 (ns torrent-client.peers
   (:use 
     [torrent-client.torrents :only [torrents]]
+    [torrent-client.torrent :only [has-full-metadata?]]
     [torrent-client.peer :only [generate-peer]]
     [waltz.state :only [trigger]])
   (:require 
     [torrent-client.core.dispatch :as dispatch]
+    [cljconsole.main :as console]
     [goog.Timer :as Timer]
     [goog.events :as events]))
 
@@ -13,18 +15,12 @@
 
 ; how many peers should we download from at once
 (def download-count 4)
+; how many peers should we get metadat from at once
+(def metadata-request-count 2)
 
 (def peers (atom {}))
 ; The peers that are currently unchoked
 (def unchoked (atom {}))
-
-; Optimistically unchoke a torrent periodically
-(dispatch/react-to #{:started-torrent} (fn [_ torrent]
-  (let [timer (goog/Timer. optimistic-unchoke-period)]
-    (.start timer)
-    ; (events/listen timer Timer/TICK #(unoptimistic (@torrent :pretty-info-hash)))
-    ; (events/listen timer Timer/TICK #(optimistic-unchoke (@torrent :pretty-info-hash)))
-  )))
 
 ; (dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
 ;   ; Cancel any pieces in transit
@@ -53,15 +49,15 @@
   (let [; If this peer is initiating the handshake
         handshake (contains? (set flags) :handshake)
         ; Find the torrent this channel is for
-        info-hash (.-label channel)
+        info-hash (aget channel "label")
         torrent (@torrents info-hash)
         peer (generate-peer torrent channel peer-id handshake)]
     ; add the peer to the list of peers for this torrent
-    (.log js/console "peer" peer)
+    (console/info "Added peer" peer-id "to torrent" info-hash)
     (swap! peers (partial merge-with concat) {info-hash [peer]}))))
 
 (dispatch/react-to #{:remove-channel} (fn [_ [peer-id channel]]
-  (let [info-hash (.-label channel)
+  (let [info-hash (aget channel "label")
         peers (@peers info-hash)
         ; Remove this peer from the torrent peers
         peers (remove #(= peer-id (-> % deref :peer-id)) peers)]
@@ -73,7 +69,24 @@
 ;   (doseq [peer (@peers (@torrent :info-hash))]
 ;     (trigger peer :add-block block))))
 
-(defn set-unchoked! 
+(defn request-metadata! [info-hash]
+  (if-let [peers (@peers info-hash)]
+    (let [peers (remove #(false? (-> % deref :has-metadata)) peers)
+          ; has-metadata can be false, nil (unknown) or true
+          ; prefer true to nil
+          peers (sort-by (comp :has-metadata deref) peers)
+          peers-count (min metadata-request-count (count peers))]
+      (doseq [p (subvec peers 0 peers-count)]
+        (trigger p :request-metadata)))))
+
+(dispatch/react-to #{:updated-torrent} (fn [_ torrent]
+  "Peers will have been waiting on metadata to continue with the connection 
+  process"
+  (let [peers (@peers (@torrent :info-hash))]
+    (doseq [p peers]
+      (trigger p :received-metadata)))))
+
+(defn set-unchoked!
   "Update the currently unchoked peers, choking & unchoking peers where 
   appropriate"
   [info-hash]
@@ -126,3 +139,13 @@
 ; listen for changes in the peers interest
 (dispatch/react-to #{:receive-interested :receive-not-interested} (fn [_ torrent]
   (change-interested (@torrent :pretty-info-hash))))
+
+; Periodically update the peers for this torrent
+(dispatch/react-to #{:started-torrent} (fn [_ torrent]
+  (let [timer (goog/Timer. optimistic-unchoke-period)]
+    (.start timer)
+    (events/listen timer Timer/TICK (fn [_]
+      (unoptimistic (@torrent :pretty-info-hash))
+      (optimistic-unchoke (@torrent :pretty-info-hash))
+      (if-not (has-full-metadata? torrent)
+        (request-metadata! (@torrent :pretty-info-hash))))))))

@@ -1,7 +1,8 @@
 (ns torrent-client.storage
 	(:require
     [torrent-client.core.dispatch :as dispatch]
-    [torrent-client.core.db :as db])
+    [torrent-client.core.db :as db]
+    [cljconsole.main :as console])
   (:use-macros [async.macros :only [let-async]]))
 
 ; An atom other db dependant files can use for db connection
@@ -22,7 +23,7 @@
 
 (dispatch/react-to #{:document-ready} (fn []
   (let-async [database (db/open-database "torrent-client" 1 object-stores)]
-    (.info js/console "Opened indexeddb")
+    (console/info "Opened indexeddb")
     ; Swap out the atom with our db connection
     (reset! connection database)
     (let [transaction (db/create-transaction database ["metainfo"] "readonly")

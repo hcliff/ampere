@@ -2,7 +2,8 @@
   (:require
     [torrent-client.core.dispatch :as dispatch]
     [goog.string :as string]
-    [goog.crypt :as crypt])
+    [goog.crypt :as crypt]
+    [cljconsole.main :as console])
   (:use 
     [torrent-client.core.crypt :only [sha1]]))
 
@@ -22,4 +23,5 @@
     (str client-id (subs sha 0 (- 20 (count client-id))))))
 
 (dispatch/react-to #{:document-ready} (fn [_]
-  (reset! peer-id (generate-peer-id))))
+  (reset! peer-id (generate-peer-id))
+  (console/info "Setting peer-id as" @peer-id)))

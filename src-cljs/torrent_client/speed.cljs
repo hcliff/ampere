@@ -28,4 +28,4 @@
 ;       (swap! download-pieces info-hash latest)
 ;       (dispatch/fire :download-speed [info-hash speed]))))
 
-(.log js/console "not-last")
+(.log js/console "EOF")

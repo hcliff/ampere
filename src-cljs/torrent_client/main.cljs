@@ -177,6 +177,18 @@
              :info-hash (second info-hash)
              :name torrent-name})))))))
 
+; jQuery doesn't support binary requests
+; (defn ajax-binary [url settings]
+;   (async [success-callback]
+;     (let [xhr (js/XMLHttpRequest.)]
+;       (aset xhr "responseType" "arraybuffer")
+;       (aset xhr "onload" (fn [_]
+;         (this-as self
+;           (if (= 200 (aget self "status"))
+;             (success-callback (aget self "response"))))))
+;       (.open xhr "GET" url true)
+;       (.send xhr))))
+
 (on $demo-torrent :click (fn [e]
   "When the user clicks the demo, download the .torrent and use it"
   (.preventDefault e)
@@ -187,18 +199,6 @@
     ; Given a .torrent URL, download it then use it
     (let-async [file (ajax-binary url options)]
       (dispatch/fire :add-metainfo-byte-array file)))))
-
-; jQuery doesn't support binary requests
-(defn ajax-binary [url settings]
-  (async [success-callback]
-    (let [xhr (js/XMLHttpRequest.)]
-      (set! (.-responseType xhr) "arraybuffer")
-      (set! (.-onload xhr) (fn [e]
-        (this-as self
-          (if (= 200 (.-status self))
-            (success-callback (.-response self))))))
-      (.open xhr "GET" url true)
-      (.send xhr))))
 
 ;;************************************************
 ;; Rendering content

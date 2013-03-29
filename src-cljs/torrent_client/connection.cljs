@@ -1,6 +1,7 @@
 (ns torrent-client.connection
   (:require [torrent-client.core.dispatch :as dispatch]
-            [torrent-client.polyfills.prefix :as prefix])
+            [torrent-client.polyfills.prefix :as prefix]
+            [cljconsole.main :as console])
   (:use-macros [async.macros :only [async let-async]]))
 
 ;;************************************************
@@ -85,10 +86,10 @@
   "Return or create a peer connection"
   (if-let [peer-connection (@connections peer-id)]
     (do
-      (.info js/console "Peer connection allready exists with peer:" peer-id)
+      (console/info "Peer connection allready exists with peer:" peer-id)
       peer-connection)
     (do
-      (.info js/console "Peer connection being made with peer:" peer-id)
+      (console/info "Peer connection being made with peer:" peer-id)
       (or potential-connection (peer-connection-ice)))))
 
 (defn send-offer! [peer-connection]
@@ -146,14 +147,14 @@
 (defn on-close [peer-id]
   (fn []
     (this-as channel
-      (.info js/console "Channel closed with peer:" peer-id)
+      (console/info "Channel closed with peer:" peer-id)
       (dispatch/fire :remove-channel [peer-id channel]))))
 
 (defn on-open [peer-id]
   "React to the client opening a channel"
   (fn []
     (this-as channel
-      (.info js/console "Channel opened with peer:" peer-id)
+      (console/info "Channel opened with peer:" peer-id)
       (set! (.-onclose channel) (on-close peer-id))
       (dispatch/fire :add-channel [peer-id channel :handshake]))))
 
@@ -161,6 +162,6 @@
   "React to the peer opening a channel"
   (fn [event]
     (let [channel (.-channel event)]
-      (.info js/console "Channel opened by peer:" peer-id)
+      (console/info "Channel opened by peer:" peer-id)
       (set! (.-onclose channel) (on-close channel))
       (dispatch/fire :add-channel [peer-id channel]))))

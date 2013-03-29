@@ -113,7 +113,7 @@
 (defpartial torrent-row [torrent]
   [:tr
     [:td.flex2.name (@torrent :name)]
-    [:td.flex1.size (total-length-to-string @torrent)]
+    [:td.flex1.size (bound torrent total-length-to-string)]
     [:td.flex5.progress-td (bound torrent torrent-progress)]
     [:td.flex1.speed (bound torrent torrent-speed-to-string)]
     [:td.actions (bound torrent torrent-actions)]])
