@@ -14,7 +14,6 @@
   (:use
     [jayq.core :only [$ on attr document-ready empty text val prepend css]]
     [torrent-client.jayq :only [append input-files event-files modal tab]]
-    [torrent-client.waltz :only [machine]]
     [torrent-client.torrent :only [share-torrent active? paused? completed? downloading?]]
     [torrent-client.torrents :only [torrents]])
   (:use-macros
@@ -178,16 +177,16 @@
              :name torrent-name})))))))
 
 ; jQuery doesn't support binary requests
-; (defn ajax-binary [url settings]
-;   (async [success-callback]
-;     (let [xhr (js/XMLHttpRequest.)]
-;       (aset xhr "responseType" "arraybuffer")
-;       (aset xhr "onload" (fn [_]
-;         (this-as self
-;           (if (= 200 (aget self "status"))
-;             (success-callback (aget self "response"))))))
-;       (.open xhr "GET" url true)
-;       (.send xhr))))
+(defn ajax-binary [url settings]
+  (async [success-callback]
+    (let [xhr (js/XMLHttpRequest.)]
+      (aset xhr "responseType" "arraybuffer")
+      (aset xhr "onload" (fn [_]
+        (this-as self
+          (if (= 200 (aget self "status"))
+            (success-callback (aget self "response"))))))
+      (.open xhr "GET" url true)
+      (.send xhr))))
 
 (on $demo-torrent :click (fn [e]
   "When the user clicks the demo, download the .torrent and use it"
@@ -226,7 +225,7 @@
     (text ($ "#completed-count") completed))))
 
 (defn tab-machine []
-  (let [me (machine {:label :tab-machine :current :downloading})]
+  (let [me (state/machine {:label :tab-machine :current :downloading})]
 
     ; When a torrent finishes automatically show the completed tab
     (dispatch/react-to #{:completed-torrent :built-torrent} 

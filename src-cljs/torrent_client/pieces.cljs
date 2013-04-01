@@ -188,6 +188,8 @@
       (.log js/console "Writing to disk")
       (dispatch/fire :write-file [torrent file])))))
 
+(declare seek-then-write)
+
 (dispatch/react-to #{:write-file} (fn [_ [torrent file]]
   ; Only kick off the writing if it's not allready running
   (if (= 1 (count (@file-write-queue (hash file))))

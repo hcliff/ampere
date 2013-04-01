@@ -10,7 +10,7 @@
 
 (defn get-entry
   "Return a fileentry (information on the file)"
-  ([filesystem path] (get-file filesystem path {}))
+  ([filesystem path] (get-entry filesystem path {}))
   ([filesystem path options]
     (async [success-callback error-callback]
       (.getFile (.-root filesystem) path (clj->js options) 

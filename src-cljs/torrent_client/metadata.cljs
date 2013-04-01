@@ -49,15 +49,15 @@
 (dispatch/react-to #{:receive-metadata-piece} (fn [_ [torrent piece-index data]]
   "When we get a metadata piece add it to the receieved pile"
   (let [info-hash (@torrent :pretty-info-hash)
-        pieces (remove #(= piece-index %) (@working info-hash))]
-    (swap! working assoc info-hash pieces))
+        working* (remove #(= piece-index %) (@working info-hash))]
+    (swap! working assoc info-hash working*)
     (swap! received assoc-in [info-hash piece-index] data)
     ; And if we have all the metadata pieces 
     (if (= (count (@received info-hash)) (count (pieces torrent)))
       ; String all the pieces into one byte array
       (let [byte-array (pieces->metadata (@received info-hash))]
         (swap! received dissoc info-hash)
-        (dispatch/fire :receive-metadata [torrent byte-array])))))
+        (dispatch/fire :receive-metadata [torrent byte-array]))))))
 
 (dispatch/react-to #{:receive-metadata} (fn [_ [torrent byte-array]]
   ; TODO: needless string conversion

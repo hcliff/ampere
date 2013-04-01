@@ -2,7 +2,6 @@
   (:use 
     [torrent-client.torrent :only [pretty-info-hash has-full-metadata?]]
     [torrent-client.protocol.bittorrent :only [generate-protocol]]
-    [torrent-client.waltz :only [machine transition]]
     [torrent-client.bitfield :only [bitfield-unique]]
     [torrent-client.pieces :only [wanted-pieces work-piece! piece-blocks get-block]]
     [torrent-client.peer-id :only [peer-id]])
@@ -25,35 +24,45 @@
 ; Helper methods for the peer
 ;************************************************
 
-(defn request-piece [torrent peer-data bittorrent-client piece-index]
+(defn set-interest! [peer torrent]
+  "Update the peer to reflect if the peer has pieces we want"
+  (if (has-full-metadata? torrent)
+    (if-not (empty? (wanted-pieces torrent ((state/get-data peer) :bitfield)))
+      (if-not (state/in? peer :client-interested)
+        (state/set peer :client-interested)
+        (state/unset peer :client-interested)))))
+
+(defn request-piece [peer torrent bittorrent-client piece-index]
   "Given a piece index request its component blocks"
   (work-piece! torrent piece-index)
   (doseq [[begin length] (piece-blocks torrent piece-index)]
     ; Add to the outstanding queue
-    (swap! peer-data update-in [:outstanding] inc)
+    (swap! peer update-in [:data :outstanding] inc)
     (protocol/send-request bittorrent-client piece-index begin length)))
 
-(defn update-queue [& [torrent peer-data _ :as arguments]]
+(defn update-queue [& [peer torrent bittorrent-client :as arguments]]
   "Saturate the peers queue with block requests"
-  (let [pieces (wanted-pieces torrent (@peer-data :bitfield))
-        request-piece (apply partial request-piece arguments)]
-    (when (and (< (@peer-data :outstanding) max-outstanding)
-               (not-empty pieces))
+  (let [pieces (wanted-pieces torrent (state/get-data peer :bitfield))
+        request-piece (partial request-piece peer torrent bittorrent-client)]
+    (when (and (< ((state/get-data peer) :outstanding) max-outstanding)
+               (not-empty pieces)
+               (state/in? peer :client-downloading))
       (request-piece (rand-nth pieces))
       (apply update-queue arguments))))
 
-(defn request-metadata [torrent peer-data bittorrent-client piece-index]
+(defn request-metadata [peer torrent bittorrent-client piece-index]
   "Request all the pieces the metadata is made from"
   (metadata/work-piece! torrent piece-index)
-  (swap! peer-data update-in [:outstanding] inc)
+  (swap! peer update-in [:data :outstanding] inc)
   (protocol/send-metadata-request bittorrent-client piece-index))
 
-(defn update-metadata-queue [& [torrent peer-data _ :as arguments]]
+(defn update-metadata-queue [& [peer torrent bittorrent-client :as arguments]]
   "Saturate the peers queue with metadata piece requests"
   (let [pieces (metadata/wanted-pieces torrent)
-        request-metadata (apply partial request-metadata arguments)]
-    (when (and (not (false? (@peer-data :has-metadata)))
-               (< (@peer-data :outstanding) max-outstanding)
+        request-metadata (partial request-metadata peer torrent bittorrent-client)]
+    ; (js* "debugger;")
+    (when (and (not (state/in? peer :rejecting-metadata-requests))
+               (< ((state/get-data peer) :outstanding) max-outstanding)
                (not-empty pieces))
       (request-metadata (first pieces))
       (apply update-metadata-queue arguments))))
@@ -69,40 +78,24 @@
   Hanshake indicates if this peer should begin the handshake"
   [torrent channel peer-data handshake]
 
-  (let [me (machine {:label :peer-machine :current :init})
-        bittorrent-client (generate-protocol torrent channel me)
-        peer-data (atom (merge peer-data {
-                         ; Does this peer have the torrents metadata?
-                         :has-metadata nil
-                         ; Is this client choking the peer,
-                         :choking true 
-                         ; Is peer interested in this client
-                         :interested false
-                         ; How many outstanding requests does this peer have
-                         :outstanding 0}))]
-
-    ; the peers management has determined choking/unchoking
-    ; of this peer
-    ; TODO: make this granular to the info-hash
-    (dispatch/react-to #{[:choke-peer (@peer-data :peer-id)]} 
-      #(state/trigger me :choke-peer))
-    (dispatch/react-to #{[:unchoke-peer (@peer-data :peer-id)]}
-      #(state/trigger me :unchoke-peer))
+  (let [data {:bitfield nil :outstanding 0}
+        me (state/machine {:label (peer-data :peer-id) :data data})
+        bittorrent-client (generate-protocol torrent channel me)]
 
     (defevent me :receive-handshake [reserved info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
       peer-id and the torrent info-hash"
       (console/info "Received handshake from peer:" peer-id)
       (when (and (= (vec (@torrent :info-hash)) info-hash)
-                 (= (@peer-data :peer-id) peer-id))
+                 (= (state/get-name me) peer-id))
+        (if-not (state/in? me :sent-handshake)
+          (state/set me :sent-handshake))
         ; If this peer supports extensions
         ; H.C: currently can't deal with peers who don't
         ; we can't send a bitfield on magnet requests obviously
         (if (nth reserved 44)
           (state/set me :sent-extended)
-          (state/set me :sent-bitfield))
-        (if-not (state/in? me :sent-handshake)
-          (state/set me :sent-handshake))))
+          (state/set me :sent-bitfield))))
 
     (defevent me :receive-extended [message]
       ; Store the metadata length for later use
@@ -114,47 +107,38 @@
         (state/set me :sent-extended)))
 
     (defevent me :receive-choke []
-      (transition me :not-choked-not-interested :choked-not-interested)
-      (transition me :not-choked-interested :choked-interested))
+      (state/set me :client-chocked))
 
     (defevent me :receive-unchoke []
-      (transition me :choked-not-interested :not-choked-not-interested)
-      (transition me :choked-interested :not-choked-interested))
+      (state/unset me :client-choked))
 
     (defevent me :receive-interested []
-      (swap! peer-data assoc :interested true)
-      (dispatch/fire :receive-interested torrent))
+      (state/set me :peer-interested))
 
     (defevent me :receive-not-interested []
-      (swap! peer-data assoc :interested false)
-      (dispatch/fire :receive-not-interested torrent))
+      (state/unset me :peer-interested))
 
     (defevent me :receive-have [index]
       "Update the bitfield to mark we have the correct piece"
-      (bitfield/set! (@peer-data :bitfield) index true)
-      ; Check the peer has pieces that we need
-      (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
-        (transition me :not-choked-not-interested :not-choked-interested)
-        (transition me :choked-not-interested :choked-interested)))
+      (bitfield/set! ((state/get-data me) :bitfield) index true)
+      (state/set me :has-metadata)
+      (set-interest! me torrent))
 
     (defevent me :receive-bitfield [bitfield]
       "The client has sent us a valid bitfield detailing the
       pieces of the torrent they have"
-      (swap! peer-data assoc :bitfield bitfield)
+      (swap! me assoc-in [:data :bitfield] bitfield)
+      (state/set me :has-metadata)
       ; If we haven't yet sent a bitfield, do so!
       (if-not (state/in? me :sent-bitfield)
         (state/set me :sent-bitfield))
-      (if (has-full-metadata torrent)
-        ; If the client has allready sent their bitfield then send interested
-        (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
-          (state/set me :choked-interested)
-          (state/set me :choked-not-interested))))
+      (set-interest! me torrent))
 
     (defevent me :receive-request [piece-index offset length]
       "If we have a given piece send it to the peer 
       if they haven't been choked"
-      (if-not (or (@peer-data :choking)
-                  (zero? (nth (@torrent :bitfield) piece-index)))
+      (if (and (state/in me :peer-downloading)
+               (not (zero? (nth (@torrent :bitfield) piece-index))))
         ; If we have the block, we have the piece
         (let-async [data (get-block torrent piece-index offset length)]
           (protocol/send-block bittorrent-client piece-index offset data))))
@@ -164,8 +148,8 @@
       and then ask for the next piece"
       ; (console/log "Received block" piece-index begin)
       ; Regardless of the blocks validity reduce the queue
-      (swap! peer-data update-in [:outstanding] dec)
-      (update-queue torrent peer-data bittorrent-client)
+      (swap! me update-in [:data :outstanding] dec)
+      (update-queue me torrent bittorrent-client)
       (dispatch/fire :receive-block [torrent piece-index begin data]))
 
     ; TODO: impliment
@@ -187,13 +171,15 @@
         (protocol/send-metadata-reject bittorrent-client piece-index)))
 
     (defevent me :receive-metadata-reject [piece-index]
-      (swap! peer-data update-in [:outstanding] dec)
-      (swap! peer-data assoc :has-metadata nil)
+      (swap! me update-in [:data :outstanding] dec)
+      (if-not (state/in? me :rejecting-metadata-requests)
+        (state/set me :rejecting-metadata-requests))
       (dispatch/fire :receive-metadata-reject [torrent piece-index]))
 
     (defevent me :receive-metadata-piece [piece-index data]
-      (swap! peer-data update-in [:outstanding] dec)
-      (update-metadata-queue torrent peer-data bittorrent-client)
+      (swap! me update-in [:data :outstanding] dec)
+      (state/set me :has-metadata)
+      (update-metadata-queue me torrent bittorrent-client)
       (dispatch/fire :receive-metadata-piece [torrent piece-index data]))
 
     ;************************************************
@@ -201,31 +187,32 @@
     ;************************************************
 
     (defevent me :request-metadata []
-      (update-metadata-queue torrent peer-data bittorrent-client))
+      (update-metadata-queue me torrent bittorrent-client))
 
     (defevent me :received-metadata []
       "Fired when a torrent has all its metadata, proceed to send the peer 
       the clients bitfield"
       (state/set me :sent-bitfield))
 
-    (defevent me :choke-peer []
-      (swap! peer-data assoc :choking true)
-      (protocol/send-unchoke bittorrent-client))
-
     (defevent me :unchoke-peer []
-      (swap! peer-data assoc :choking false)
-      (protocol/send-unchoke bittorrent-client))
+      (if-not (state/in? me :peer-unchoked)
+        (state/set me :peer-unchoked)))
+
+    (defevent me :choke-peer []
+      (state/unset me :peer-unchoked))
+
+    (defevent me :optimistic []
+      (state/set me :optimistic))
+
+    (defevent me :unoptimistic []
+      (state/unset me :optimistic))
 
     ;************************************************
     ; States
     ;************************************************
 
-    (defstate me :init)
-
     (defstate me :sent-handshake
-      (in [] (protocol/send-handshake bittorrent-client))
-      ; Only send the handshake once
-      (constraint [_ _] (state/in? me :init)))
+      (in [] (protocol/send-handshake bittorrent-client)))
 
     (defstate me :sent-extended
       (in [] (protocol/send-extended-handshake bittorrent-client))
@@ -237,37 +224,68 @@
       ; Can't send the bitfield until we have all our metadata
       (constraint [_ _] (has-full-metadata? torrent)))
 
-    (defstate me :choked-not-interested
-      (in [] (protocol/send-not-interested bittorrent-client))
-      (constraint [_ _] (state/in? me :sent-bitfield)))
+    (defstate me :client-unchoked
+      "This client can request pieces from the peer"
+      (in [] (state/set me :client-downloading))
+      (out [] (state/unset me :client-downloading)))
 
-    (defstate me :choked-interested
-      (in [] (protocol/send-interested bittorrent-client))
-      (constraint [_ _] (state/in? me :sent-bitfield)))
-
-    (defstate me :not-choked-not-interested
-      (in [] (protocol/send-not-interested bittorrent-client))
-      (constraint [_ _] (state/in? me :sent-bitfield)))
-
-    ; This is when downloading actually occurs
-    ; TODO: this can be optimised
-    (defstate me :not-choked-interested 
-      (in []
+    (defstate me :client-interested
+      "This client wants pieces from the peer"
+      (in [] 
         (protocol/send-interested bittorrent-client)
-        ; If the peer has pieces we want then start fetching
-        (if-not (empty? (wanted-pieces torrent (@peer-data :bitfield)))
-          (update-queue torrent peer-data bittorrent-client)
-          (state/set me :not-choked-not-interested)))
+        (state/set me :client-downloading))
+      (out [] 
+        (protocol/send-not-interested bittorrent-client)
+        (state/unset me :client-downloading))
       (constraint [_ _] (state/in? me :sent-bitfield)))
+
+    (defstate me :peer-unchocked
+      "The peer is allowed to request pieces from this client if it wants"
+      (in [] 
+        (protocol/send-unchoke bittorrent-client)
+        (state/set me :peer-downloading))
+      (out [] 
+        (protocol/send-choke bittorrent-client)
+        (state/unset me :peer-downloading))
+      (constraint [_ _] (state/in? me :sent-bitfield)))
+
+    (defstate me :peer-interested
+      "The peer wants pieces from this client"
+      (in [] (state/set me :peer-downloading))
+      (out [] (state/unset me :peer-downloading)))
+
+    (defstate me :client-downloading
+      "This client is requested pieces from the peer"
+      ; When we start downloading from the peer kick of piece request
+      (in [] (update-queue me torrent bittorrent-client))
+      (constraint [_ _] 
+        (and (state/in? me :client-interested) 
+             (state/in? me :client-unchoked)
+             (state/in? me :sent-bitfield))))
+
+    (defstate me :peer-downloading
+      "The peer is requesting pieces from this client"
+      (constraint [_ _]
+        (and (state/in? me :peer-interested)
+             (state/in? me :peer-unchoked)
+             ; Peer can only download from us if we have torrent meta
+             (state/in? me :sent-bitfield))))
+
+    (defstate me :has-metadata
+      (constraint [_ _] (not (state/in? me :has-metadata))))
+    (defstate me :rejecting-metadata-requests)
+
+    ;************************************************
+    ; Initiate state machine
+    ;************************************************
 
     ; Handshake if this is the first client
     (when handshake
-      (console/info "Initiating handshake with peer:" (@peer-data :peer-id))
+      (console/info "Initiating handshake with peer:" (state/get-name me))
       (state/set me :sent-handshake))
 
-    ; Return some info on the peer
-    me
-))
+    ; Return the machine
+    me))
 
 (defn generate-peer
   "Given a channel create a bittorrent peer and track the state"

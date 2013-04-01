@@ -41,5 +41,5 @@
               (f* [i & arguments]
                 ; run the provided function with the collections as params
                 ; execute success function with index and result
-                ((apply f arguments) (partial success %1)))]
+                ((apply f arguments) (partial success i)))]
         (doall (apply map-indexed* f* collections))))))

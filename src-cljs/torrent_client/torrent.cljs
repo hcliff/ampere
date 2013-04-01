@@ -24,6 +24,13 @@
 ;; Torrent state
 ;;************************************************
 
+(defn has-full-metadata? [torrent]
+  (if-not (coll? torrent)
+    (has-full-metadata? @torrent)
+    (boolean (and (torrent :pretty-info-hash)
+                  (torrent :pieces-hash)
+                  (torrent :files)))))
+
 (defn active? [torrent]
   "Take either a collection or atom and return it's active status"
   (if-not (coll? torrent)
@@ -42,13 +49,6 @@
          (>= (torrent :pieces-written) (torrent :pieces-length)))))
 
 (def downloading? (complement completed?))
-
-(defn has-full-metadata? [torrent]
-  (if-not (coll? torrent)
-    (has-full-metadata? @torrent)
-    (boolean (and (torrent :pretty-info-hash)
-                  (torrent :pieces-hash)
-                  (torrent :files)))))
 
 ;************************************************
 ; Functions for processing torrent data into
@@ -295,7 +295,7 @@
   (let-async [metadata (read-metadata-file metadata-file)
               files (write-torrent-files metadata)]
     (torrent-files (atom metadata) files)
-    (dispatch/fire :processed-metadata torrent))))
+    (dispatch/fire :processed-metadata metadata))))
 
 (defn- add-byte-array [metadata]
   "General method to handle adding torrents from byte-arrays"

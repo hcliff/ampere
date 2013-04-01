@@ -18,6 +18,8 @@
 (defn int [number]
   (js/parseInt number))
 
+(declare decode-dispatch)
+
 (defn- decode-number [stream delimeter & ch]
   (loop [i (if (nil? ch) (reader/read stream) (first ch)), result ""]
     (let [c (char i)]
@@ -77,6 +79,8 @@
   "Generate a new ByteArrayOutputStream with a native
   javascript array (performance reasons)"
   (ByteArrayOutputStream. (js/Array)))
+
+(declare encode-object)
 
 (defn- encode-string [obj stream]
   (let [bytes (crypt/stringToByteArray obj)
