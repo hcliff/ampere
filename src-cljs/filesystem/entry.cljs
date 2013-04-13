@@ -20,4 +20,4 @@
   "Given a FileEntry return the underlying file object"
   [entry]
   (async [success-callback error-callback]
-    (.file entry success-callback)))
+    (.file entry success-callback (fn [e] (js* "debugger;") (.log js/console "failed")))))

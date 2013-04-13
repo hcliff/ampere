@@ -5,6 +5,7 @@
     [torrent-client.bitfield :as bitfield]
     [filesystem.filesystem :as filesystem]
     [filesystem.entry :as entry]
+    [cljconsole.main :as console]
     [clojure.set :as set])
   (:use
     [async.helpers :only [map-async]]
@@ -17,7 +18,7 @@
 
 ; The bytes in a piece block (16kb)
 ; http://bit.ly/RsGL0R
-(def block-length 16384)
+(def block-length 700)
 
 ; Blocks that have had requests sent out for them
 (def working (atom {}))
@@ -40,12 +41,22 @@
   "Marks that we have started fetching a piece"
   [torrent piece-index]
   (let [info-hash (@torrent :pretty-info-hash)]
-    (.log js/console "work-next-piece" piece-index)
+    (console/log "work-next-piece" piece-index)
     ; Add this block to the works in progress
     (swap! working (partial merge-with concat) {info-hash [piece-index]})
     piece-index))
 
-(dispatch/react-to #{:written-piece :invalid-piece} (fn [_ torrent block-index]
+(defn unwork-piece!
+  "Relinquish a piece"
+  [torrent piece-index]
+  (let [info-hash (@torrent :pretty-info-hash)
+        working* (remove #(= piece-index %) (@working info-hash))]
+    (console/log "work-next-piece" piece-index)
+    ; Add this block to the works in progress
+    (swap! working assoc info-hash working*)
+    piece-index))
+
+(dispatch/react-to #{:written-piece :invalid-piece} (fn [_ [torrent block-index]]
   "When a block has finished or is invalid, remove it from the in-progress"
   (let [info-hash (@torrent :pretty-info-hash)
         blocks (remove #(= block-index %) (@working info-hash))]
@@ -54,7 +65,7 @@
 (defn piece-length 
   "If this is the last piece return the last-piece-length"
   [torrent piece-index]
-  (.log js/console "piece-length" piece-index)
+  (console/log "piece-length" piece-index)
   (if (= piece-index (dec (@torrent :pieces-length)))
     (@torrent :last-piece-length)
     (@torrent :piece-length)))
@@ -66,14 +77,14 @@
   (let [bitfield (@torrent :bitfield)
         pieces-prior (take piece-index bitfield)
         pieces-written (count (remove zero? pieces-prior))]
-    (.log js/console "calc piece-offset" piece-index pieces-prior pieces-written)
+    (console/log "calc piece-offset" piece-index pieces-prior pieces-written)
     (* pieces-written (@torrent :piece-length))))
 
 (defn piece-blocks
   "Given a piece, return all the blocks within it"
   [torrent piece-index]
   (let [piece-length (piece-length torrent piece-index)]
-    (.log js/console "calculating piece-length" piece-length)
+    (console/log "calculating piece-length" piece-length)
     (loop [offset 0
            blocks []]
       ; If we havn't finished splitting up this piece
@@ -85,25 +96,28 @@
         blocks))))
 
 (defn- get-file-section
-  "Given a raw file, offset and length return a byte array"
-  [offset length file]
+  "Given a piece-file, offset and length return a byte array"
+  [piece-file offset length]
   (async [success-callback _]
-    (let-async [:let offset (max offset ((meta file) :pos-start))
-                :let end (min (+ offset length) ((meta file) :pos-end))
+    (let-async [file (entry/file (.-file piece-file))
+                :let offset (max offset ((meta piece-file) :pos-start))
+                :let end (min (+ offset length) ((meta piece-file) :pos-end))
                 :let length (- end offset)
-                ; Get a filereader on the piece-files underlying file
-                data (filesystem/filereader (.-file file) offset length)]
-      (.log js/console "get-file-section" offset length ((meta file) :pos-end) (.-byteLength data))
+                ; Slice the file, only reading the required piece
+                :let slice (filesystem/slice file offset length)
+                data (filesystem/filereader slice)]
       (success-callback (uint8-array data)))))
 
-(defn get-file-piece [files piece-length piece-index]
+(defn get-file-piece 
+  "Fetch a piece across the files that contain part of it"
+  [files piece-length piece-index]
   (async [success-callback _]
     (let [offset (*  piece-index piece-length)
           files (filter #(contains? % piece-index) files)]
-      (.log js/console "files with piece" (count files))
+      (console/log "files with piece" (count files))
       (if-not (empty? files)
         ; Get a byte array subsection of the file then make a piece from it
-        (let-async [section (get-file-section offset piece-length (first files))]
+        (let-async [section (get-file-section (first files) offset piece-length)]
           (success-callback (pieces/piece section)))
         (success-callback nil)))))
 
@@ -119,12 +133,13 @@
           ; stradles two files, establish which files use this block
           files (filter #(contains? % piece-index) (@files info-hash))]
       ; Retrieve the pieces from the files
-      (.log js/console "get-block" piece-index offset length (first files))
+      (console/log "get-block" (first files) piece-index offset length)
       ; TODO: support stradling files
-      (let-async [data (get-file-section block-offset length (first files))]
-        ; (.log js/console data)
-        ; (.log js/console "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
-        (success-callback data))
+      (let-async [data (get-file-section (first files) block-offset length)]
+        ; (console/log data)
+        ; (console/log "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
+        (success-callback data)
+        )
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))
 
@@ -166,7 +181,7 @@
       (if (= (count blocks) (count (piece-blocks torrent piece-index)))
         (let [piece (pieces/blocks->piece blocks)
               piece-hash (hash piece)]
-          (.log js/console "piece hash" piece-hash (nth (@torrent :pieces-hash) piece-index))
+          (console/log "piece hash" piece-hash (nth (@torrent :pieces-hash) piece-index))
           ; If the hash of the piece we have is correct, use the piece
           (if (= (hash piece) (nth (@torrent :pieces-hash) piece-index))
             (dispatch/fire :receive-piece [info-hash piece-index piece])
@@ -185,7 +200,7 @@
       ; Add this to list of pieces to write for this file
       (queue! file-write-queue file [piece-index file piece])
       ; And potentially initiate a writer
-      (.log js/console "Writing to disk")
+      (console/log "Writing to disk")
       (dispatch/fire :write-file [torrent file])))))
 
 (declare seek-then-write)
@@ -218,16 +233,14 @@
     (let [[piece-index _ _] next-piece
           [seek-position piece-data] (apply truncate-piece torrent next-piece)]
       ; When the piece finishes writing
-      (set! (.-onwriteend writer) (fn [_]
+      (aset writer "onwriteend" (fn [_]
         ; Consume this piece from the queue
         (consume! file-write-queue file)
         ; And inform that it has been written
-        (.log js/console "finished writing!" seek-position piece-index)
+        (console/log "finished writing!" seek-position piece-index)
         (dispatch/fire :written-piece [torrent piece-index])
         ; grab the next one if applicable
         (seek-then-write torrent file writer)))
       (.seek writer seek-position)
       ; H.C: for now only blobs can be written
       (.write writer (js/Blob. (js/Array. piece-data))))))
-
-(.log js/console "EOF")

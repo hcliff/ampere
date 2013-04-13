@@ -77,7 +77,7 @@
     (let [byte-array (js/Uint8Array. (clj->js bits))]
       (Bitfield. byte-array 0))))
 
-(defn fill-bitfield 
+(defn fill-bitfield!
   "Given a bitfield mark that we have all the pieces"
   [bitfield pieces-length]
   (let [full-bytes (quot pieces-length 8)

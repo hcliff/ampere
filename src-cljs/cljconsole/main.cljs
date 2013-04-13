@@ -11,4 +11,4 @@
 (defn-method "warn")
 (defn-method "info")
 (defn-method "time")
-(defn-method "timeEnd")
+(defn-method "time-end" "timeEnd")

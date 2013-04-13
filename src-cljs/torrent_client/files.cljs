@@ -23,27 +23,29 @@
             pos {:pos-start total :pos-end new-total}]
         (recur (rest files) new-total (conj boundaries pos))))))
 
-(defn block-boundaries [torrent file]
-  "Given a file and the torrent block-length calculate the
-  blocks that a file contains, note that two files may require
-  the same block due to overlap between the head and tail of
-  the files. (e.g block 3 has the head of file b and tail of a)"
-  {:piece-start (Math/floor (/ (file :pos-start) (@torrent :piece-length)))
-   :piece-end   (Math/floor (/ (file :pos-end)   (@torrent :piece-length)))})
+(defn piece-boundaries [file piece-length]
+  "Given a file and a piece-length calculate the pieces that a file contains, 
+  note that two files may require the same piece due to overlap between the 
+  head and tail of the files. 
+  (e.g piece 3 has the head of file b and tail of a)"
+  {:piece-start (Math/floor (/ (file :pos-start) piece-length))
+   :piece-end   (Math/floor (/ (file :pos-end)   piece-length))})
 
 ;************************************************
 ; Manage torrent files
 ;************************************************
 
-(defn generate-file [torrent file-entry file-data]
-  ; file-data is {:pos-start x :pos-end x}, file-entry is the file on the filesystem
-  (let [boundaries (block-boundaries torrent file-data)]
+(defn generate-file [file-entry file-data piece-length]
+  ; file-data is {:pos-start x :pos-end x}
+  ; file-entry is the file on the filesystem
+  ; piece length is how we should break apart these files
+  (let [boundaries (piece-boundaries file-data piece-length)]
     ; Attach information on the block boundaries to the file
     (with-meta (pieces/piece-file file-entry) (merge file-data boundaries))))
 
 (dispatch/react-to #{:add-file} (fn [_ [torrent file-entry file-data]]
   "A file has been added to this torrent"
-  (let [file (generate-file torrent file-entry file-data)]
+  (let [file (generate-file file-entry file-data (@torrent :piece-length))]
     ; TODO: use below code
     ; (swap! files update-in [(@torrent :pretty-info-hash)] conj file)
     (swap! files (partial merge-with concat) {(@torrent :pretty-info-hash) [file]})
@@ -55,7 +57,7 @@
 ;************************************************
 
 (defn read-file 
-  "Given a path, read a file from the filesystem and trigger :add-file"
+  "Given a path, read a fileEntry from the filesystem"
   [fs path]
   (console/info "Read file from filesystem" path)
   (async [success-callback _]
@@ -68,8 +70,8 @@
   (async [success-callback error-callback]
     (let-async [entry (entry/get-entry fs path {:create true})
                 writer (entry/create-writer entry)]
-      (set! (.-onerror writer) error-callback)
-      (set! (.-onwriteend writer) #(success-callback entry))
+      (aset writer "onerror" error-callback)
+      (aset writer "onwriteend" #(success-callback entry))
       ; If we have no data for this file there's no need to write
       (if (nil? data)
         (success-callback entry)

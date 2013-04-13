@@ -2,7 +2,8 @@
   (:use 
     [torrent-client.torrents :only [torrents]]
     [torrent-client.torrent :only [has-full-metadata?]]
-    [torrent-client.peer :only [generate-peer]])
+    [torrent-client.peer :only [generate-peer]]
+    [torrent-client.core.incubator :only [dissoc-in]])
   (:require 
     [torrent-client.core.dispatch :as dispatch]
     [waltz.state :as state]
@@ -28,6 +29,10 @@
 (defn peer-interested? [m] (state/in? m :peer-interested))
 (def peer-uninterested? (complement peer-interested?))
 
+;;************************************************
+;; Manage events sent from torrent management
+;;************************************************
+
 (dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
   ; Cancel any pieces in transit
   (doseq [peer (@peers (torrent :info-hash))]
@@ -50,6 +55,10 @@
   ; TODO: pause timer
   ))
 
+;;************************************************
+;; Manage events sent from channels
+;;************************************************
+
 (dispatch/react-to #{:add-channel} (fn [_ [peer-id channel & flags]]
   "A new channel has been established to get torrent data"
   (let [; If this peer is initiating the handshake
@@ -60,14 +69,16 @@
         peer (generate-peer torrent channel peer-id handshake)]
     ; add the peer to the list of peers for this torrent
     (console/info "Added peer" peer-id "to torrent" info-hash)
-    (swap! peers (partial merge-with concat) {info-hash [peer]}))))
+    (swap! peers assoc-in [info-hash peer-id] peer))))
 
 (dispatch/react-to #{:remove-channel} (fn [_ [peer-id channel]]
-  (let [info-hash (aget channel "label")
-        peers (@peers info-hash)
-        ; Remove this peer from the torrent peers
-        peers (remove #(= peer-id (state/get-name %)) peers)]
-  (swap! peers assoc info-hash peers))))
+  (let [info-hash (aget channel "label")]
+    (swap! peers dissoc-in [info-hash peer-id]))))
+
+(dispatch/react-to #{:receive-data} (fn [_ [peer-id channel data]]
+  (let [info-hash (aget channel "label")]
+    (if-let [peer (get-in @peers [info-hash peer-id])]
+      (state/trigger peer :receive-data data)))))
 
 ; (dispatch/react-to #{:written-piece} (fn [_ [torrent block]]
 ;   "When a peer sends us a block we didn't have before"
@@ -75,8 +86,12 @@
 ;   (doseq [peer (@peers (@torrent :info-hash))]
 ;     (state/trigger peer :add-block block))))
 
+;;************************************************
+;; Peer management
+;;************************************************
+
 (defn request-metadata! [info-hash]
-  (if-let [peers (@peers info-hash)]
+  (if-let [peers (vals (@peers info-hash))]
     (let [peers (remove #(state/in? % :rejecting-metadata-requests) peers)
           ; has-metadata not being set can also mean it is unknown
           ; prefer peers that definately have metadata, but also try unknowns
@@ -89,7 +104,7 @@
   "Update the currently unchoked peers, choking & unchoking peers where 
   appropriate"
   [info-hash]
-  (if-let [peers (@peers info-hash)]
+  (if-let [peers (vals (@peers info-hash))]
     (let [peers (sort-by (juxt optimistic? peer-interested?) peers)
           ; is the first peer is optimistically unchoked but not interested
           ; TODO: resolve this testing logic
@@ -113,14 +128,14 @@
   "The optimistic downloader is protected for the first 30 seconds
   after that it has to fight for itself"
   [info-hash]
-  (if-let [peers (get @peers info-hash)]
+  (if-let [peers (vals (get @peers info-hash))]
     (if-let [peer (first (filter optimistic? peers))]
       (state/trigger peer :unoptimistic))))
 
 (defn optimistic-unchoke
   "Unchoke a peer regardless of its upload speed"
   [info-hash]
-  (if-let [peers (get @peers info-hash)]
+  (if-let [peers (vals (get @peers info-hash))]
     ; mark optimistic a random peer that is choked and not allready optimistic
     (let [eligible-peers (filter (every-pred not-optimistic? peer-choked?) peers)]
       (if (pos? (count eligible-peers))
@@ -128,6 +143,7 @@
 
 (dispatch/react-to #{:receive-interested :receive-not-interested} (fn [_ torrent]
   "A peer changed its interested status"
+  (js* "debugger;")
   (set-unchoked! (@torrent :pretty-info-hash))))
 
 (defn- manage-peers [torrent]
@@ -148,6 +164,6 @@
 (dispatch/react-to #{:updated-torrent} (fn [_ torrent]
   "Peers will have been waiting on metadata to continue with the connection 
   process"
-  (let [peers (@peers (@torrent :info-hash))]
+  (let [peers (vals (@peers (@torrent :info-hash)))]
     (doseq [p peers]
       (state/trigger p :received-metadata)))))

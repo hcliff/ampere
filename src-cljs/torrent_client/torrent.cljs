@@ -5,6 +5,7 @@
     [torrent-client.bitfield :as bitfield]
     [filesystem.filesystem :as filesystem]
     [filesystem.entry :as entry]
+    [cljconsole.main :as console]
     [goog.crypt :as crypt])
   (:use
     [torrent-client.core.string :only [partition-string pad-string-left]]
@@ -82,7 +83,7 @@
         announce-list (reduce conj announce (flatten (metadata :announce-list)))
 
         ; NOTE: the actual torrent files are not referred to in
-        ; the torrent, they are managed seperately in pieces.cljs
+        ; the torrent, they are managed seperately in files.cljs
         files-list (info :files)
         files (or files-list [{:path (info :name) :length (info :length)}])
         file-boundaries (file-boundaries files)
@@ -172,9 +173,9 @@
                 files (map-async reader files)]
       (success-callback files))))
 
-(defn write-torrent-files 
+(defn write-torrent-files
   ([metainfo]
-    "If not given any file data just use nil"
+    "If not given any file data just use nil (empty file)"
     (let [files (take (count (metainfo :files)) (repeat nil))]
       (write-torrent-files metainfo files)))
   ([metainfo files]
@@ -194,70 +195,74 @@
 ;************************************************
 
 (defn hashes
-  ([torrent files] (hashes torrent files 0 []))
-  ([torrent files i output]
+  "Break stream of files into pieces and hash the pieces"
+  ([files piece-length] (hashes files piece-length 0 []))
+  ([files piece-length i output]
     (async [success-callback _]
-      (hashes torrent files i output success-callback)))
-  ([torrent files i output success-callback]
-    (.time js/console (str "get-file-piece" i))
-    (let-async [piece (get-file-piece files (@torrent :piece-length) i)]
-      (.timeEnd js/console (str "get-file-piece" i))
+      (hashes files piece-length i output success-callback)))
+  ([files piece-length i output success-callback]
+    ; (console/time (str "get-file-piece" i))
+    (let-async [piece (get-file-piece files piece-length i)]
+      ; (console/time-end (str "get-file-piece" i))
       (if piece
         (do 
-          (.time js/console (str "hash" i))
+          (console/time (str "hash" i))
           (let [hashed (hash piece)]
-            (.timeEnd js/console (str "hash" i))
-            (hashes torrent files (inc i) (conj output hashed) success-callback)))
+            (console/time-end (str "hash" i))
+            (hashes files piece-length (inc i) (conj output hashed) success-callback)))
         (success-callback output)))))
 
-(defn file-metainfo
-  "Given a list of files return their name and length"
-  [file]
-  {:path (.-name file) :length (.-size file)})
+(defn file-metainfo [file]
+  "Given a raw file return its name and length"
+  {:path (aget file "name") :length (aget file "size")})
 
-(defn piece-length [length]
+(defn piece-length [total-length]
+  "Given the total size of the torrent work out an appropriate size
+   for each of its component pieces"
   (let [exp (cond
-              (> length (* 2048 1024 1024)) 20 ; > 2gb
-              (> length (* 512 1024 1024)) 19 ; > 512mb
-              (> length (* 64 1024 1024)) 18 ; > 64mb
-              (> length (* 16 1024 1024)) 17 ; > 16mb
-              (> length (* 4 1024 1024)) 16 ; > 4mb
+              (> total-length (* 2048 1024 1024)) 20 ; > 2gb
+              (> total-length (* 512 1024 1024)) 19 ; > 512mb
+              (> total-length (* 64 1024 1024)) 18 ; > 64mb
+              (> total-length (* 16 1024 1024)) 17 ; > 16mb
+              (> total-length (* 4 1024 1024)) 16 ; > 4mb
               :else 15)]
     (Math/pow 2 exp)))
 
-(defn create-torrent [{:keys [tracker files] :as form}]
+(defn files-metainfo [files]
+  "Given files create all the meta needed to write them"
+  (let [files-metainfo (map file-metainfo files)
+        total-length (reduce + (map :length files-metainfo))]
+    {:files files-metainfo
+     :total-length total-length
+     :piece-length (piece-length total-length)}))
+
+(defn generate-files [data files]
+  "Given files generate piece-files for each of them"
+  (let [; build file data from the provided files
+        file-boundaries (file-boundaries (data :files))
+        ; compute the file boundaries then add them to the file data
+        files-data (map merge (data :files) file-boundaries)]
+    (map #(generate-file % %2 (data :piece-length)) files (data :files))))
+
+(defn create-torrent [form {:keys [total-length piece-length files]} piece-files]
   (async [success-callback _]
-    ; (js* "debugger;")
-    (let [files-metainfo (map file-metainfo files)
-          total-length (reduce + (map :length files-metainfo))
-          piece-length (piece-length total-length)
-          ; generate-file typically expects a torrent atom
-          metainfo (atom {:piece-length piece-length})
-
-          ; build file data from the provided files
-          file-boundaries (file-boundaries files-metainfo)
-          ; compute the file boundaries then add them to the file data
-          files-data (map merge files-metainfo file-boundaries)
-
-          files (map #(generate-file metainfo % %2) files files-data)]
-      ; (.time js/console "hasher")
-      (let-async [hashes (hashes metainfo files)]
-        ; (.log js/console (vec hashes))
-        ; (.timeEnd js/console "hasher")
-        (let [metainfo {
-                :info {
-                  :pieces (apply str hashes)
-                  (keyword "piece length") piece-length
-                  :name (form :name)
-                  :files files-metainfo
-                  :length (reduce + (map :length files-metainfo))}
-                :announce tracker}
-              metadata (process-metadata metainfo)
-              bitfield (bitfield/bitfield (metadata :pieces-length))
-              metadata (assoc metadata :bitfield bitfield
-                                       :pieces-written (metadata :pieces-length)
-                                       :announce tracker)]
-          (success-callback metadata))))))
+    ; (console/time "hasher")
+    (let-async [hashes (hashes piece-files piece-length)]
+      ; (console/time-end "hasher")
+      (let [metainfo {:info 
+                       {:pieces (apply str hashes)
+                        (keyword "piece length") piece-length
+                        :name (form :name)
+                        :length total-length
+                        :files files}
+                      :announce (form :tracker)}
+            metadata (process-metadata metainfo)
+            bitfield (bitfield/bitfield (metadata :pieces-length))
+            bitfield (bitfield/fill-bitfield! bitfield (metadata :pieces-length))
+            metadata (assoc metadata :bitfield bitfield
+                                     :pieces-written (metadata :pieces-length)
+                                     :announce (form :tracker))]
+        (success-callback metadata)))))
 
 (defn create-torrent-file-metainfo [metainfo]
   ".torrents have a subset of the metainfo we track"
@@ -315,8 +320,11 @@
 ; When the user submits a form with details for a torrent
 (dispatch/react-to #{:create-torrent} (fn [_ form]
   ; Write the provided files to fs before continuing
-  (let-async [metadata (create-torrent form)
-              files (write-torrent-files metadata (form :files))]
+  (let-async [:let files-metainfo (files-metainfo (form :files))
+              files (write-torrent-files files-metainfo (form :files))
+              ; Turn the form files into piece-files that can be sliced
+              :let piece-files (generate-files files-metainfo files)
+              metadata (create-torrent form files-metainfo piece-files)]
     (torrent-files (atom metadata) files)
     (dispatch/fire :processed-metadata metadata)
     ; Inform the UI the torrent has been built

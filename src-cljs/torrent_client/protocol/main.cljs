@@ -1,7 +1,6 @@
 (ns torrent-client.protocol.main)
 
 (defprotocol Protocol
-  (watch-channel [client] "Start listening to the channel for data")
   (send-data [client data] [client type data] "")
   (send-handshake [client] "")
   (send-extended [client id message] [client id message data] "")
@@ -18,12 +17,4 @@
   (send-request [client index begin piece] "")
   (send-block [client index begin piece] "")
   (send-cancel [client index begin piece] "")
-
-  (receive-handshake [client data])
-  (receive-bitfield [client data])
-
-
-  ; (keep-alive [client] "Fire a keep-alive every 60 seconds")
-  ; (handle-data [client data] "")
-  ; H.C syntax (send-interested [client] [client optional] "whatever")
   )

@@ -23,7 +23,7 @@
           "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
           "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/bootstrap.min.js"
           "http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.10/socket.io.min.js"
-          "/js/humane.js" "/js/datachannel.js")
+          "/js/humane.js")
       ]
       [:body
         [:div#create-modal.modal.hide

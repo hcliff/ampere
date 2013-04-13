@@ -8,14 +8,16 @@
     [torrent-client.torrents :only [torrents]]
     [torrent-client.peer-id :only [peer-id]]
     [torrent-client.connection :only 
-      [create-data-channel
-       get-or-create-connection
+      [create-connection
+       create-data-channel
        send-offer!
-       recieve-answer
        receive-offer!
+       receive-ice-candidate!
        send-answer!
-       on-open
-       on-data-channel]])
+       receive-answer!
+       set-connection-events!
+       set-channel-events!
+       connections]])
   (:use-macros [async.macros :only [let-async async]]))
 
 ; How often should we tell the tracker our download progress
@@ -42,12 +44,13 @@
       ; Otherwise build one
       (let [socket (.connect js/io tracker)]
         (swap! trackers assoc tracker socket)
-        (set! (.-onerror tracker) error-callback)
+        (aset tracker "onerror" error-callback)
         ; Continue once the socket is opened
         (on socket :connect #(success-callback socket))
         ; Listen for socket events
         (on socket :need_offer #(dispatch/fire :need-offer [socket %]))
         (on socket :offer #(dispatch/fire :offer [socket %]))
+        (on socket :ice-candidate #(dispatch/fire :ice-candidate [socket %]))
         (on socket :answer #(dispatch/fire :answer [socket %]))))))
 
 ;;************************************************
@@ -73,21 +76,21 @@
         :numwant 10
         })))))
 
-(dispatch/react-to #{:completed-torrent} (fn [_ torrent]
-  "When a torrent is finished send the complete event to the trackers"
-  (doseq [socket @trackers]
-    (emit socket :completed {
-      :peer_id @peer-id
-      :info_hash (@torrent :pretty-info-hash)
-      }))))
+; (dispatch/react-to #{:completed-torrent} (fn [_ torrent]
+;   "When a torrent is finished send the complete event to the trackers"
+;   (doseq [socket (@trackers ]
+;     (emit socket :completed {
+;       :peer_id @peer-id
+;       :info_hash (@torrent :pretty-info-hash)
+;       }))))
 
-(dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
-  "When a torrent is stopped send the stopped event to the trackers"
-  (doseq [socket @trackers]
-    (emit socket :stopped {
-      :peer_id @peer-id
-      :info_hash (@torrent :pretty-info-hash)
-      }))))
+; (dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
+;   "When a torrent is stopped send the stopped event to the trackers"
+;   (doseq [socket @trackers]
+;     (emit socket :stopped {
+;       :peer_id @peer-id
+;       :info_hash (@torrent :pretty-info-hash)
+;       }))))
 
 ;;************************************************
 ;; Reactions to events sent by the tracker
@@ -95,7 +98,11 @@
 
 (dispatch/react-to #{:need-offer} (fn [_ [tracker-socket {:keys [peer_id info_hash]}]]
   "The tracker has requested an offer from this client"
-  (let [connection (get-or-create-connection peer_id)]
+  (let [connection (create-connection peer_id info_hash)
+        ; Build a channel on this connection for the torrent]
+        channel (create-data-channel connection info_hash)]
+    (set-connection-events! tracker-socket connection peer_id info_hash)
+    (set-channel-events! channel peer_id)
     (let-async [_ (send-offer! connection)
                 :let sdp (-> connection .-localDescription .-sdp)]
       ; Check the peer requested a torrent we have
@@ -111,12 +118,12 @@
 (dispatch/react-to #{:offer} (fn [_ [tracker-socket {:keys [peer_id info_hash sdp]}]]
   "When the tracker sends an offer for a torrent connection
   build and return an answer"
-  (let [connection (get-or-create-connection peer_id)]
+  (let [connection (create-connection peer_id info_hash)]
+    (set-connection-events! tracker-socket connection peer_id info_hash)
     (receive-offer! connection sdp)
     (let-async [_ (send-answer! connection peer_id)
                 :let sdp (-> connection .-localDescription .-sdp)]
       ; Listen for the peer opening a data channel
-      (set! (.-ondatachannel connection) (on-data-channel peer_id))
       (if-let [torrent (@torrents info_hash)]
         ; The peer that sent the offer will create the datachannel after it
         ; gets this clients offer
@@ -129,12 +136,26 @@
 
 (dispatch/react-to #{:answer} (fn [_ [tracker-socket {:keys [peer_id info_hash sdp]}]]
   "When the tracker sends an answer for an offer we send"
-  (let [; Retrieve the peer connection
-        peer-connection (recieve-answer sdp peer_id)
-        ; Build a channel on this connection for the torrent
-        channel (create-data-channel peer-connection info_hash)]
-    ; When the channel we opened is successful announce it
-    (set! (.-onopen channel) (on-open peer_id)))))
+  (if-let [connection (get-in @connections [peer_id info_hash])]
+    (receive-answer! connection sdp))))
+
+(dispatch/react-to #{:ice-candidate} (fn [_ [_ {:keys [peer_id info_hash candidate]}]]
+  "The peer has provided a new ice candidate"
+  (if-let [connection (get-in @connections [peer_id info_hash])]
+    (receive-ice-candidate! connection candidate))))
+
+;;************************************************
+;; Reactions to events created by the client for the peer
+;;************************************************
+
+(dispatch/react-to #{:add-ice-candidate} (fn [_ [tracker-socket to-peer-id info-hash candidate]]
+  "The peer has provided a new ice candidate"
+  (emit tracker-socket :ice-candidate {
+    :candidate (clj->js candidate)
+    :info_hash info-hash
+    :to_peer_id to-peer-id
+    :peer_id @peer-id
+    })))
 
 ;;************************************************
 ;; Statistics

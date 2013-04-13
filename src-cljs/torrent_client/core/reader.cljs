@@ -1,4 +1,5 @@
 (ns torrent-client.core.reader
+  (:refer-clojure :exclude [rem])
   (:use [torrent-client.core.byte-array :only [subarray]]))
 
 (defprotocol PushbackReader

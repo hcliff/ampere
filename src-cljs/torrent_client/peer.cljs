@@ -1,9 +1,9 @@
 (ns torrent-client.peer
   (:use 
     [torrent-client.torrent :only [pretty-info-hash has-full-metadata?]]
-    [torrent-client.protocol.bittorrent :only [generate-protocol]]
+    [torrent-client.protocol.bittorrent :only [generate-protocol receive-data]]
     [torrent-client.bitfield :only [bitfield-unique]]
-    [torrent-client.pieces :only [wanted-pieces work-piece! piece-blocks get-block]]
+    [torrent-client.pieces :only [wanted-pieces work-piece! unwork-piece! piece-blocks get-block]]
     [torrent-client.peer-id :only [peer-id]])
   (:require
     [torrent-client.core.dispatch :as dispatch]
@@ -29,8 +29,8 @@
   (if (has-full-metadata? torrent)
     (if-not (empty? (wanted-pieces torrent ((state/get-data peer) :bitfield)))
       (if-not (state/in? peer :client-interested)
-        (state/set peer :client-interested)
-        (state/unset peer :client-interested)))))
+        (state/set peer :client-interested))
+      (state/unset peer :client-interested))))
 
 (defn request-piece [peer torrent bittorrent-client piece-index]
   "Given a piece index request its component blocks"
@@ -42,7 +42,7 @@
 
 (defn update-queue [& [peer torrent bittorrent-client :as arguments]]
   "Saturate the peers queue with block requests"
-  (let [pieces (wanted-pieces torrent (state/get-data peer :bitfield))
+  (let [pieces (wanted-pieces torrent ((state/get-data peer) :bitfield))
         request-piece (partial request-piece peer torrent bittorrent-client)]
     (when (and (< ((state/get-data peer) :outstanding) max-outstanding)
                (not-empty pieces)
@@ -80,7 +80,11 @@
 
   (let [data {:bitfield nil :outstanding 0}
         me (state/machine {:label (peer-data :peer-id) :data data})
-        bittorrent-client (generate-protocol torrent channel me)]
+        bittorrent-client (generate-protocol torrent channel)]
+
+    (defevent me :receive-data [data]
+      "Translate the strings we receive into something usable"
+      (receive-data me data))
 
     (defevent me :receive-handshake [reserved info-hash peer-id]
       "The peer has sent us a valid handshake confirming their
@@ -103,14 +107,16 @@
       (let [info-length (or (@torrent :info-length) (message :metadata_size))
             metadata {:info-length info-length}]
         (dispatch/fire :update-metadata [torrent metadata]))
-      (if-not (state/in? me :sent-extended)
+      (if (state/in? me :sent-extended)
+        (state/set me :sent-bitfield)
         (state/set me :sent-extended)))
 
     (defevent me :receive-choke []
-      (state/set me :client-chocked))
+      (state/unset me :client-unchocked))
 
     (defevent me :receive-unchoke []
-      (state/unset me :client-choked))
+      (console/log "receive unchoke")
+      (state/set me :client-unchoked))
 
     (defevent me :receive-interested []
       (state/set me :peer-interested))
@@ -137,7 +143,8 @@
     (defevent me :receive-request [piece-index offset length]
       "If we have a given piece send it to the peer 
       if they haven't been choked"
-      (if (and (state/in me :peer-downloading)
+      ; (js* "debugger;")
+      (if (and (state/in? me :peer-downloading)
                (not (zero? (nth (@torrent :bitfield) piece-index))))
         ; If we have the block, we have the piece
         (let-async [data (get-block torrent piece-index offset length)]
@@ -146,16 +153,14 @@
     (defevent me :receive-block [piece-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
-      ; (console/log "Received block" piece-index begin)
+      (console/log "Received block" piece-index begin)
       ; Regardless of the blocks validity reduce the queue
       (swap! me update-in [:data :outstanding] dec)
       (update-queue me torrent bittorrent-client)
       (dispatch/fire :receive-block [torrent piece-index begin data]))
 
-    ; TODO: impliment
-    (defevent me :receive-cancel [index begin length]
-
-      )
+    ; TODO: implement
+    (defevent me :receive-cancel [index begin length])
 
     ;************************************************
     ; Methods relating to BEP 9
@@ -239,9 +244,9 @@
         (state/unset me :client-downloading))
       (constraint [_ _] (state/in? me :sent-bitfield)))
 
-    (defstate me :peer-unchocked
+    (defstate me :peer-unchoked
       "The peer is allowed to request pieces from this client if it wants"
-      (in [] 
+      (in []
         (protocol/send-unchoke bittorrent-client)
         (state/set me :peer-downloading))
       (out [] 
@@ -265,6 +270,7 @@
 
     (defstate me :peer-downloading
       "The peer is requesting pieces from this client"
+      (in [] (console/info "Started requesting pieces from" (state/get-name me)))
       (constraint [_ _]
         (and (state/in? me :peer-interested)
              (state/in? me :peer-unchoked)

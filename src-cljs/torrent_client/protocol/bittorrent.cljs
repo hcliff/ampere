@@ -9,8 +9,7 @@
   (:use 
     [torrent-client.core.byte-array :only [uint8-array subarray]]
     [torrent-client.peer-id :only [peer-id]]
-    [waltz.state :only [trigger]])
-  )
+    [waltz.state :only [trigger]]))
 
 (defn ^boolean array-buffer-view? [candidate]
   ; Incorrect; but js/ArrayBufferView doesn't exist
@@ -146,19 +145,11 @@
 ;; The bittorrent protocol
 ;;************************************************
 
-; connection-instance not connection to avoid naming collision
-(deftype BittorrentProtocol [torrent channel peer]
+(deftype BittorrentProtocol [torrent channel]
   protocol/Protocol
 
-  (watch-channel [client]
-    "Watch a datachannel for incoming data"
-    (set! (.-onmessage channel) (fn [event]
-      ; Handshakes are sent as strings, everything else as arraybuffer
-      (if (string? (.-data event))
-        (receive-data peer (crypt/str->byte-array (.-data event)))
-        (receive-data peer (.-data event))))))
-
   (send-data [client string]
+    (.log js/console "sending data" (aget channel "readyState") string)
     (.send channel string))
 
   (send-data [client type data]
@@ -260,20 +251,15 @@
   ; H.C REVIEW
   (send-block [client piece-index begin piece]
     (let [data (crypt/pack :int piece-index :int begin)]
+      ; (js* "debugger;")
       (protocol/send-data client msg-piece [data piece])))
 
   (send-cancel [client index begin length]
     (let [data (crypt/pack :int index :int begin :int length)]
       (protocol/send-data client msg-cancel data)))
 
-  ; (send-keep-alive [client]
-  ;   (protocol/send-data client ""))
-
   )
 
-(defn generate-protocol [torrent channel peer]
-  "Generate an instance of the protocol, and start watching the 
-  provided channel"
-  (let [protocol-instance (BittorrentProtocol. torrent channel peer)]
-    (protocol/watch-channel protocol-instance)
-    protocol-instance))
+(defn generate-protocol [torrent channel]
+  "Generate an instance of the protocol"
+  (BittorrentProtocol. torrent channel))
