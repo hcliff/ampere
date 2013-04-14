@@ -79,14 +79,14 @@
 (defn piece [byte-array]
   (Piece. nil byte-array nil))
 
-(defn blocks->piece 
+(defn blocks->piece [blocks]
   "Build a piece from its component blocks"
-  [blocks]
-  (let [blocks (sort :begin blocks)
+  (let [blocks (sort-by :begin blocks)
         piece-size (reduce + (map (comp count :data) blocks))
         ; Build a byte array long enough for all the blocks
         byte-array (uint8-array piece-size)]
     ; Then add all the pieces at their correct offset
     (doseq [block blocks]
+      (.log js/console "block hash" (block :begin) (byte-array->str (sha1 (block :data))))
       (.set byte-array (block :data) (block :begin)))
     (piece byte-array)))

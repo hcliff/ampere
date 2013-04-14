@@ -138,6 +138,7 @@
       (let-async [data (get-file-section (first files) block-offset length)]
         ; (console/log data)
         ; (console/log "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
+        (.log js/console "block hash" offset (byte-array->str (sha1 data)))
         (success-callback data)
         )
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
