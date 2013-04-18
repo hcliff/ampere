@@ -109,7 +109,7 @@
   (async [success-callback _]
     (let [offset (*  piece-index piece-length)
           files (filter #(contains? % piece-index) files)]
-      (console/log "files with piece" (count files))
+      (console/log "Files with piece-index" (count files))
       (if-not (empty? files)
         ; Get a byte array subsection of the file then make a piece from it
         (let-async [section (get-file-section (first files) offset piece-length)]

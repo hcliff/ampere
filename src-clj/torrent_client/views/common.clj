@@ -23,9 +23,14 @@
           "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
           "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/bootstrap.min.js"
           "http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.10/socket.io.min.js"
-          "/js/humane.js")
-      ]
+          "/js/humane.js")]
       [:body
+        [:div#unsupported-modal.modal.hide {:data-backdrop "static"}
+          [:div.modal-header
+            [:h3 "Browser not supported"]]
+          [:div.modal-body
+            [:p "webrtc datachannel and persistent localstorage required"]
+            (link-to {:class "btn"} "http://www.google.com/chrome" "Download google chrome")]]
         [:div#create-modal.modal.hide
           [:div.modal-header
             [:h3 "Create a torrent"]
@@ -46,8 +51,7 @@
                 [:span.help-inline "Drag files from your computer to add them"]]]]
           [:div.modal-footer
             [:a.btn {:data-dismiss "modal"} "close"]
-            (submit-button {:class "btn btn-primary" :form "create-form"} "create")]
-          ]
+            (submit-button {:class "btn btn-primary" :form "create-form"} "create")]]
         [:div#add-modal.modal.hide
           [:div.modal-header
             [:h3 "Add a torrent"]
@@ -61,8 +65,7 @@
               ]]]
           [:div.modal-footer
             [:a.btn {:data-dismiss "modal"} "close"]
-            (submit-button {:class "btn btn-primary" :form "add-form"} "create")]
-          ]
+            (submit-button {:class "btn btn-primary" :form "add-form"} "create")]]
 
         [:div#about-modal.modal.hide
           [:div.modal-header
@@ -76,9 +79,11 @@
               "Building on the efforts of others"
               [:ul
                 [:li
-                  [:a {:href "https://github.com/piranna" :target "_blank"} "Piranna"]]
+                  (link-to {:target "_blank"} "https://github.com/piranna" "Piranna")]
                 [:li
-                  [:a {:href "http://nakkaya.com" :target "_blank"} "Nakkaya"]]
+                  (link-to {:target "_blank"} "http://nakkaya.com" "Nakkaya")]
+                [:li
+                  (link-to {:target "_blank"} "https://github.com/Peer5/ShareFest" "ShareFest")]
               ]]
             [:pre "Ampere is licensed under the MIT license"]
             [:pre 
@@ -120,7 +125,7 @@
               [:li
                 [:a#completed-tab {:data-toggle "tab" :href "#torrents"}
                   "Completed " [:span#completed-count.badge "0"]]]
-              [:li
+              [:li.hide
                 [:a#settings-tab {:data-toggle "tab" :href "#settings"}
                   "Settings"]]]
             [:div.tab-content
@@ -148,5 +153,4 @@
                       [:a#settings-magnet.btn "Handle magnet links"]]]
                 ]]
                 ]]]
-          (include-js "/cljs/bootstrap.js" "/js/monkey.js")
-        ])))
+          (include-js "/cljs/bootstrap.js" "/js/monkey.js")])))

@@ -1,4 +1,4 @@
-(ns torrent-client.views 
+(ns torrent-client.ui.views 
   (:require 
     [clojure.string :as string]
     [crate.core :as crate]
@@ -93,8 +93,7 @@
   (let [files (@files (torrent :pretty-info-hash))]
     (if (and (not-empty files) (completed? torrent))
       [:a.btn {:href (file-url (first files)) :target "_blank"}
-        [:i.icon-folder-open]]
-        )))
+        [:i.icon-folder-open]])))
 
 (defn- torrent-actions [torrent]
   [:div.btn-group

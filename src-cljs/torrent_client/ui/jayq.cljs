@@ -1,4 +1,4 @@
-(ns torrent-client.jayq)
+(ns torrent-client.ui.jayq)
 
 ; Wrappers around jquery methods
 

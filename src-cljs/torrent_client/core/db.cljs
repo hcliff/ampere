@@ -4,7 +4,7 @@
             [goog.db.KeyRange :as KeyRange]
             [goog.db.ObjectStore :as ObjectStore]
             [goog.db.IndexedDb :as IndexedDb]
-            [torrent-client.polyfills.prefix :as prefix])
+            [torrent-client.browser.prefix :as prefix])
   (:use 
     [torrent-client.core.string :only [camel-case selector-case]])
   (:use-macros [async.macros :only [async]]))

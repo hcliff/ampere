@@ -66,8 +66,10 @@
       (success-callback entry))))
 
 (defn write-file
+  "Write data to the filesystem
+   For files where the data is not yet know set the file size to its
+   eventual size"
   [fs {:keys [path length]} data]
-  (js* "debugger;")
   (console/info "Write file to filesystem" path data)
   (async [success-callback error-callback]
     (let-async [entry (entry/get-entry fs path {:create true})
@@ -75,6 +77,7 @@
       (aset writer "onerror" error-callback)
       (aset writer "onwriteend" #(success-callback entry))
       ; Set the file to the correct length (padding with 0s)
+      ; This allows random block writing
       (filesystem/truncate writer length)
       (console/info "file-length" length)
       ; If we have no data for this file there's no need to write
