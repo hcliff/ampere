@@ -72,13 +72,8 @@
 
 (defn piece-offset [torrent piece-index]
   "Given a torrent and a requested piece-index calculate the actual
-  offset in the file (e.g: given piece 5 and only piece one is written
-  the offset is one piece)"
-  (let [bitfield (@torrent :bitfield)
-        pieces-prior (take piece-index bitfield)
-        pieces-written (count (remove zero? pieces-prior))]
-    (console/log "calc piece-offset" piece-index pieces-prior pieces-written)
-    (* pieces-written (@torrent :piece-length))))
+  offset in the overall stream"
+  (* piece-index (@torrent :piece-length)))
 
 (defn piece-blocks
   "Given a piece, return all the blocks within it"
@@ -138,9 +133,7 @@
       (let-async [data (get-file-section (first files) block-offset length)]
         ; (console/log data)
         ; (console/log "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
-        (.log js/console "block hash" offset (byte-array->str (sha1 data)))
-        (success-callback data)
-        )
+        (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))
 
@@ -216,15 +209,20 @@
   (let [piece-offset (piece-offset torrent piece-index)
         ; Get the data stored in the meta about this files pieces
         {:keys [pos-start pos-end]} (meta file)
-        ; where in this file should we seek too
-        seek-position (max 0 (- piece-offset pos-start))
         ; trim the start of the piece (inverse of seek)
         piece-start (max 0 (- pos-start piece-offset))
         ; trim the end of the piece
         piece-end (- (min (count piece) (- pos-end pos-start))
                      piece-start)
         piece-data (subarray (.-byte-array piece) piece-start piece-end)]
-    [seek-position piece-data]))
+    piece-data))
+
+(defn- seek-position [torrent piece-index file]
+  (let [piece-offset (piece-offset torrent piece-index)
+        ; Get the data stored in the meta about this files pieces
+        {:keys [pos-start]} (meta file)]
+  ; where in this file should we seek too
+  (max 0 (- piece-offset pos-start))))
 
 (defn- seek-then-write [torrent file writer]
   ; Grab the next piece when possible
@@ -232,16 +230,17 @@
     ; Destructure seperate to the if-let
     ; (otherwise when clause allways executes)
     (let [[piece-index _ _] next-piece
-          [seek-position piece-data] (apply truncate-piece torrent next-piece)]
+          seek-position (seek-position torrent piece-index file)
+          piece-data (apply truncate-piece torrent next-piece)]
       ; When the piece finishes writing
       (aset writer "onwriteend" (fn [_]
         ; Consume this piece from the queue
         (consume! file-write-queue file)
         ; And inform that it has been written
-        (console/log "finished writing!" seek-position piece-index)
+        (console/log "Finished writing file" seek-position piece-index)
         (dispatch/fire :written-piece [torrent piece-index])
         ; grab the next one if applicable
         (seek-then-write torrent file writer)))
-      (.seek writer seek-position)
+      (filesystem/seek writer seek-position)
       ; H.C: for now only blobs can be written
-      (.write writer (js/Blob. (js/Array. piece-data))))))
+      (filesystem/write writer (js/Blob. (js/Array. piece-data))))))

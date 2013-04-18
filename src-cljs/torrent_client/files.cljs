@@ -2,6 +2,7 @@
   (:require
     [torrent-client.core.dispatch :as dispatch]
     [torrent-client.core.pieces :as pieces]
+    [filesystem.filesystem :as filesystem]
     [filesystem.entry :as entry]
     [cljconsole.main :as console])
   (:use-macros 
@@ -65,14 +66,18 @@
       (success-callback entry))))
 
 (defn write-file
-  [fs path data]
+  [fs {:keys [path length]} data]
+  (js* "debugger;")
   (console/info "Write file to filesystem" path data)
   (async [success-callback error-callback]
     (let-async [entry (entry/get-entry fs path {:create true})
                 writer (entry/create-writer entry)]
       (aset writer "onerror" error-callback)
       (aset writer "onwriteend" #(success-callback entry))
+      ; Set the file to the correct length (padding with 0s)
+      (filesystem/truncate writer length)
+      (console/info "file-length" length)
       ; If we have no data for this file there's no need to write
       (if (nil? data)
         (success-callback entry)
-        (.write writer data)))))
+        (filesystem/write writer data)))))

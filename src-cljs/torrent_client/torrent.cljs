@@ -181,13 +181,14 @@
   ([metainfo files]
     (async [success-callback _]
       (let-async [:let requested-bytes (metainfo :total-length)
+                  ; TODO: check usage across every file in use
+                  :let requested-bytes (* 1024 1024 1024)
                   ; Request the space to store the complete files
                   granted-bytes (filesystem/request-quota :PERSISTENT requested-bytes)
                   fs (filesystem/request-file-system :PERSISTENT granted-bytes)
                   ; write every file to disk
                   :let writer #(write-file fs %1 %2)
-                  :let file-paths (map :path (metainfo :files))
-                  files (map-async writer file-paths files)]
+                  files (map-async writer (metainfo :files) files)]
         (success-callback files)))))
 
 ;************************************************
@@ -242,7 +243,7 @@
         file-boundaries (file-boundaries (data :files))
         ; compute the file boundaries then add them to the file data
         files-data (map merge (data :files) file-boundaries)]
-    (map #(generate-file % %2 (data :piece-length)) files (data :files))))
+    (map #(generate-file % %2 (data :piece-length)) files files-data)))
 
 (defn create-torrent [form {:keys [total-length piece-length files]} piece-files]
   (async [success-callback _]

@@ -87,6 +87,5 @@
         byte-array (uint8-array piece-size)]
     ; Then add all the pieces at their correct offset
     (doseq [block blocks]
-      (.log js/console "block hash" (block :begin) (byte-array->str (sha1 (block :data))))
       (.set byte-array (block :data) (block :begin)))
     (piece byte-array)))

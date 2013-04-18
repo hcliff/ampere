@@ -103,7 +103,7 @@
   (.modal $create-modal "hide")
   ; See the magnet spec for an explanation of these values
   ; http://en.wikipedia.org/wiki/Magnet_URI_scheme
-  (let [base-url "http://hcliff.github.com/ampere"
+  (let [base-url "http://bittorrent.io"
         querystring 
          {:xt (str "urn:btih:" (@torrent :pretty-info-hash))
           :dn (@torrent :name)}

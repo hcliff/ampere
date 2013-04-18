@@ -43,3 +43,12 @@
 (defn slice [file offset length]
   {:pre [(file? file)]}
   (.slice file offset (+ offset length)))
+
+(defn seek [file position]
+  (.seek file position))
+
+(defn truncate [file length]
+  (.truncate file length))
+
+(defn write [file data]
+  (.write file data))

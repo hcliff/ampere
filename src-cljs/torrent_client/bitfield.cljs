@@ -48,7 +48,8 @@
   ISeq
   (-first [bitfield] (nth bitfield 0))
   (-rest [bitfield] 
-    (if (< (inc i) (count bitfield))
+    ; If we can create a new bitfield with length >= 1
+    (if (pos? (dec (count bitfield)))
       (Bitfield. byte-array (inc i))))
 
   ICounted
