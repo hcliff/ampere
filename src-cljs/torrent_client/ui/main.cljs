@@ -14,7 +14,7 @@
     [cljconsole.main :as console])
   (:use
     [jayq.core :only [$ on attr document-ready empty text val prepend css]]
-    [torrent-client.ui.jayq :only [append input-files event-files modal tab]]
+    [torrent-client.ui.jayq :only [append input-files event-files modal tab detach]]
     [torrent-client.torrent :only [share-torrent active? paused? completed? downloading?]]
     [torrent-client.torrents :only [torrents]])
   (:use-macros
@@ -207,16 +207,17 @@
 
 (def elements (atom {}))
 
-(defn set-element-events! [element torrent]
-  (on ($ element) :click "button.share" (fn [_]
+(defn set-element-events! [$element torrent]
+  (on $element :click "button.share" (fn [_]
     (dispatch/fire :share-torrent torrent))))
 
 (dispatch/react-to #{:started-torrent} (fn [_ torrent]
   "When a new torrent is started generate an element and bind its events"
-  (let [element ($ (views/torrent-row torrent))]
-    (set-element-events! element torrent)
+  (let [$element ($ (views/torrent-row torrent))]
+    (set-element-events! $element torrent)
     ; Render the torrent row and add it to the atom
-    (swap! elements assoc (@torrent :pretty-info-hash) element))))
+    (swap! elements assoc (@torrent :pretty-info-hash) $element)
+    (dispatch/fire :rendered-torrent $element))))
 
 (dispatch/react-to #{:started-torrent :completed-torrent :stopped-torrent 
                      :paused-torrent :resumed-torrent} (fn [_ torrent]
@@ -231,16 +232,15 @@
 
 (defn draw-torrents! [torrents]
   "Render a list of torrents into the main torrent view"
-  (empty $torrents)
+  (detach ($ "tr" $torrents))
   (let [elements (map (comp @elements :pretty-info-hash deref) torrents)]
-    (js* "debugger;")
     (append $torrents (doall elements))))
 
 (defn tab-machine []
   (let [me (state/machine {:label :tab-machine :current :downloading})]
 
     ; When a new torrent starts automatically switch to downloading
-    (dispatch/react-to #{:started-torrent} 
+    (dispatch/react-to #{:rendered-torrent} 
       #(state/set me :downloading))
 
     ; When a torrent finishes automatically show the completed tab

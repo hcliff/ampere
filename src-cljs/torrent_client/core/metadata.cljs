@@ -2,7 +2,7 @@
   (:use [torrent-client.core.byte-array :only [uint8-array]]))
 
 ; The bytes in each metainfo piece
-(def piece-length 16384)
+(def piece-length 700)
 
 (defn pieces->metadata
   "Build metadata from its pieces"

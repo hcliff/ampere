@@ -1,13 +1,16 @@
 (ns torrent-client.metadata
   (:require 
     [torrent-client.core.dispatch :as dispatch]
+    [torrent-client.core.queue :as queue]
     [cljconsole.main :as console])
   (:use
     [torrent-client.torrent :only [has-full-metadata?]]
     [torrent-client.torrents :only [torrents]]
     [torrent-client.core.crypt :only [sha1]]
     [torrent-client.core.metadata :only [piece-length pieces->metadata]]
-    [torrent-client.core.byte-array :only [uint8-array]]))
+    [torrent-client.core.byte-array :only [uint8-array]])
+  (:use-macros 
+    [task.macros :only [deftask]]))
 
 ;;************************************************
 ;; For retrieving metadata per BEP 9
@@ -19,39 +22,32 @@
 ; All the metadata pieces we've received
 (def received (atom {}))
 
+; How long can a piece be working before we expire it
+(def working-life (* 1000 15))
+
+(deftask expire-pieces working-life [_]
+  (queue/expire working working-life))
+
 ; Indexes of all the pieces in a torrent
 (defn pieces [torrent]
   (range (Math/ceil (/ (@torrent :info-length) piece-length))))
 
 (defn wanted-pieces [torrent]
   "Given a torrent return the pieces missing from its metadata"
-  (let [info-hash (@torrent :pretty-info-hash)
-        wanted (pieces torrent)
-        working (set (@working info-hash))]
+  (let [wanted (pieces torrent)
+        working (set (@working torrent))]
     (if-not (has-full-metadata? torrent)
       (remove #(contains? working %) wanted))))
 
-(defn work-piece!
-  "Marks that we have started fetching a piece"
-  [torrent piece-index]
-  (let [info-hash (@torrent :pretty-info-hash)]
-    (.log js/console "work-next-piece" piece-index)
-    ; Add this block to the works in progress
-    (swap! working (partial merge-with concat) {info-hash [piece-index]})
-    piece-index))
-
-; (dispatch/react-to #{:receive-metadata-reject} (fn [_ [torrent piece-index]]
-;   "A peer indicates it doesn't have a metadata piece, mark it no longer worked"
-;   (let [info-hash (@torrent :pretty-info-hash)
-;         pieces (remove #(= piece-index %) (@working info-hash))]
-;     (swap! working assoc info-hash pieces))))
+(dispatch/react-to #{:receive-metadata-reject} (fn [_ [torrent piece-index]]
+  "A peer indicates it doesn't have a metadata piece, mark it no longer worked"
+  (queue/unwork! working torrent piece-index)))
 
 (dispatch/react-to #{:receive-metadata-piece} (fn [_ [torrent piece-index data]]
   "When we get a metadata piece add it to the receieved pile"
-  (let [info-hash (@torrent :pretty-info-hash)
-        working* (remove #(= piece-index %) (@working info-hash))]
-    (swap! working assoc info-hash working*)
+  (let [info-hash (@torrent :pretty-info-hash)]
     (swap! received assoc-in [info-hash piece-index] data)
+    (queue/unwork! working torrent piece-index)
     ; And if we have all the metadata pieces 
     (if (= (count (@received info-hash)) (count (pieces torrent)))
       ; String all the pieces into one byte array

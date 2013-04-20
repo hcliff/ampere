@@ -2,6 +2,9 @@
 
 ; Wrappers around jquery methods
 
+(defn detach [$elem]
+  (.detach $elem))
+
 (defn append [$elem content]
   (if (sequential? content)
     ; TODO: Should be able to apply .append?

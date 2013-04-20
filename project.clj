@@ -6,8 +6,7 @@
                  [environ "0.3.0"]
                  [jayq "2.0.0"]
                  [crate "0.2.4"]]
-  :git-dependencies [["https://github.com/hcliff/waltz.git"]
-                     ["https://github.com/mmcgrana/clj-stacktrace.git"]]
+  :git-dependencies [["https://github.com/hcliff/waltz.git"]]
   :hooks [environ.leiningen.hooks]
   :plugins [[environ/environ.lein "0.3.0"]
             [lein-exec "0.2.1"]
@@ -22,7 +21,8 @@
         :source-paths ["src-cljs", 
                        ".lein-git-deps/waltz/src/"
                        ; https://github.com/mmcgrana/clj-stacktrace/issues/19
-                       ".lein-git-deps/clj-stacktrace/src/"]
+                       ; ".lein-git-deps/clj-stacktrace/src/"
+                       ]
         ; The standard ClojureScript compiler options:
         ; (See the ClojureScript compiler documentation for details.)
         :compiler {

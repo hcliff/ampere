@@ -15,16 +15,13 @@
     :else
       (.apply (.-fromCharCode js/String) nil characters)))
 
-(defn int [number]
-  (js/parseInt number))
-
 (declare decode-dispatch)
 
 (defn- decode-number [stream delimeter & ch]
   (loop [i (if (nil? ch) (reader/read stream) (first ch)), result ""]
     (let [c (char i)]
       (if (= c delimeter)
-        (int result)
+        (js/parseInt result)
         (recur (reader/read stream) (str result c))))))
 
 (defn- decode-string [stream ch]
@@ -67,13 +64,14 @@
 (defprotocol ArrayOutputStream
   (write [array bytes] "append the bytes to the array"))
 
-(deftype ByteArrayOutputStream [array]
+(deftype ByteArrayOutputStream [a]
   ArrayOutputStream
   (write [_ bytes]
     (if (number? bytes)
-      (.push array bytes)
-      (.apply (.-push array) array bytes)))
+      (.push a bytes)
+      (.apply (.-push array) array bytes))
     array)
+  )
 
 (defn byte-array-output-stream []
   "Generate a new ByteArrayOutputStream with a native
