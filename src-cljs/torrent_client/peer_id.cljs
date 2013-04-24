@@ -1,11 +1,10 @@
 (ns torrent-client.peer-id
   (:require
     [torrent-client.core.dispatch :as dispatch]
+    [torrent-client.core.crypt :as crypt]
     [goog.string :as string]
-    [goog.crypt :as crypt]
-    [cljconsole.main :as console])
-  (:use 
-    [torrent-client.core.crypt :only [sha1]]))
+    [goog.crypt :as gcrypt]
+    [cljconsole.main :as console]))
 
 ; Create the unique peer-id atom
 ; nil is an invalid peer-id and should be switched
@@ -19,7 +18,7 @@
         ; And a random string - note that this is 
         ; partially based from the current date
         random-string (string/getRandomString)
-        sha (crypt/byteArrayToHex (sha1 random-string))]
+        sha (gcrypt/byteArrayToHex (crypt/sha1 random-string))]
     (str client-id (subs sha 0 (- 20 (count client-id))))))
 
 (dispatch/react-to #{:document-ready} (fn [_]

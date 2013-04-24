@@ -1,15 +1,15 @@
 (ns torrent-client.peers
-  (:use 
-    [torrent-client.torrents :only [torrents]]
-    [torrent-client.torrent :only [has-full-metadata?]]
-    [torrent-client.peer :only [generate-peer]]
-    [torrent-client.core.incubator :only [dissoc-in]])
   (:require 
     [torrent-client.core.dispatch :as dispatch]
     [waltz.state :as state]
     [cljconsole.main :as console]
     [goog.Timer :as Timer]
-    [goog.events :as events]))
+    [goog.events :as events])
+  (:use 
+    [torrent-client.torrents :only [torrents]]
+    [torrent-client.torrent :only [has-full-metadata?]]
+    [torrent-client.peer :only [generate-peer]]
+    [torrent-client.core.incubator :only [dissoc-in]]))
 
 ; 30 seconds
 (def optimistic-unchoke-period (* 10 1000))

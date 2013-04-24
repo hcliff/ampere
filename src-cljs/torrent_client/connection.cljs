@@ -1,9 +1,10 @@
 (ns torrent-client.connection
-  (:require [torrent-client.core.dispatch :as dispatch]
-            [torrent-client.browser.prefix :as prefix]
-            [torrent-client.core.crypt :as crypt]
-            [cljconsole.main :as console]
-            [clojure.string :as string])
+  (:require 
+    [torrent-client.core.dispatch :as dispatch]
+    [torrent-client.browser.prefix :as prefix]
+    [torrent-client.core.crypt :as crypt]
+    [cljconsole.main :as console]
+    [clojure.string :as string])
   (:use-macros [async.macros :only [async let-async]]))
 
 ;;************************************************

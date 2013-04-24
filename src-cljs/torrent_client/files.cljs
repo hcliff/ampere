@@ -3,6 +3,7 @@
     [torrent-client.core.dispatch :as dispatch]
     [torrent-client.core.pieces :as pieces]
     [filesystem.filesystem :as filesystem]
+    [filesystem.writer :as writer]
     [filesystem.entry :as entry]
     [cljconsole.main :as console])
   (:use-macros 
@@ -54,33 +55,17 @@
     (swap! torrent identity))))
 
 ;************************************************
-; Reading and writing from the filesystem
+; Filesystem helpers
 ;************************************************
 
-(defn read-file 
-  "Given a path, read a fileEntry from the filesystem"
-  [fs path]
-  (console/info "Read file from filesystem" path)
-  (async [success-callback _]
-    (let-async [entry (entry/get-entry fs path {:create false})]
-      (success-callback entry))))
-
 (defn write-file
-  "Write data to the filesystem
-   For files where the data is not yet know set the file size to its
-   eventual size"
+  "Create a file on the filesystem, set it to the correct length and then 
+   write any data we have for it"
   [fs {:keys [path length]} data]
-  (console/info "Write file to filesystem" path data)
+  (console/info "Write to filesystem. Path: " path " Data: " data)
   (async [success-callback error-callback]
     (let-async [entry (entry/get-entry fs path {:create true})
-                writer (entry/create-writer entry)]
-      (aset writer "onerror" error-callback)
-      (aset writer "onwriteend" #(success-callback entry))
-      ; Set the file to the correct length (padding with 0s)
-      ; This allows random block writing
-      (filesystem/truncate writer length)
-      (console/info "file-length" length)
-      ; If we have no data for this file there's no need to write
-      (if (nil? data)
-        (success-callback entry)
-        (filesystem/write writer data)))))
+                writer (entry/create-writer entry)
+                _ (writer/truncate writer length)
+                _ (writer/write writer data)]
+      (success-callback entry))))

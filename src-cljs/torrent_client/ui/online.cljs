@@ -1,8 +1,8 @@
 (ns torrent-client.ui.online
-  (:use [jayq.core :only [$ on]])
   (:require 
   	[cljconsole.main :as console]
-  	[torrent-client.core.dispatch :as dispatch]))
+  	[torrent-client.core.dispatch :as dispatch])
+  (:use [jayq.core :only [$ on]]))
 
 (def $window ($ js/window))
 

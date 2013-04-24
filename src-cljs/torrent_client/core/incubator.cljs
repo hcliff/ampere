@@ -14,3 +14,6 @@
           (dissoc m k)))
       m)
     (dissoc m k)))
+
+(defn aget-in [a keys]
+  (reduce #(aget % %2) keys a))

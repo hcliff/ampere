@@ -4,6 +4,7 @@
     [torrent-client.core.db :as db]
     [torrent-client.bitfield :as bitfield]
     [filesystem.filesystem :as filesystem]
+    [filesystem.writer :as writer]
     [filesystem.entry :as entry]
     [cljconsole.main :as console]
     [goog.crypt :as crypt])
@@ -16,7 +17,7 @@
     [torrent-client.core.crypt :only [sha1]]
     [torrent-client.storage :only [connection]]
     [torrent-client.pieces :only [get-file-piece]]
-    [torrent-client.files :only [files generate-file file-boundaries read-file write-file]]
+    [torrent-client.files :only [files generate-file file-boundaries write-file]]
     [async.helpers :only [map-async]])
   (:use-macros 
     [async.macros :only [async let-async]]))
@@ -168,9 +169,8 @@
 (defn read-torrent-files [torrent]
   (async [success-callback _]
     (let-async [fs (filesystem/request-file-system :PERSISTENT 0)
-                :let reader #(read-file fs %1)
                 :let files (map :path (torrent :files))
-                files (map-async reader files)]
+                files (map-async (partial entry/get-entry fs) files)]
       (success-callback files))))
 
 (defn write-torrent-files
@@ -187,7 +187,7 @@
                   granted-bytes (filesystem/request-quota :PERSISTENT requested-bytes)
                   fs (filesystem/request-file-system :PERSISTENT granted-bytes)
                   ; write every file to disk
-                  :let writer #(write-file fs %1 %2)
+                  :let writer (partial write-file fs)
                   files (map-async writer (metainfo :files) files)]
         (success-callback files)))))
 

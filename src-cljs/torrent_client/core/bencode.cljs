@@ -64,11 +64,11 @@
 (defprotocol ArrayOutputStream
   (write [array bytes] "append the bytes to the array"))
 
-(deftype ByteArrayOutputStream [a]
+(deftype ByteArrayOutputStream [array]
   ArrayOutputStream
   (write [_ bytes]
     (if (number? bytes)
-      (.push a bytes)
+      (.push array bytes)
       (.apply (.-push array) array bytes))
     array)
   )

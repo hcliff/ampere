@@ -3,24 +3,25 @@
     [torrent-client.core.dispatch :as dispatch]
     [torrent-client.core.pieces :as pieces]
     [torrent-client.core.queue :as queue]
+    [torrent-client.core.byte-array :as byte-array]
     [torrent-client.bitfield :as bitfield]
     [filesystem.filesystem :as filesystem]
+    [filesystem.writer :as writer]
     [filesystem.entry :as entry]
     [cljconsole.main :as console]
     [clojure.set :as set])
   (:use
     [async.helpers :only [map-async]]
-    [torrent-client.core.byte-array :only [uint8-array subarray]]
     [torrent-client.torrents :only [torrents]]
-    [torrent-client.files :only [files]]
-    [torrent-client.core.crypt :only [sha1 byte-array->str]])
+    [torrent-client.files :only [files]])
   (:use-macros 
     [async.macros :only [async let-async]]
     [task.macros :only [deftask]]))
 
 ; The bytes in a piece block (16kb)
 ; http://bit.ly/RsGL0R
-(def block-length 700)
+; Reduced to 1kb due to chrome constraints
+(def block-length 750)
 
 ; Blocks that have had requests sent out for them
 (def working (atom {}))
@@ -28,8 +29,8 @@
 ; How long can a piece be working before we expire it
 (def working-life (* 1000 30))
 
-(deftask expire-pieces working-life [_]
-  (queue/expire working working-life))
+; (deftask expire-pieces working-life [_]
+;   (queue/expire working working-life))
 
 ; TODO: switch this over to rarity based search
 (defn wanted-pieces
@@ -40,18 +41,16 @@
   (if-let [client-bitfield (@torrent :bitfield)]
     (let [; Get a bitfield of the blocks we want from the peer
           wanted-bitfield (bitfield/difference peer-bitfield client-bitfield)
-          wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)
-          working (set (@working torrent))]
-      (remove #(contains? working %) wanted))))
+          wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)]
+      (remove #(queue/contains? working torrent %) wanted))))
 
 (dispatch/react-to #{:written-piece :invalid-piece} (fn [_ [torrent piece-index]]
   "When a block has finished or is invalid, remove it from the in-progress"
-  (queue/unwork! working torrent piece-index)))
+  (queue/disj! working torrent piece-index)))
 
 (defn piece-length 
   "If this is the last piece return the last-piece-length"
   [torrent piece-index]
-  (console/log "piece-length" piece-index)
   (if (= piece-index (dec (@torrent :pieces-length)))
     (@torrent :last-piece-length)
     (@torrent :piece-length)))
@@ -65,7 +64,7 @@
   "Given a piece, return all the blocks within it"
   [torrent piece-index]
   (let [piece-length (piece-length torrent piece-index)]
-    (console/log "calculating piece-length" piece-length)
+    (console/log "Piece index:" piece-index " size:" piece-length)
     (loop [offset 0
            blocks []]
       ; If we havn't finished splitting up this piece
@@ -86,8 +85,10 @@
                 :let length (- end offset)
                 ; Slice the file, only reading the required piece
                 :let slice (filesystem/slice file offset length)
+                ; :let slice (filesystem/slice file 0 100000000)
                 data (filesystem/filereader slice)]
-      (success-callback (uint8-array data)))))
+      ; (js* "debugger;")
+      (success-callback (byte-array/uint8-array data)))))
 
 (defn get-file-piece 
   "Fetch a piece across the files that contain part of it"
@@ -118,7 +119,7 @@
       ; TODO: support stradling files
       (let-async [data (get-file-section (first files) block-offset length)]
         ; (console/log data)
-        ; (console/log "hash" piece-index (byte-array->str (sha1 data)) (nth (@torrent :pieces-hash) piece-index))
+        ; (console/log "hash" piece-index (byte-array->str (crypt/sha1 data)) (nth (@torrent :pieces-hash) piece-index))
         (success-callback data))
       ; (let-async [data (map-async #(get-file-piece offset end %) files)]
       ;   (success-callback (apply conj data)))
@@ -135,19 +136,24 @@
 (def pieces-to-write (atom {}))
 (def file-write-queue (atom {}))
 
+(dispatch/react-to #{:invalid-piece :receive-piece} (fn [_ [torrent piece-index]]
+  "Remove the blocks from the working queue"
+  (let [queue-key (str (@torrent :pretty-info-hash) piece-index)]
+    (queue/dissoc! pieces-to-write queue-key))))
+
 (defn needed? [torrent piece-index blocks block]
   "Given a torrent, a piece and its thus far collected blocks, resolve if the
    block we have just recieved is needed in said piece"
-  (let [working (set (@working torrent))
-        ; Blocks are identified by their offset in the file
+  (let [; Blocks are identified by their offset in the file
         blocks (set (map :begin blocks))]
     ; We are currently looking for this piece and don't allready have it (xor)
-    (and (contains? working piece-index)
+    (and (queue/contains? working torrent piece-index)
          (not (contains? blocks block)))))
 
 (defn correct-count? [torrent piece-index blocks]
   "Given a set of blocks, check if we have all the blocks a piece requires"
   (let [correct-count (count (piece-blocks torrent piece-index))]
+    (console/log "Correct count: " correct-count " Actual count: " (count blocks))
     (= (count blocks) correct-count)))
 
 (defn correct-hash? [torrent piece-index piece]
@@ -158,7 +164,7 @@
 
 (defn dispatch-piece [torrent piece-index blocks]
   (let [piece (pieces/blocks->piece blocks)]
-    (if (correct-hash? torrent piece-index blocks)
+    (if (correct-hash? torrent piece-index piece)
       (dispatch/fire :receive-piece [torrent piece-index piece])
       (dispatch/fire :invalid-piece [torrent piece-index]))))
 
@@ -168,22 +174,28 @@
         block {:begin begin :data data}]
     (when (needed? torrent piece-index blocks begin)
       ; Add this piece to the queue of pieces to write
-      (queue/work! pieces-to-write queue-key block))
+      (queue/conj! pieces-to-write queue-key block))
       (let [blocks (get @pieces-to-write queue-key)]
+        (console/info "blocks" begin (sort (map :begin blocks)))
         (if (correct-count? torrent piece-index blocks)
           (dispatch-piece torrent piece-index blocks))))))
 
 (dispatch/react-to #{:invalid-piece} (fn [_ [_ piece-index]]
   (.error js/console "invalid hash" piece-index)))
 
+(defn file-queue-key [file]
+  "Generate a key for the file, use the name as this shouldn't be changed"
+  (aget (.-file file) "name"))
+
 (dispatch/react-to #{:receive-piece} (fn [_ [torrent piece-index piece]]
   ; Grab their meta info
   (let [info-hash (@torrent :pretty-info-hash)
         files (filter #(contains? % piece-index) (@files info-hash))]
+    (console/info "Received piece: " piece-index " for torrent: " info-hash)
     ; For every file that needs this piece
     (doseq [file files]
       ; Add this to list of pieces to write for this file
-      (queue/work! file-write-queue file [piece-index file piece])
+      (queue/conj! file-write-queue (file-queue-key file) [piece-index file piece])
       ; And potentially initiate a writer
       (console/log "Writing to disk")
       (dispatch/fire :write-file [torrent file])))))
@@ -192,7 +204,7 @@
 
 (dispatch/react-to #{:write-file} (fn [_ [torrent file]]
   ; Only kick off the writing if it's not allready running
-  (if (= 1 (count (@file-write-queue file)))
+  (if (= 1 (count (@file-write-queue (file-queue-key file))))
     (let-async [writer (entry/create-writer (.-file file))]
       (seek-then-write torrent file writer)))))
 
@@ -205,7 +217,7 @@
         ; trim the end of the piece
         piece-end (- (min (count piece) (- pos-end pos-start))
                      piece-start)
-        piece-data (subarray (.-byte-array piece) piece-start piece-end)]
+        piece-data (byte-array/subarray (.-byte-array piece) piece-start piece-end)]
     piece-data))
 
 (defn- seek-position [torrent piece-index file]
@@ -215,23 +227,23 @@
   ; where in this file should we seek too
   (max 0 (- piece-offset pos-start))))
 
+; TODO: could be done via recur
 (defn- seek-then-write [torrent file writer]
   ; Grab the next piece when possible
-  (if-let [next-piece (first (@file-write-queue file))]
+  (if-let [next-piece (first (@file-write-queue (file-queue-key file)))]
     ; Destructure seperate to the if-let
     ; (otherwise when clause allways executes)
     (let [[piece-index _ _] next-piece
           seek-position (seek-position torrent piece-index file)
-          piece-data (apply truncate-piece torrent next-piece)]
-      ; When the piece finishes writing
-      (aset writer "onwriteend" (fn [_]
+          piece-data (apply truncate-piece torrent next-piece)
+          ; H.C: for now only blobs can be written
+          piece-data (js/Blob. (js/Array. piece-data))]
+      (writer/seek writer seek-position)
+      (let-async [_ (writer/write writer piece-data)]
         ; Consume this piece from the queue
-        (queue/consume! file-write-queue file next-piece)
+        (queue/disj! file-write-queue (file-queue-key file) next-piece)
         ; And inform that it has been written
         (console/log "Finished writing file" seek-position piece-index)
         (dispatch/fire :written-piece [torrent piece-index])
         ; grab the next one if applicable
-        (seek-then-write torrent file writer)))
-      (filesystem/seek writer seek-position)
-      ; H.C: for now only blobs can be written
-      (filesystem/write writer (js/Blob. (js/Array. piece-data))))))
+        (seek-then-write torrent file writer)))))

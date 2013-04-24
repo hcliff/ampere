@@ -1,16 +1,17 @@
 (ns torrent-client.peer
+  (:require
+    [torrent-client.core.dispatch :as dispatch]
+    [torrent-client.core.queue :as queue]
+    [torrent-client.protocol.main :as protocol]
+    [torrent-client.metadata :as metadata]
+    [torrent-client.pieces :as pieces]
+    [cljconsole.main :as console]
+    [waltz.state :as state])
   (:use 
     [torrent-client.torrent :only [pretty-info-hash has-full-metadata?]]
     [torrent-client.protocol.bittorrent :only [generate-protocol receive-data]]
     [torrent-client.bitfield :only [bitfield-unique]]
-    [torrent-client.pieces :only [wanted-pieces work-piece! unwork-piece! piece-blocks get-block]]
     [torrent-client.peer-id :only [peer-id]])
-  (:require
-    [torrent-client.core.dispatch :as dispatch]
-    [torrent-client.protocol.main :as protocol]
-    [torrent-client.metadata :as metadata]
-    [cljconsole.main :as console]
-    [waltz.state :as state])
   (:use-macros 
     [waltz.macros :only [in out constraint defstate defevent]]
     [async.macros :only [async let-async]]))
@@ -18,7 +19,7 @@
 ; How many outstanding requests can a peer have at any given time
 ; http://wiki.theory.org/BitTorrentSpecification#Queuing
 ; TODO: this number has been pulled out of my ass
-(def max-outstanding 20)
+(def max-outstanding 10)
 
 ;************************************************
 ; Helper methods for the peer
@@ -27,22 +28,22 @@
 (defn set-interest! [peer torrent]
   "Update the peer to reflect if the peer has pieces we want"
   (if (has-full-metadata? torrent)
-    (if-not (empty? (wanted-pieces torrent ((state/get-data peer) :bitfield)))
+    (if-not (empty? (pieces/wanted-pieces torrent ((state/get-data peer) :bitfield)))
       (if-not (state/in? peer :client-interested)
         (state/set peer :client-interested))
       (state/unset peer :client-interested))))
 
 (defn request-piece [peer torrent bittorrent-client piece-index]
   "Given a piece index request its component blocks"
-  (work-piece! torrent piece-index)
-  (doseq [[begin length] (piece-blocks torrent piece-index)]
+  (queue/conj! pieces/working torrent piece-index)
+  (doseq [[begin length] (pieces/piece-blocks torrent piece-index)]
     ; Add to the outstanding queue
     (swap! peer update-in [:data :outstanding] inc)
     (protocol/send-request bittorrent-client piece-index begin length)))
 
 (defn update-queue [& [peer torrent bittorrent-client :as arguments]]
   "Saturate the peers queue with block requests"
-  (let [pieces (wanted-pieces torrent ((state/get-data peer) :bitfield))
+  (let [pieces (pieces/wanted-pieces torrent ((state/get-data peer) :bitfield))
         request-piece (partial request-piece peer torrent bittorrent-client)]
     (when (and (< ((state/get-data peer) :outstanding) max-outstanding)
                (not-empty pieces)
@@ -52,7 +53,7 @@
 
 (defn request-metadata [peer torrent bittorrent-client piece-index]
   "Request all the pieces the metadata is made from"
-  (metadata/work-piece! torrent piece-index)
+  (queue/conj! metadata/working torrent piece-index)
   (swap! peer update-in [:data :outstanding] inc)
   (protocol/send-metadata-request bittorrent-client piece-index))
 
@@ -79,7 +80,7 @@
   [torrent channel peer-data handshake]
 
   (let [data {:bitfield nil :outstanding 0}
-        me (state/machine {:label (peer-data :peer-id) :data data})
+        me (state/machine {:label (peer-data :peer-id) :data data :debug false})
         bittorrent-client (generate-protocol torrent channel)]
 
     (defevent me :receive-data [data]
@@ -147,13 +148,14 @@
       (if (and (state/in? me :peer-downloading)
                (not (zero? (nth (@torrent :bitfield) piece-index))))
         ; If we have the block, we have the piece
-        (let-async [data (get-block torrent piece-index offset length)]
+        (let-async [data (pieces/get-block torrent piece-index offset length)]
           (protocol/send-block bittorrent-client piece-index offset data))))
 
     (defevent me :receive-block [piece-index begin data]
       "Inform the torrent of the piece we have just received
       and then ask for the next piece"
-      (console/log "Received block" piece-index begin)
+      (console/log "Received block" piece-index begin 
+                   "Outstanding" ((state/get-data me) :outstanding))
       ; Regardless of the blocks validity reduce the queue
       (swap! me update-in [:data :outstanding] dec)
       (update-queue me torrent bittorrent-client)
