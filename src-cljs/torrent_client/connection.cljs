@@ -81,7 +81,7 @@
 ; https://github.com/Peer5/ShareFest/issues/10
 (defn increase-bandwidth [description]
   (let [match "b=AS:30"
-        sdp (string/replace (aget description "sdp") match "b=AS:163840")]
+        sdp (string/replace (aget description "sdp") match "b=AS:327680")]
     (aset description "sdp" sdp)
     description))
 
@@ -198,7 +198,6 @@
     (let [channel (or (aget event "channel") event)]
       ; (set-channel-events! channel peer-id)
       (console/info "Channel opened by peer:" peer-id)
-      (aset js/window "dickshit" channel)
       (set-channel-events! channel peer-id)
       (dispatch/fire :add-channel [peer-id channel]))))
 
@@ -213,13 +212,17 @@
                         candidate])
         (console/info "Sent ice candidate to peer" peer-id)))))
 
-(defn log-event [event]
-  (console/log event))
+(defn on-ice-state-change [peer-id info-hash]
+  (fn [_]
+    (this-as connection
+      (if (= (aget connection "iceConnectionState") "disconnected")
+        (dispatch/fire :remove-connection [peer-id info-hash])))))
 
 (defn set-connection-events! [tracker connection peer-id info-hash]
   (aset connection "ondatachannel" (on-data-channel peer-id))
   (aset connection "onicecandidate" (on-ice-candidate tracker peer-id info-hash))
-  (aset connection "onicechange" log-event))
+  (aset connection "onicechange" (on-ice-state-change peer-id info-hash))
+  (aset connection "oniceconnectionstatechange" (on-ice-state-change peer-id info-hash)))
 
 (defn on-close [peer-id]
   (fn []

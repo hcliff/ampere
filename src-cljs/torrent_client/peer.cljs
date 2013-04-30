@@ -11,7 +11,8 @@
     [torrent-client.torrent :only [pretty-info-hash has-full-metadata?]]
     [torrent-client.protocol.bittorrent :only [generate-protocol receive-data]]
     [torrent-client.bitfield :only [bitfield-unique]]
-    [torrent-client.peer-id :only [peer-id]])
+    [torrent-client.peer-id :only [peer-id]]
+    [async.helpers :only [sleep]])
   (:use-macros 
     [waltz.macros :only [in out constraint defstate defevent]]
     [async.macros :only [async let-async]]))
@@ -61,7 +62,6 @@
   "Saturate the peers queue with metadata piece requests"
   (let [pieces (metadata/wanted-pieces torrent)
         request-metadata (partial request-metadata peer torrent bittorrent-client)]
-    ; (js* "debugger;")
     (when (and (not (state/in? peer :rejecting-metadata-requests))
                (< ((state/get-data peer) :outstanding) max-outstanding)
                (not-empty pieces))
@@ -93,6 +93,8 @@
       (console/info "Received handshake from peer:" peer-id)
       (when (and (= (vec (@torrent :info-hash)) info-hash)
                  (= (state/get-name me) peer-id))
+        (state/set me :received-handshake)
+        ; If we havn't allready sent a handshake, do so now
         (if-not (state/in? me :sent-handshake)
           (state/set me :sent-handshake))
         ; If this peer supports extensions
@@ -108,15 +110,16 @@
       (let [info-length (or (@torrent :info-length) (message :metadata_size))
             metadata {:info-length info-length}]
         (dispatch/fire :update-metadata [torrent metadata]))
+      (state/set me :received-extended)
+      ; If we havn't allready sent extended, do so now
       (if (state/in? me :sent-extended)
         (state/set me :sent-bitfield)
         (state/set me :sent-extended)))
 
     (defevent me :receive-choke []
-      (state/unset me :client-unchocked))
+      (state/unset me :client-unchoked))
 
     (defevent me :receive-unchoke []
-      (console/log "receive unchoke")
       (state/set me :client-unchoked))
 
     (defevent me :receive-interested []
@@ -135,8 +138,9 @@
       "The client has sent us a valid bitfield detailing the
       pieces of the torrent they have"
       (swap! me assoc-in [:data :bitfield] bitfield)
+      (state/set me :received-bitfield)
       (state/set me :has-metadata)
-      ; If we haven't yet sent a bitfield, do so!
+      ; If we haven't allready sent a bitfield, do so now
       (if-not (state/in? me :sent-bitfield)
         (state/set me :sent-bitfield))
       (set-interest! me torrent))
@@ -148,7 +152,8 @@
       (if (and (state/in? me :peer-downloading)
                (not (zero? (nth (@torrent :bitfield) piece-index))))
         ; If we have the block, we have the piece
-        (let-async [data (pieces/get-block torrent piece-index offset length)]
+        (let-async [_ (sleep 500)
+                    data (pieces/get-block torrent piece-index offset length)]
           (protocol/send-block bittorrent-client piece-index offset data))))
 
     (defevent me :receive-block [piece-index begin data]
@@ -214,6 +219,12 @@
     (defevent me :unoptimistic []
       (state/unset me :optimistic))
 
+    (defevent me :have-piece [piece-index]
+      (protocol/send-have bittorrent-client piece-index))
+
+    (defevent me :check-downloading []
+      (set-interest! me torrent))
+
     ;************************************************
     ; States
     ;************************************************
@@ -221,15 +232,21 @@
     (defstate me :sent-handshake
       (in [] (protocol/send-handshake bittorrent-client)))
 
+    (defstate me :received-handshake)
+
     (defstate me :sent-extended
       (in [] (protocol/send-extended-handshake bittorrent-client))
       ; Can't send extensions until peer is validated
       (constraint [_ _] (state/in? me :sent-handshake)))
 
+    (defstate me :received-extended)
+
     (defstate me :sent-bitfield
       (in [] (protocol/send-bitfield bittorrent-client))
       ; Can't send the bitfield until we have all our metadata
       (constraint [_ _] (has-full-metadata? torrent)))
+
+    (defstate me :received-bitfield)
 
     (defstate me :client-unchoked
       "This client can request pieces from the peer"
@@ -244,7 +261,7 @@
       (out [] 
         (protocol/send-not-interested bittorrent-client)
         (state/unset me :client-downloading))
-      (constraint [_ _] (state/in? me :sent-bitfield)))
+      (constraint [_ _] (state/in? me :received-bitfield)))
 
     (defstate me :peer-unchoked
       "The peer is allowed to request pieces from this client if it wants"
@@ -267,17 +284,14 @@
       (in [] (update-queue me torrent bittorrent-client))
       (constraint [_ _] 
         (and (state/in? me :client-interested) 
-             (state/in? me :client-unchoked)
-             (state/in? me :sent-bitfield))))
+             (state/in? me :client-unchoked))))
 
     (defstate me :peer-downloading
       "The peer is requesting pieces from this client"
       (in [] (console/info "Started requesting pieces from" (state/get-name me)))
       (constraint [_ _]
         (and (state/in? me :peer-interested)
-             (state/in? me :peer-unchoked)
-             ; Peer can only download from us if we have torrent meta
-             (state/in? me :sent-bitfield))))
+             (state/in? me :peer-unchoked))))
 
     (defstate me :has-metadata
       (constraint [_ _] (not (state/in? me :has-metadata))))

@@ -30,34 +30,13 @@
 (def peer-uninterested? (complement peer-interested?))
 
 ;;************************************************
-;; Manage events sent from torrent management
-;;************************************************
-
-(dispatch/react-to #{:stopped-torrent} (fn [_ torrent]
-  ; Cancel any pieces in transit
-  (doseq [peer (@peers (torrent :info-hash))]
-    (state/trigger peer :cancel))
-  ; Remove all of our peers
-  (swap! peers dissoc (torrent :info-hash))))
-
-; ; TODO: impliment better end game stratgy
-; ; http://wiki.theory.org/BitTorrentSpecification#End_Game
-; (dispatch/react-to #{:completed-torrent} (fn [_ torrent]
-;   (doseq [peer (@peers (torrent :info-hash))]
-;     (state/trigger peer :cancel))
-;   ; TODO: rework unchoke algorithm upon completion
-;   ; TODO: do we change our interested status?
-;   ))
-
-(dispatch/react-to #{:paused-torrent} (fn [_ torrent]
-  ; TODO: cancel current pieces?
-  ; TODO: do we change our interested status?
-  ; TODO: pause timer
-  ))
-
-;;************************************************
 ;; Manage events sent from channels
 ;;************************************************
+
+(dispatch/react-to #{:remove-connection} (fn [peer-id info-hash]
+  "For now a connection and channel are 1-1
+   When a connection breaks remove all the peers associated with it"
+  (swap! peers dissoc-in [info-hash peer-id])))
 
 (dispatch/react-to #{:add-channel} (fn [_ [peer-id channel & flags]]
   "A new channel has been established to get torrent data"
@@ -80,25 +59,11 @@
     (if-let [peer (get-in @peers [info-hash peer-id])]
       (state/trigger peer :receive-data data)))))
 
-; (dispatch/react-to #{:written-piece} (fn [_ [torrent block]]
-;   "When a peer sends us a block we didn't have before"
-;   ; Inform all our peers we have it
-;   (doseq [peer (@peers (@torrent :info-hash))]
-;     (state/trigger peer :add-block block))))
-
 ;;************************************************
-;; Peer management
+;; Helper function to determin choked/unchoked peers
+;; Used both when dealing with torrent events and
+;; peer events
 ;;************************************************
-
-(defn request-metadata! [info-hash]
-  (if-let [peers (vals (@peers info-hash))]
-    (let [peers (remove #(state/in? % :rejecting-metadata-requests) peers)
-          ; has-metadata not being set can also mean it is unknown
-          ; prefer peers that definately have metadata, but also try unknowns
-          peers (sort-by #(state/in? % :has-metadata) peers)
-          peers-count (min metadata-request-count (count peers))]
-      (doseq [p (subvec peers 0 peers-count)]
-        (state/trigger p :request-metadata)))))
 
 (defn set-unchoked!
   "Update the currently unchoked peers, choking & unchoking peers where 
@@ -124,6 +89,20 @@
       (doseq [peer (filter peer-unchoked? inactive)]
         (state/trigger peer :choke-peer)))))
 
+;;************************************************
+;; Manage events sent from torrent management
+;;************************************************
+
+(defn request-metadata! [info-hash]
+  (if-let [peers (vals (@peers info-hash))]
+    (let [peers (remove #(state/in? % :rejecting-metadata-requests) peers)
+          ; has-metadata not being set can also mean it is unknown
+          ; prefer peers that definately have metadata, but also try unknowns
+          peers (sort-by #(state/in? % :has-metadata) peers)
+          peers-count (min metadata-request-count (count peers))]
+      (doseq [p (subvec peers 0 peers-count)]
+        (state/trigger p :request-metadata)))))
+
 (defn unoptimistic
   "The optimistic downloader is protected for the first 30 seconds
   after that it has to fight for itself"
@@ -140,11 +119,6 @@
     (let [eligible-peers (filter (every-pred not-optimistic? peer-choked?) peers)]
       (if (pos? (count eligible-peers))
         (state/trigger (rand-nth eligible-peers) :optimistic)))))
-
-(dispatch/react-to #{:receive-interested :receive-not-interested} (fn [_ torrent]
-  "A peer changed its interested status"
-  (js* "debugger;")
-  (set-unchoked! (@torrent :pretty-info-hash))))
 
 (defn- manage-peers [torrent]
   "Run all the sub functions required to manage all a torrents peers"
@@ -167,3 +141,23 @@
   (let [peers (vals (@peers (@torrent :info-hash)))]
     (doseq [p peers]
       (state/trigger p :received-metadata)))))
+
+;;************************************************
+;; Manage a peer based on what other peers are doing
+;;************************************************
+
+(dispatch/react-to #{:written-piece} (fn [_ [torrent piece]]
+  "When a peer sends us a block we didn't have before notify other peers"
+  (doseq [peer (@peers (@torrent :info-hash))]
+    (state/trigger peer :have-piece piece))))
+
+(def retry-events #{:invalid-piece :expired-piece})
+(dispatch/react-to retry-events (fn [_ [torrent piece]]
+  "When a piece needs retrying recheck which peers the client is interested in"
+  (doseq [peer (@peers (@torrent :info-hash))]
+    (state/trigger peer :check-downloading))))
+
+(def unchoke-events #{:receive-interested :receive-not-interested})
+(dispatch/react-to unchoke-events (fn [_ torrent]
+  "When a peer becomes interested recalculate choked peers"
+  (set-unchoked! (@torrent :pretty-info-hash))))

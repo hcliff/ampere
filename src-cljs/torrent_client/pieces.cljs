@@ -29,8 +29,13 @@
 ; How long can a piece be working before we expire it
 (def working-life (* 1000 30))
 
-; (deftask expire-pieces working-life [_]
-;   (queue/expire working working-life))
+(deftask expire-pieces working-life [_]
+  (let [expired (queue/expired working working-life)]
+    (doseq [[torrent pieces] expired
+            piece pieces]
+      (console/info "Expiring piece: " piece)
+      (queue/disj! working torrent piece)
+      (dispatch/fire :expire-piece [torrent piece]))))
 
 ; TODO: switch this over to rarity based search
 (defn wanted-pieces
@@ -44,7 +49,9 @@
           wanted (keep-indexed #(if-not (zero? %2) %1) wanted-bitfield)]
       (remove #(queue/contains? working torrent %) wanted))))
 
-(dispatch/react-to #{:written-piece :invalid-piece} (fn [_ [torrent piece-index]]
+; Events that indicate we should stop working a piece
+(def not-working-events #{:written-piece :invalid-piece :expired-piece})
+(dispatch/react-to not-working-events (fn [_ [torrent piece-index]]
   "When a block has finished or is invalid, remove it from the in-progress"
   (queue/disj! working torrent piece-index)))
 

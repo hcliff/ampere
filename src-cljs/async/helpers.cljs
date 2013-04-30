@@ -43,3 +43,7 @@
                 ; execute success function with index and result
                 ((apply f arguments) (partial success i)))]
         (doall (apply map-indexed* f* collections))))))
+
+(defn sleep [period]
+  (async [success-callback]
+    (.setTimeout js/window success-callback period)))

@@ -65,9 +65,8 @@
   (let [max-life (- (.getTime (js/Date.)) life)]
     (-> object meta :added (partial >= life))))
 
-(defn expire [queues life]
-  "Given a collection of queues, remove expired pieces"
-  (doseq [[k c] @queues
-          :let [c (filter (partial expired? life) c)]]
-    (console/info "Expiring pieces" (map str c))
-    (map (partial disj! k) c)))
+(defn expired [queues life]
+  "Given a collection of queues, return the expired pieces"
+  (letfn [(f [[k1 c]]
+            [k1 (filter (partial expired? life) c)])]
+    (map f @queues)))
