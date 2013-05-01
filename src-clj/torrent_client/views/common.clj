@@ -109,7 +109,7 @@
           ]]]
         [:div.container-fluid
           [:div#alerts.row-fluid]
-          (link-to {:id "demo-torrent"} "/Rescue%20You.mp3.torrent"
+          (link-to {:id "demo-torrent"} "http://bittorrent.io?dn=lonely%20star&xt=urn:btih:fc9f1f538d07aee107d3bbfd273e86ffb289f380&tr=http://ec2-184-73-103-94.compute-1.amazonaws.com:80"
             [:div.row-fluid
               [:div.info
                 [:img.promo {:src (to-uri "/the_weeknd.jpg")}]

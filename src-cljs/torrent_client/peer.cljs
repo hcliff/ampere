@@ -152,8 +152,7 @@
       (if (and (state/in? me :peer-downloading)
                (not (zero? (nth (@torrent :bitfield) piece-index))))
         ; If we have the block, we have the piece
-        (let-async [_ (sleep 500)
-                    data (pieces/get-block torrent piece-index offset length)]
+        (let-async [data (pieces/get-block torrent piece-index offset length)]
           (protocol/send-block bittorrent-client piece-index offset data))))
 
     (defevent me :receive-block [piece-index begin data]

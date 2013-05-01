@@ -25,8 +25,13 @@
 ; How long can a piece be working before we expire it
 (def working-life (* 1000 15))
 
-; (deftask expire-pieces working-life [_]
-;   (queue/expire working working-life))
+(deftask expire-pieces working-life [_]
+  (let [expired (queue/expired working working-life)]
+    (doseq [[torrent pieces] expired
+            piece pieces]
+      (console/error "Expiring metadata piece: " piece)
+      (queue/disj! working torrent piece)
+      (dispatch/fire :expire-piece [torrent piece]))))
 
 ; Indexes of all the pieces in a torrent
 (defn pieces [torrent]

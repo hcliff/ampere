@@ -9,6 +9,7 @@
 
 (defn-method "log")
 (defn-method "warn")
+(defn-method "error")
 (defn-method "info")
 (defn-method "time")
 (defn-method "time-end" "timeEnd")

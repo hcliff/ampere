@@ -163,9 +163,9 @@
 
 (def urn-pattern #"^urn:btih:([a-zA-F\d]{40})$")
 
-(dispatch/react-to #{:document-ready} (fn [_]
-  "When provided with a magnet link, use it to initiate a torrent"
-  (let [qo (.getQueryData (goog/Uri. (.-location js/window)))
+(defn read-magnet-link [url]
+  "Given a url, extract the requested magnet link"
+  (let [qo (.getQueryData (goog/Uri. url))
         torrent-name (.get qo "dn")]
     ; Some early stage filtering, we need an info hash and a tracker
     ; the tracker may or may not be valid (validation occurs later)
@@ -176,30 +176,19 @@
           (dispatch/fire :add-magnet-link
             {:announce-list announce-list
              :info-hash (second info-hash)
-             :name torrent-name})))))))
+             :name torrent-name}))))))
 
-; jQuery doesn't support binary requests
-(defn ajax-binary [url settings]
-  (async [success-callback]
-    (let [xhr (js/XMLHttpRequest.)]
-      (aset xhr "responseType" "arraybuffer")
-      (aset xhr "onload" (fn [_]
-        (this-as self
-          (if (= 200 (aget self "status"))
-            (success-callback (aget self "response"))))))
-      (.open xhr "GET" url true)
-      (.send xhr))))
+(dispatch/react-to #{:document-ready} (fn [_]
+  "When provided with a magnet link, use it to initiate a torrent"
+  (read-magnet-link (.-location js/window))))
 
 (on $demo-torrent :click (fn [e]
   "When the user clicks the demo, download the .torrent and use it"
   (.preventDefault e)
-  (let [url (attr $demo-torrent :href)
-        options {:xhrFields {:responseType "arraybuffer"} :dataType "binary"}]
+  (let [url (attr $demo-torrent :href)]
     ; Hide the demo, no longer relevant
     (css $demo-torrent :display "none")
-    ; Given a .torrent URL, download it then use it
-    (let-async [file (ajax-binary url options)]
-      (dispatch/fire :add-metainfo-byte-array file)))))
+    (read-magnet-link url))))
 
 ;;************************************************
 ;; Rendering content

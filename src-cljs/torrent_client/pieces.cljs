@@ -33,7 +33,7 @@
   (let [expired (queue/expired working working-life)]
     (doseq [[torrent pieces] expired
             piece pieces]
-      (console/info "Expiring piece: " piece)
+      (console/error "Expiring piece: " piece)
       (queue/disj! working torrent piece)
       (dispatch/fire :expire-piece [torrent piece]))))
 
