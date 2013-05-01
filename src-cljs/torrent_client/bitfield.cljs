@@ -1,7 +1,6 @@
 (ns torrent-client.bitfield
-  (:use
-    [torrent-client.core.byte-array :only [uint8-array?]])
-  (:require [torrent-client.core.dispatch :as dispatch]))
+  (:require [torrent-client.core.dispatch :as dispatch])
+  (:use [torrent-client.core.byte-array :only [uint8-array?]]))
 
 (deftype Bitfield [byte-array i]
 

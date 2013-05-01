@@ -33521,8 +33521,8 @@ async.helpers.sleep = function sleep(period) {
 goog.provide("torrent_client.bitfield");
 goog.require("cljs.core");
 goog.require("torrent_client.core.byte_array");
-goog.require("torrent_client.core.dispatch");
 goog.require("torrent_client.core.byte_array");
+goog.require("torrent_client.core.dispatch");
 goog.provide("torrent_client.bitfield.Bitfield");
 torrent_client.bitfield.Bitfield = function(byte_array, i) {
   this.byte_array = byte_array;
@@ -33557,9 +33557,9 @@ torrent_client.bitfield.Bitfield.prototype.call = function(self__) {
   var bitfield = self____$1;
   return self__.byte_array
 };
-torrent_client.bitfield.Bitfield.prototype.apply = function(self__, args3272) {
+torrent_client.bitfield.Bitfield.prototype.apply = function(self__, args13691) {
   var self__ = this;
-  return self__.call.apply(self__, [self__].concat(args3272.slice()))
+  return self__.call.apply(self__, [self__].concat(args13691.slice()))
 };
 torrent_client.bitfield.Bitfield.prototype.cljs$core$ICollection$_conj$arity$2 = function(coll, entry) {
   var self__ = this;
@@ -33622,25 +33622,25 @@ torrent_client.bitfield.bitfield = function bitfield(bits) {
 torrent_client.bitfield.fill_bitfield_BANG_ = function fill_bitfield_BANG_(bitfield, pieces_length) {
   var full_bytes = cljs.core.quot.call(null, pieces_length, 8);
   var represented_bits = full_bytes * 8;
-  var n__2690__auto___3275 = full_bytes;
-  var n_3276 = 0;
+  var n__2690__auto___13694 = full_bytes;
+  var n_13695 = 0;
   while(true) {
-    if(n_3276 < n__2690__auto___3275) {
-      bitfield.byte_array[n_3276] = 255;
-      var G__3277 = n_3276 + 1;
-      n_3276 = G__3277;
+    if(n_13695 < n__2690__auto___13694) {
+      bitfield.byte_array[n_13695] = 255;
+      var G__13696 = n_13695 + 1;
+      n_13695 = G__13696;
       continue
     }else {
     }
     break
   }
-  var G__3274_3278 = cljs.core.seq.call(null, cljs.core.range.call(null, represented_bits, pieces_length));
+  var G__13693_13697 = cljs.core.seq.call(null, cljs.core.range.call(null, represented_bits, pieces_length));
   while(true) {
-    if(G__3274_3278) {
-      var n_3279 = cljs.core.first.call(null, G__3274_3278);
-      cljs.core.assoc.call(null, bitfield, n_3279, true);
-      var G__3280 = cljs.core.next.call(null, G__3274_3278);
-      G__3274_3278 = G__3280;
+    if(G__13693_13697) {
+      var n_13698 = cljs.core.first.call(null, G__13693_13697);
+      cljs.core.assoc.call(null, bitfield, n_13698, true);
+      var G__13699 = cljs.core.next.call(null, G__13693_13697);
+      G__13693_13697 = G__13699;
       continue
     }else {
     }
@@ -33667,25 +33667,25 @@ torrent_client.bitfield.difference = function() {
     return torrent_client.bitfield.intersection.call(null, b1, torrent_client.bitfield.bitfield.call(null, unique))
   };
   var difference__3 = function() {
-    var G__3281__delegate = function(b1, b2, bitfields) {
+    var G__13700__delegate = function(b1, b2, bitfields) {
       return cljs.core.reduce.call(null, difference, b1, cljs.core.conj.call(null, bitfields, b2))
     };
-    var G__3281 = function(b1, b2, var_args) {
+    var G__13700 = function(b1, b2, var_args) {
       var bitfields = null;
       if(goog.isDef(var_args)) {
         bitfields = cljs.core.array_seq(Array.prototype.slice.call(arguments, 2), 0)
       }
-      return G__3281__delegate.call(this, b1, b2, bitfields)
+      return G__13700__delegate.call(this, b1, b2, bitfields)
     };
-    G__3281.cljs$lang$maxFixedArity = 2;
-    G__3281.cljs$lang$applyTo = function(arglist__3282) {
-      var b1 = cljs.core.first(arglist__3282);
-      var b2 = cljs.core.first(cljs.core.next(arglist__3282));
-      var bitfields = cljs.core.rest(cljs.core.next(arglist__3282));
-      return G__3281__delegate(b1, b2, bitfields)
+    G__13700.cljs$lang$maxFixedArity = 2;
+    G__13700.cljs$lang$applyTo = function(arglist__13701) {
+      var b1 = cljs.core.first(arglist__13701);
+      var b2 = cljs.core.first(cljs.core.next(arglist__13701));
+      var bitfields = cljs.core.rest(cljs.core.next(arglist__13701));
+      return G__13700__delegate(b1, b2, bitfields)
     };
-    G__3281.cljs$lang$arity$variadic = G__3281__delegate;
-    return G__3281
+    G__13700.cljs$lang$arity$variadic = G__13700__delegate;
+    return G__13700
   }();
   difference = function(b1, b2, var_args) {
     var bitfields = var_args;
@@ -33703,10 +33703,10 @@ torrent_client.bitfield.difference = function() {
   difference.cljs$lang$arity$variadic = difference__3.cljs$lang$arity$variadic;
   return difference
 }();
-torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'written-piece"]), function(_, p__3283) {
-  var vec__3284 = p__3283;
-  var torrent = cljs.core.nth.call(null, vec__3284, 0, null);
-  var piece_index = cljs.core.nth.call(null, vec__3284, 1, null);
+torrent_client.core.dispatch.react_to.call(null, cljs.core.PersistentHashSet.fromArray(["\ufdd0'written-piece"]), function(_, p__13702) {
+  var vec__13703 = p__13702;
+  var torrent = cljs.core.nth.call(null, vec__13703, 0, null);
+  var piece_index = cljs.core.nth.call(null, vec__13703, 1, null);
   var bitfield = cljs.core.deref.call(null, torrent).call(null, "\ufdd0'bitfield");
   return cljs.core.assoc.call(null, bitfield, piece_index, true)
 });
